@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>새벽의 대지</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 로그인 -->
+    <section id="screen-login" class="screen">
+      <div class="card login-card">
+        <h1 class="logo">새벽의 대지</h1>
+        <p class="subtitle">Web MMORPG Prototype</p>
+        <form id="login-form" autocomplete="off">
+          <label>아이디 <input name="username" maxlength="12" required></label>
+          <label>비밀번호 <input name="password" type="password" required></label>
+          <div class="row">
+            <button type="submit" data-action="login" class="primary">로그인</button>
+            <button type="submit" data-action="register">회원가입</button>
+          </div>
+          <p class="msg" id="login-msg"></p>
+        </form>
+        <small class="note">※ 프로토타입: 계정과 캐릭터는 이 브라우저(localStorage)에만 저장됩니다.</small>
+      </div>
+    </section>
+
+    <!-- 캐릭터 선택 -->
+    <section id="screen-select" class="screen">
+      <div class="card wide">
+        <header class="screen-head">
+          <h2>캐릭터 선택</h2>
+          <span class="user"></span>
+          <button id="btn-logout">로그아웃</button>
+        </header>
+        <div class="slots" id="char-slots"></div>
+        <div class="row end">
+          <button id="btn-delete" class="danger">캐릭터 삭제</button>
+          <button id="btn-start" class="primary">게임 시작</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 캐릭터 생성 -->
+    <section id="screen-create" class="screen">
+      <div class="card wide">
+        <header class="screen-head">
+          <h2>캐릭터 생성</h2>
+          <button id="btn-create-back">돌아가기</button>
+        </header>
+        <div class="create-grid">
+          <div>
+            <h3>직업 선택</h3>
+            <div class="class-cards" id="class-cards"></div>
+            <div class="class-info" id="class-info"></div>
+          </div>
+          <div>
+            <h3>능력치 배분 <small id="points-left"></small></h3>
+            <div id="stat-alloc"></div>
+            <div class="preview" id="create-preview"></div>
+            <label class="name-label">캐릭터 이름 <input id="char-name" maxlength="12" placeholder="2~12자"></label>
+            <p class="msg" id="create-msg"></p>
+            <button id="btn-create" class="primary wide-btn">캐릭터 생성</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 게임 -->
+    <section id="screen-game" class="screen">
+      <canvas id="game-canvas"></canvas>
+      <div id="hud"></div>
+    </section>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
