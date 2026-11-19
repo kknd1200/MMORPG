@@ -12,6 +12,7 @@
 //   passive[]: { kind(fury|haste|mend|focus|hide), value }
 //   art: 스프라이트 시트 정보, size: 그림 크기 배율, color: 대표색
 import { ROSTER } from './rebirth-roster.js';
+import { monsterBase } from '../systems/balance.js';
 
 // ---------------------------------------------------------------- 필드 사냥터 (지역 50곳 = 몬스터 300종 전부)
 // 순서 = 난이도 순 (마을에서 가까운 칸부터 배치). 같은 단계(1~10)의 다섯 던전을 묶어서 차례로
@@ -42,22 +43,19 @@ export const THEME_BIOME = {
 export const LEVEL_SPAN = 3;
 export const zoneMinLevel = (zi, count = FIELD_REGIONS.length) => 1 + Math.round(zi * 95 / Math.max(1, count - 1));
 
-// ---------------------------------------------------------------- 레벨 → 수치 공식
-// 기준(일반 몬스터): Lv.1 HP 23 / 공격 3, Lv.10 HP 110 / 공격 15, Lv.30 HP 338 / 공격 42, Lv.60 HP 770 / 공격 88, Lv.99 HP 1493 / 공격 160
+// ---------------------------------------------------------------- 레벨 → 수치
+// 같은 레벨 "평범한 플레이어" 기준으로 역산 (js/systems/balance.js 의 TARGET 에서 조정)
+//   일반 몬스터: 약 3초에 처치, 1:1 로 맞기만 하면 약 30초 버팀, 레벨업까지 약 (5 + 0.6×레벨) 마리
 export function baseStats(level) {
-  return {
-    hp: Math.round(14 + 9 * level + 0.06 * level * level),
-    atk: Math.round(2 + 1.3 * level + 0.003 * level * level),
-    exp: Math.round(4 + 3 * level + 0.35 * level * level),
-    gold: [Math.max(1, Math.round(level * 0.8)), Math.round(3 + level * 2.2)],
-  };
+  return monsterBase(level);
 }
 
 // 등급 배율
+// 네임드: 약 25초 처치, 혼자 맞으면 약 18초 / 보스: 약 60초 처치, 내려찍기까지 맞으면 약 10초 → 물약·회피 필요
 export const RANK = {
   normal: { hp: 1, atk: 1, exp: 1, gold: 1, size: 1 },
-  guard: { hp: 4.5, atk: 1.35, exp: 6, gold: 5, size: 1.15, respawn: 90 },
-  boss: { hp: 9, atk: 1.6, exp: 14, gold: 12, size: 1.25, respawn: 180 },
+  guard: { hp: 8, atk: 1.45, exp: 8, gold: 6, size: 1.15, respawn: 90 },
+  boss: { hp: 19, atk: 1.75, exp: 20, gold: 15, size: 1.25, respawn: 180 },
 };
 
 // 체형별 성향 (이동속도, 방어, 마법저항, 회피)

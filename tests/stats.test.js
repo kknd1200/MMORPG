@@ -157,3 +157,15 @@ test('월드: 모든 사냥터에 자리가 있고 마을에서 걸어서 닿음
     assert.ok(w.findPath(w.spawn.x, w.spawn.y, c.x, c.y, 400000), `${z.id}: 길 없음`);
   }
 });
+
+test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 오를수록 HP·공격·경험치 상승', async () => {
+  const B = await import('../js/systems/balance.js');
+  let prev = null;
+  for (const lv of [1, 10, 30, 60, 99]) {
+    const m = B.monsterBase(lv);
+    const kill = m.hp / B.curve(lv).dps;
+    assert.ok(kill >= 2 && kill <= 5, `Lv.${lv} 처치 ${kill.toFixed(1)}초`);
+    if (prev) for (const k of ['hp', 'atk', 'exp']) assert.ok(m[k] > prev[k], `Lv.${lv} ${k}`);
+    prev = m;
+  }
+});

@@ -733,8 +733,15 @@ export class Game {
     const eff = it.effect;
     if (eff.hp && ch.hp >= ch.maxHp) { this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
     if (eff.mp && ch.mp >= ch.maxMp) { this.log('이미 MP가 가득 찼습니다.', 'warn'); return; }
-    if (eff.hp) { ch.hp = Math.min(ch.maxHp, ch.hp + eff.hp); this.floatText(this.player, `+${eff.hp}`, '#7dff9a'); }
-    if (eff.mp) { ch.mp = Math.min(ch.maxMp, ch.mp + eff.mp); this.floatText(this.player, `MP +${eff.mp}`, '#7ab8ff'); }
+    // 물약: 고정량 + 최대치 비율 (고레벨에서도 쓸모 있게)
+    if (eff.hp) {
+      const amt = eff.hp + Math.floor(ch.maxHp * (eff.hpPct || 0));
+      ch.hp = Math.min(ch.maxHp, ch.hp + amt); this.floatText(this.player, `+${amt}`, '#7dff9a');
+    }
+    if (eff.mp) {
+      const amt = eff.mp + Math.floor(ch.maxMp * (eff.mpPct || 0));
+      ch.mp = Math.min(ch.maxMp, ch.mp + amt); this.floatText(this.player, `MP +${amt}`, '#7ab8ff');
+    }
     if (eff.buff) this.addBuff(eff.buff, it.icon.color);
     if (eff.teleport) {
       const p = this.player;
