@@ -7,7 +7,7 @@ import { SKILLS } from './data/skills.js';
 import * as S from './systems/stats.js';
 import { Game } from './game/game.js';
 import { ITEMS } from './data/items.js';
-import { LOOKS, drawHumanoid } from './game/sprites.js';
+import { paintAvatars, loginRosterMarkup } from './ui/portraits.js';
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -19,31 +19,15 @@ const state = {
   create: { classId: 'knight', stats: null },
 };
 
-// 캐릭터 선택/생성 화면의 초상: 게임 안과 같은 스프라이트를 작게 그림
-function paintAvatars(root) {
-  for (const cv of root.querySelectorAll('canvas.avatar')) {
-    const look = LOOKS[cv.dataset.class];
-    if (!look) continue;
-    const dpr = window.devicePixelRatio || 1;
-    const w = 44, h = 64;
-    cv.width = w * dpr; cv.height = h * dpr;
-    const ctx = cv.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.beginPath(); ctx.ellipse(w / 2, h - 5, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
-    drawHumanoid(ctx, w / 2, h - 5, {
-      look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
-      weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color, armorId: cv.dataset.armor || null,
-    });
-  }
-}
-
 function show(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
 }
 
 // ---------------------------------------------------------------- 로그인
 function initLogin() {
+  const roster = $('#login-roster');
+  roster.innerHTML = loginRosterMarkup();
+  paintAvatars(roster);
   const form = $('#login-form');
   const msg = $('#login-msg');
   form.addEventListener('submit', async (e) => {
