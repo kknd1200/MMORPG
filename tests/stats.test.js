@@ -122,7 +122,7 @@ test('원본 몬스터 300종: 그림 시트 파일 존재, 시트 안 행 번�
   }
 });
 
-test('필드 몬스터 120종: 드롭 아이템 존재, 필수 수치 양수', () => {
+test('필드 몬스터 300종 전부: 드롭 아이템 존재, 필수 수치 양수', () => {
   assert.equal(Object.keys(MONSTERS).length, FIELD_REGIONS.length * 6);
   for (const [id, m] of Object.entries(MONSTERS)) {
     for (const k of ['level', 'hp', 'atk', 'exp', 'speed', 'attackRange', 'attackInterval', 'size']) {
@@ -133,8 +133,9 @@ test('필드 몬스터 120종: 드롭 아이템 존재, 필수 수치 양수', (
   }
 });
 
-test('사냥터 20곳: 가중치 합 1, 일반 5종 + 네임드/보스 1종, 뒤로 갈수록 레벨 상승', () => {
-  assert.equal(SPAWN_ZONES.length, 20);
+test('사냥터 50곳: 가중치 합 1, 일반 5종 + 네임드/보스 1종, 뒤로 갈수록 레벨 상승', () => {
+  assert.equal(SPAWN_ZONES.length, 50);
+  assert.equal(Object.keys(MONSTERS).length, ROSTER.length);
   let prev = 0;
   for (const z of SPAWN_ZONES) {
     const sum = z.monsters.reduce((a, [, w]) => a + w, 0);

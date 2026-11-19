@@ -13,13 +13,11 @@
 //   art: 스프라이트 시트 정보, size: 그림 크기 배율, color: 대표색
 import { ROSTER } from './rebirth-roster.js';
 
-// ---------------------------------------------------------------- 필드 사냥터 (지역 20곳 = 몬스터 120종)
-// 순서 = 난이도 순. 마을에서 가까운 안쪽 고리 8곳 → 바깥 고리 12곳
-export const FIELD_REGIONS = [
-  'gear-01', 'str-01', 'gear-02', 'str-02', 'gear-03', 'str-03', 'gear-04', 'str-04',
-  'gear-05', 'str-05', 'gear-06', 'str-06', 'gear-07', 'str-07', 'gear-08', 'str-08',
-  'gear-09', 'str-09', 'gear-10', 'str-10',
-];
+// ---------------------------------------------------------------- 필드 사냥터 (지역 50곳 = 몬스터 300종 전부)
+// 순서 = 난이도 순 (마을에서 가까운 칸부터 배치). 같은 단계(1~10)의 다섯 던전을 묶어서 차례로
+const DUNGEON_ORDER = ['gear', 'str', 'agi', 'int', 'vit'];
+export const FIELD_REGIONS = [];
+for (let t = 1; t <= 10; t++) for (const d of DUNGEON_ORDER) FIELD_REGIONS.push(`${d}-${String(t).padStart(2, '0')}`);
 
 // 지역 테마 → 지형 (world.js 의 BIOMES)
 export const THEME_BIOME = {
@@ -29,12 +27,23 @@ export const THEME_BIOME = {
   '쐐기 채석장': 'quarry', '침목 제재소': 'lumber', '검댕 대장간': 'forge', '쇠사슬 선창': 'harbor',
   '황동 투기장': 'arena', '깨진 종탑': 'ruins', '현무암 벼랑': 'quarry', '청철 제련소': 'forge',
   '뼈언덕 격전지': 'graveyard', '지맥의 심장': 'volcano',
+  '솔바람 오솔길': 'forest', '갈대 비탈': 'reeds', '까치 지붕길': 'town', '모래 소용길': 'desert',
+  '새벽 질풍교': 'bridge', '연무 부두': 'harbor', '달꽃 돌계단': 'garden', '소용돌이 수림': 'forest',
+  '구름 정거장': 'highland', '별똥 사냥터': 'crater',
+  '초승달 서고': 'library', '푸른 인장실': 'library', '유리 관측실': 'crystal', '허수의 회랑': 'void',
+  '뇌우 공방': 'forge', '뿌리 연산림': 'lumber', '빙경 도서탑': 'snow', '공허 문장소': 'void',
+  '성좌 연금당': 'crystal', '시간의 심문실': 'ruins',
+  '이슬 온실': 'garden', '진주 샘길': 'springs', '자작 수피림': 'forest', '붉은 산호원': 'coral',
+  '녹맥 치료당': 'garden', '진흙 용출지': 'swamp', '천근 방벽': 'fortress', '심해 기포굴': 'coral',
+  '푸른 재생림': 'forest', '장수의 심층': 'darkforest',
 };
 
-export const LEVEL_STEP = 3; // 사냥터마다 레벨 +3 → 20곳이면 Lv.1 ~ 61
+// 사냥터 레벨: 첫 곳 Lv.1, 마지막 곳 Lv.96 사이를 고르게 나눔. 일반 몬스터는 최저 레벨 ~ +2, 네임드/보스는 +3
+export const LEVEL_SPAN = 3;
+export const zoneMinLevel = (zi, count = FIELD_REGIONS.length) => 1 + Math.round(zi * 95 / Math.max(1, count - 1));
 
 // ---------------------------------------------------------------- 레벨 → 수치 공식
-// 기준(일반 몬스터): Lv.1 HP 23 / 공격 3, Lv.10 HP 110 / 공격 15, Lv.30 HP 338 / 공격 42, Lv.60 HP 770 / 공격 88
+// 기준(일반 몬스터): Lv.1 HP 23 / 공격 3, Lv.10 HP 110 / 공격 15, Lv.30 HP 338 / 공격 42, Lv.60 HP 770 / 공격 88, Lv.99 HP 1493 / 공격 160
 export function baseStats(level) {
   return {
     hp: Math.round(14 + 9 * level + 0.06 * level * level),
@@ -96,8 +105,8 @@ function buildMonster(src, zoneIndex) {
   const rank = RANK[src.rank] || RANK.normal;
   const fam = FAMILY[src.family] || FAMILY.biped;
   const slot = src.art.row; // 0~4 일반, 5 네임드
-  const minLv = 1 + zoneIndex * LEVEL_STEP;
-  const level = src.rank === 'normal' ? minLv + (slot % 3) : minLv + LEVEL_STEP + 1;
+  const minLv = zoneMinLevel(zoneIndex);
+  const level = src.rank === 'normal' ? minLv + (slot % 3) : minLv + LEVEL_SPAN;
   const b = baseStats(level);
   const r = hash01(src.id);
   const ranged = src.style === 'ranged', magic = src.style === 'magic';
@@ -142,13 +151,13 @@ FIELD_REGIONS.forEach((key, zi) => {
   for (const m of mobs) MONSTERS[m.id] = buildMonster(m, zi);
   const normals = mobs.filter((m) => m.rank === 'normal');
   const named = mobs.find((m) => m.rank !== 'normal');
-  const minLv = 1 + zi * LEVEL_STEP;
+  const minLv = zoneMinLevel(zi);
   SPAWN_ZONES.push({
     id: key,
     index: zi,
     theme: mobs[0].theme,
     biome: THEME_BIOME[mobs[0].theme] || 'forest',
-    name: `${mobs[0].theme} (Lv.${minLv}~${minLv + LEVEL_STEP + 1})`,
+    name: `${mobs[0].theme} (Lv.${minLv}~${minLv + LEVEL_SPAN})`,
     minLevel: minLv,
     rect: null, // world.js 가 맵을 만들며 채움
     monsters: normals.map((m) => [m.id, 1 / normals.length]),

@@ -1,43 +1,55 @@
 // 월드 맵 (시드 고정 절차 생성 → 모든 접속에서 같은 지형)
 //
-// 240×240 타일을 48칸 격자 5×5 로 나눕니다.
-//   가운데 칸 = 새싹 마을, 안쪽 고리 8칸 = 사냥터 1~8, 바깥 고리 12칸 = 사냥터 9~20, 네 모서리 = 호수/산
+// 48칸 격자 COLS × ROWS (8 × 7 = 384 × 336 타일).
+//   마을 칸을 중심으로 가까운 고리부터(같은 고리 안에서는 동쪽부터 시계방향) 사냥터를 난이도 순으로 배치합니다.
+//   사냥터가 차지하지 않은 칸은 호수/산.
 // 칸 경계를 따라 길이 나 있어 모든 사냥터가 이어집니다.
 import { SPAWN_ZONES } from '../data/monsters.js';
 
 export const TILE_SIZE = 32;
-export const WORLD_VERSION = 2; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 마을로 초기화
+export const WORLD_VERSION = 3; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 마을로 초기화
 
 export const T = {
   GRASS: 0, DIRT: 1, TREE: 2, WATER: 3, WALL: 4, FLOOR: 5,
   STONE: 6, ROCK: 7, FLOWER: 8, SAND: 9,
   SWAMP: 10, ASH: 11, DARKGRASS: 12, LAVA: 13, GRAVE: 14, DEADTREE: 15,
+  SNOW: 16, ICE: 17, CRYSTAL: 18, CORAL: 19, SHELF: 20, VOID: 21, CACTUS: 22,
 };
 
-const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE]);
+const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE, T.ICE, T.CRYSTAL, T.CORAL, T.SHELF, T.CACTUS]);
 
-const W = 240, CELL = 48;
+const CELL = 48, COLS = 8, ROWS = 7;
+const VCELL = { x: 3, y: 3 }; // 마을 칸
+const OX = VCELL.x * CELL, OY = VCELL.y * CELL; // 마을 칸의 왼쪽 위
+const at = (dx, dy) => [OX + dx, OY + dy]; // 마을 칸 기준 좌표
+const VC = { x: OX + 24, y: OY + 24 }; // 마을 중심 타일
 
 // 초보자의 마을(새싹 마을) — 성벽 포함 범위, 안전지대
-export const VILLAGE = { x0: 108, y0: 108, x1: 132, y1: 132, name: '새싹 마을' };
-
-// 사냥터 칸 배치 (난이도 순서). 안쪽 고리는 동쪽부터 시계방향, 바깥 고리는 그 바깥을 이어서 시계방향
-const INNER = [[3, 2], [3, 3], [2, 3], [1, 3], [1, 2], [1, 1], [2, 1], [3, 1]];
-const OUTER = [[4, 1], [4, 2], [4, 3], [3, 4], [2, 4], [1, 4], [0, 3], [0, 2], [0, 1], [1, 0], [2, 0], [3, 0]];
-const CORNERS = { '0,0': 'lake', '4,0': 'mountain', '0,4': 'mountain', '4,4': 'lake' };
+export const VILLAGE = { x0: OX + 12, y0: OY + 12, x1: OX + 36, y1: OY + 36, name: '새싹 마을' };
 
 const cellRect = (cx, cy, pad = 3) => ({ x0: cx * CELL + pad, y0: cy * CELL + pad, x1: (cx + 1) * CELL - pad, y1: (cy + 1) * CELL - pad });
 
+// 칸 순서: 마을과의 거리(고리) → 동쪽부터 시계방향
+export const CELL_ORDER = (() => {
+  const cells = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    if (x === VCELL.x && y === VCELL.y) continue;
+    const dx = x - VCELL.x, dy = y - VCELL.y;
+    let ang = Math.atan2(dy, dx); if (ang < -1e-9) ang += Math.PI * 2;
+    cells.push({ x, y, ring: Math.max(Math.abs(dx), Math.abs(dy)), ang });
+  }
+  return cells.sort((a, b) => a.ring - b.ring || a.ang - b.ang);
+})();
+
 // 사냥터 → 칸 (모듈을 불러올 때 한 번)
 const CELL_BIOME = new Map();
-[...INNER, ...OUTER].forEach(([cx, cy], i) => {
+CELL_ORDER.forEach(({ x, y }, i) => {
   const zone = SPAWN_ZONES[i];
-  if (!zone) return;
-  zone.rect = cellRect(cx, cy);
-  zone.cell = { x: cx, y: cy };
-  CELL_BIOME.set(`${cx},${cy}`, zone.biome);
+  if (!zone) { CELL_BIOME.set(`${x},${y}`, (x + y) % 2 ? 'lake' : 'mountain'); return; }
+  zone.rect = cellRect(x, y);
+  zone.cell = { x, y };
+  CELL_BIOME.set(`${x},${y}`, zone.biome);
 });
-for (const [k, b] of Object.entries(CORNERS)) CELL_BIOME.set(k, b);
 
 function mulberry32(seed) {
   return () => {
@@ -84,6 +96,27 @@ const BIOMES = {
   arena: (r, n) => (r < 0.012 ? T.ROCK : n > 0.7 ? T.DIRT : T.SAND),
   lake: (r, n) => (n > 0.4 ? T.WATER : n > 0.32 ? T.SAND : r < 0.06 ? T.TREE : T.GRASS),
   mountain: (r, n) => (n > 0.48 ? T.ROCK : r < 0.08 ? T.ROCK : T.STONE),
+  // ---- 민첩 · 지능 · 체력 던전 지역
+  reeds: (r, n) => (n > 0.7 ? T.WATER : n > 0.56 ? T.SWAMP : r < 0.04 ? T.FLOWER : T.GRASS),
+  town: (r, n, x, y) => (x % 11 < 6 && y % 9 < 4 ? T.WALL : r < 0.025 ? T.TREE : n < 0.45 ? T.FLOOR : T.DIRT),
+  desert: (r, n) => (n > 0.76 ? T.ROCK : r < 0.02 ? T.CACTUS : n < 0.25 ? T.DIRT : T.SAND),
+  bridge: (r, n, x, y) => (n > 0.45 ? (x % 8 < 2 || y % 8 < 2 ? T.FLOOR : T.WATER) : n > 0.4 ? T.SAND : T.GRASS),
+  garden: (r, n, x, y) => (n > 0.76 ? T.WATER : r < 0.03 ? T.TREE : x % 7 === 0 && y % 7 === 0 ? T.STONE : r < 0.22 ? T.FLOWER : T.GRASS),
+  highland: (r, n) => (n > 0.7 ? T.ROCK : r < 0.03 ? T.TREE : n < 0.35 ? T.STONE : T.GRASS),
+  crater: (r, n) => (n > 0.82 ? T.ROCK : n > 0.7 ? T.ASH : r < 0.015 ? T.CRYSTAL : n < 0.3 ? T.DIRT : T.GRASS),
+  library: (r, n, x, y) => (y % 5 === 0 && x % 9 > 1 ? T.SHELF : r < 0.01 ? T.ROCK : T.FLOOR),
+  crystal: (r, n) => (n > 0.72 ? T.CRYSTAL : r < 0.03 ? T.CRYSTAL : n < 0.35 ? T.FLOOR : T.STONE),
+  snow: (r, n) => (n > 0.7 ? T.ICE : r < 0.04 ? T.TREE : n < 0.2 ? T.STONE : T.SNOW),
+  void: (r, n) => (n > 0.72 ? T.CRYSTAL : r < 0.02 ? T.WALL : T.VOID),
+  springs: (r, n) => (n > 0.6 ? T.WATER : n > 0.53 ? T.SAND : r < 0.06 ? T.FLOWER : r < 0.09 ? T.TREE : T.GRASS),
+  coral: (r, n) => (n > 0.62 ? T.WATER : r < 0.06 ? T.CORAL : n < 0.25 ? T.STONE : T.SAND),
+};
+
+// 메울 때 쓰는 지형별 막힌 타일
+const FILL = {
+  swamp: T.WATER, lake: T.WATER, harbor: T.WATER, reeds: T.WATER, bridge: T.WATER, springs: T.WATER, coral: T.WATER,
+  volcano: T.LAVA, forge: T.LAVA, darkforest: T.DEADTREE, forest: T.TREE, lumber: T.TREE, meadow: T.TREE, garden: T.TREE,
+  snow: T.ICE, crystal: T.CRYSTAL, void: T.CRYSTAL, library: T.SHELF, town: T.WALL, desert: T.CACTUS,
 };
 
 // 길 위에 덮을 때: 물/용암 위는 다리(나무 바닥)
@@ -91,19 +124,20 @@ const roadTile = (t) => (t === T.WATER || t === T.LAVA ? T.FLOOR : T.DIRT);
 
 export class World {
   constructor(seed = 20261118) {
-    this.w = W;
-    this.h = W;
+    this.w = COLS * CELL;
+    this.h = ROWS * CELL;
     this.tiles = new Uint8Array(this.w * this.h);
     this.variant = new Uint8Array(this.w * this.h);
     this.rng = mulberry32(seed);
     this.noise = makeNoise(seed, 6);
+    this.spawn = { x: VC.x + 0.5, y: VC.y + 5.5 };
     this.generate();
-    this.spawn = { x: 120.5, y: 125.5 };
+    const npc = (id, kind, name, dx, dy, color) => ({ id, kind, name, x: OX + dx + 0.5, y: OY + dy + 0.5, color });
     this.npcs = [
-      { id: 'npc_merchant', kind: 'merchant', name: '잡화상 브론', x: 113.5, y: 114.5, color: '#c98a3a' },
-      { id: 'npc_smith', kind: 'smith', name: '대장장이 고른', x: 127.5, y: 114.5, color: '#7a5a48' },
-      { id: 'npc_healer', kind: 'healer', name: '치유사 엘린', x: 113.5, y: 126.5, color: '#e8e8f8' },
-      { id: 'npc_guide', kind: 'guide', name: '안내원 토마', x: 123.5, y: 123.5, color: '#5aa0c8' },
+      npc('npc_merchant', 'merchant', '잡화상 브론', 17, 18, '#c98a3a'),
+      npc('npc_smith', 'smith', '대장장이 고른', 31, 18, '#7a5a48'),
+      npc('npc_healer', 'healer', '치유사 엘린', 17, 30, '#e8e8f8'),
+      npc('npc_guide', 'guide', '안내원 토마', 27, 27, '#5aa0c8'),
     ];
     for (const n of this.npcs) { n.radius = 0.35; n.isNpc = true; }
   }
@@ -142,12 +176,10 @@ export class World {
       for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++)
         for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) this.set(x, y, roadTile(this.get(x, y)));
     };
-    for (const g of [CELL, CELL * 2, CELL * 3, CELL * 4]) {
-      road(g - 1, 2, g, h - 3);
-      road(2, g - 1, w - 3, g);
-    }
-    road(119, 2, 121, h - 3);
-    road(2, 119, w - 3, 121);
+    for (let c = 1; c < COLS; c++) road(c * CELL - 1, 2, c * CELL, h - 3);
+    for (let c = 1; c < ROWS; c++) road(2, c * CELL - 1, w - 3, c * CELL);
+    road(VC.x - 1, 2, VC.x + 1, h - 3);
+    road(2, VC.y - 1, w - 3, VC.y + 1);
 
     // 마을: 성벽 + 바닥 + 성문
     for (let y = V.y0; y <= V.y1; y++) {
@@ -156,18 +188,18 @@ export class World {
         this.set(x, y, edge ? T.WALL : T.FLOOR);
       }
     }
-    for (let d = 119; d <= 121; d++) {
-      this.set(d, V.y0, T.DIRT); this.set(d, V.y1, T.DIRT);
-      this.set(V.x0, d, T.DIRT); this.set(V.x1, d, T.DIRT);
+    for (let d = -1; d <= 1; d++) {
+      this.set(VC.x + d, V.y0, T.DIRT); this.set(VC.x + d, V.y1, T.DIRT);
+      this.set(V.x0, VC.y + d, T.DIRT); this.set(V.x1, VC.y + d, T.DIRT);
     }
     // 마을 중앙 광장 길 + 분수 + 장식 나무
-    road(112, 119, 128, 121);
-    road(119, 112, 121, 128);
-    this.set(120, 118, T.WATER);
-    for (const [x, y] of [[110, 110], [130, 110], [110, 130], [130, 130], [117, 110], [123, 110]]) this.set(x, y, T.TREE);
+    road(...at(16, 23), ...at(32, 25));
+    road(...at(23, 16), ...at(25, 32));
+    this.set(...at(24, 22), T.WATER);
+    for (const [dx, dy] of [[14, 14], [34, 14], [14, 34], [34, 34], [21, 14], [27, 14]]) this.set(...at(dx, dy), T.TREE);
 
     // 월드 외곽 나무 울타리
-    for (let i = 0; i < w; i++) {
+    for (let i = 0; i < Math.max(w, h); i++) {
       for (let k = 0; k < 2; k++) {
         this.set(i, k, T.TREE); this.set(i, h - 1 - k, T.TREE);
         this.set(k, i, T.TREE); this.set(w - 1 - k, i, T.TREE);
@@ -180,7 +212,7 @@ export class World {
   sealPockets() {
     const { w, h } = this;
     const seen = new Uint8Array(w * h);
-    const stack = [this.idx(120, 125)];
+    const stack = [this.idx(Math.floor(this.spawn.x), Math.floor(this.spawn.y))];
     seen[stack[0]] = 1;
     while (stack.length) {
       const i = stack.pop();
@@ -194,7 +226,6 @@ export class World {
         stack.push(j);
       }
     }
-    const FILL = { swamp: T.WATER, lake: T.WATER, harbor: T.WATER, volcano: T.LAVA, forge: T.LAVA, darkforest: T.DEADTREE, forest: T.TREE, lumber: T.TREE, meadow: T.TREE };
     let sealed = 0;
     for (let i = 0; i < w * h; i++) {
       if (seen[i] || SOLID.has(this.tiles[i])) continue;

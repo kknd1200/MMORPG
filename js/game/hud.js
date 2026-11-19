@@ -274,6 +274,8 @@ export class Hud {
       [T.ROCK]: [80, 78, 74], [T.SAND]: [214, 194, 140],
       [T.SWAMP]: [72, 96, 60], [T.ASH]: [70, 64, 62], [T.DARKGRASS]: [44, 74, 46], [T.LAVA]: [220, 90, 30],
       [T.GRAVE]: [120, 120, 128], [T.DEADTREE]: [52, 44, 40],
+      [T.SNOW]: [228, 234, 240], [T.ICE]: [150, 200, 230], [T.CRYSTAL]: [150, 110, 220], [T.CORAL]: [230, 100, 110],
+      [T.SHELF]: [110, 70, 40], [T.VOID]: [50, 40, 70], [T.CACTUS]: [70, 140, 70],
     };
     for (let i = 0; i < w.w * w.h; i++) {
       const c = colors[w.tiles[i]] || [0, 0, 0];

@@ -355,6 +355,61 @@ function drawTile(ctx, t, v, x, y, time) {
       ctx.moveTo(x + 15, y + 9); ctx.lineTo(x + 13, y + 2);
       ctx.stroke();
       break;
+    case T.SNOW:
+      ctx.fillStyle = ['#e6ebf0', '#eaeff3', '#e2e8ee', '#edf1f5'][v & 3]; ctx.fillRect(x, y, TS, TS);
+      if (v % 6 === 0) { ctx.fillStyle = '#cfd8e2'; ctx.fillRect(x + (v % 24), y + ((v >> 2) % 24), 5, 2); }
+      break;
+    case T.ICE:
+      ctx.fillStyle = '#e6ebf0'; ctx.fillRect(x, y, TS, TS);
+      ctx.fillStyle = '#9ccbe6'; roundRect(ctx, x + 2, y + 3, TS - 4, TS - 5, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(x + 6, y + 6, 10, 3); ctx.fillRect(x + 6, y + 10, 3, 6);
+      ctx.strokeStyle = '#6aa8cc'; ctx.lineWidth = 1; ctx.strokeRect(x + 2.5, y + 3.5, TS - 5, TS - 6);
+      break;
+    case T.CRYSTAL: {
+      ctx.fillStyle = (v & 1) ? '#77756f' : '#3a3050'; ctx.fillRect(x, y, TS, TS);
+      const glow = 0.5 + 0.3 * Math.sin(time * 2 + v);
+      ctx.fillStyle = `rgba(170,120,255,${glow * 0.35})`; ctx.beginPath(); ctx.ellipse(x + 16, y + 24, 13, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#9a6ae0';
+      ctx.beginPath(); ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 23, y + 18); ctx.lineTo(x + 16, y + 27); ctx.lineTo(x + 9, y + 18); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#c8a8ff';
+      ctx.beginPath(); ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 19, y + 18); ctx.lineTo(x + 16, y + 27); ctx.lineTo(x + 13, y + 18); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#7a4ac0';
+      ctx.beginPath(); ctx.moveTo(x + 7, y + 12); ctx.lineTo(x + 11, y + 22); ctx.lineTo(x + 5, y + 26); ctx.closePath(); ctx.fill();
+      break;
+    }
+    case T.CORAL:
+      ctx.fillStyle = (v & 1) ? '#dac792' : '#d6c28c'; ctx.fillRect(x, y, TS, TS);
+      ctx.strokeStyle = ['#e8646e', '#f08a5a', '#d85090'][v % 3]; ctx.lineCap = 'round'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y + 28); ctx.lineTo(x + 16, y + 12); ctx.lineTo(x + 10, y + 5);
+      ctx.moveTo(x + 16, y + 17); ctx.lineTo(x + 23, y + 8);
+      ctx.moveTo(x + 16, y + 22); ctx.lineTo(x + 8, y + 16);
+      ctx.stroke();
+      break;
+    case T.SHELF:
+      ctx.fillStyle = '#5a3e26'; ctx.fillRect(x, y, TS, TS);
+      ctx.fillStyle = '#3a2614'; ctx.fillRect(x, y + 10, TS, 2); ctx.fillRect(x, y + 21, TS, 2);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = ['#8a2a2a', '#2a4a8a', '#3a6a3a', '#8a6a2a', '#5a2a6a'][(v + i) % 5];
+        ctx.fillRect(x + 2 + i * 5, y + 2 + ((v + i) % 2), 4, 8);
+        ctx.fillRect(x + 2 + i * 5, y + 13 + ((v + i * 3) % 2), 4, 8);
+      }
+      break;
+    case T.VOID: {
+      ctx.fillStyle = ['#2e2440', '#30263f', '#2b2240', '#332844'][v & 3]; ctx.fillRect(x, y, TS, TS);
+      ctx.strokeStyle = 'rgba(120,90,180,0.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TS - 1, TS - 1);
+      if (v % 11 === 0) { ctx.fillStyle = `rgba(200,170,255,${0.4 + 0.4 * Math.sin(time * 3 + v)})`; ctx.fillRect(x + (v % 24) + 3, y + ((v >> 2) % 24) + 3, 2, 2); }
+      break;
+    }
+    case T.CACTUS:
+      ctx.fillStyle = (v & 1) ? '#d6c28c' : '#dac792'; ctx.fillRect(x, y, TS, TS);
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 28, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4a8a46';
+      roundRect(ctx, x + 13, y + 5, 7, 23, 3); ctx.fill();
+      roundRect(ctx, x + 6, y + 11, 5, 9, 2); ctx.fill(); ctx.fillRect(x + 8, y + 17, 6, 3);
+      roundRect(ctx, x + 22, y + 8, 5, 9, 2); ctx.fill(); ctx.fillRect(x + 19, y + 14, 5, 3);
+      ctx.fillStyle = '#6aaa5a'; ctx.fillRect(x + 15, y + 7, 2, 18);
+      break;
     default:
       ctx.fillStyle = '#f0f'; ctx.fillRect(x, y, TS, TS);
   }
