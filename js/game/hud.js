@@ -3,22 +3,20 @@ import { CLASSES, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, STAT_CAP } from '../
 import { SKILLS } from '../data/skills.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import * as S from '../systems/stats.js';
-import { T, VILLAGE_CELL } from './world.js';
-import { SPAWN_ZONES } from '../data/monsters.js';
+import { T } from './world.js';
+import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
+import { MONSTERS } from '../data/monsters.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pct = (v) => `${Math.round(v * 100)}%`;
 
-// 마을 성문 4곳 밖의 사냥터 안내 (쉬운 순서)
-function gateZonesText() {
-  const dirs = [['남문', 0, 1], ['서문', -1, 0], ['동문', 1, 0], ['북문', 0, -1]];
-  return dirs.map(([label, dx, dy]) => {
-    const z = SPAWN_ZONES.find((zn) => zn.cell && zn.cell.x === VILLAGE_CELL.x + dx && zn.cell.y === VILLAGE_CELL.y + dy);
-    return z ? { label, z } : null;
-  }).filter(Boolean)
-    .sort((a, b) => a.z.minLevel - b.z.minLevel)
-    .map(({ label, z }) => `${label} ${esc(z.name)}`).join(' → ');
+// 이 마을 동/서 출구로 이어지는 맵 안내
+function exitsText(def) {
+  const parts = [];
+  if (def.exits.west) parts.push(`서쪽 출구 → ${esc(mapTitle(MAPS[def.exits.west.map]))}`);
+  if (def.exits.east) parts.push(`동쪽 출구 → ${esc(mapTitle(MAPS[def.exits.east.map]))}`);
+  return parts.join(' · ');
 }
 
 function iconHtml(color, text, extra = '') {
@@ -50,6 +48,7 @@ export class Hud {
       </div>
       <div class="hud-topright">
         <div class="hud-zone"></div>
+        <div class="hud-boss"></div>
         <canvas class="hud-minimap" width="150" height="150"></canvas>
       </div>
       <div class="hud-log"></div>
@@ -76,6 +75,7 @@ export class Hud {
         </div>
       </section>
       <div class="levelup-banner"></div>
+      <div class="map-banner"></div>
       <div class="death-overlay"><div>쓰러졌습니다</div><small></small></div>
     `;
     this.el = {
@@ -85,6 +85,8 @@ export class Hud {
       exp: r.querySelector('.bar.exp'),
       buffs: r.querySelector('.hud-buffs'),
       zone: r.querySelector('.hud-zone'),
+      boss: r.querySelector('.hud-boss'),
+      mapBanner: r.querySelector('.map-banner'),
       minimap: r.querySelector('.hud-minimap'),
       log: r.querySelector('.hud-log'),
       hotbar: r.querySelector('.hud-hotbar'),
@@ -146,6 +148,9 @@ export class Hud {
     this.el.buffs.innerHTML = g.buffs.map((b) =>
       `<span class="buff" style="--c:${b.color}" title="${esc(b.name)}">${esc(b.name)} ${Math.ceil(b.until - g.time)}s</span>`).join('');
     this.el.zone.textContent = g.zoneName();
+    const bossText = g.fieldBossStatus();
+    this.el.boss.textContent = bossText;
+    this.el.boss.style.display = bossText ? '' : 'none';
 
     this.updateHotbarCooldowns();
     this.drawMinimap();
@@ -313,9 +318,32 @@ export class Hud {
     }
     ctx.fillStyle = '#ffe680';
     for (const n of g.world.npcs) ctx.fillRect(n.x * s - 1.5, n.y * s - 1.5, 3, 3);
+    // 출구 · 던전 입구 · 계단
+    for (const q of [...g.world.portals, ...g.tempPortals]) {
+      ctx.fillStyle = q.kind === 'exit' ? '#6ae0ff' : '#c87aff';
+      ctx.fillRect(q.cx * s - 2.5, q.cy * s - 2.5, 5, 5);
+    }
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#000';
     ctx.beginPath(); ctx.arc(g.player.x * s, g.player.y * s, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+
+  // 맵이 바뀌면: 미니맵 다시 만들기, NPC 창 닫기
+  onMapChange(first) {
+    this.buildMinimap();
+    if (!first) this.closePanel('npc');
+    this.el.minimap.style.aspectRatio = `${this.game.world.w} / ${this.game.world.h}`;
+    const cv = this.el.minimap;
+    cv.height = Math.round(cv.width * this.game.world.h / this.game.world.w);
+  }
+
+  // 맵 이름 띄우기
+  flashMap(def) {
+    const sub = def.type === 'village' ? def.desc : def.type === 'dungeon' ? `권장 Lv.${def.level[0]}~${def.level[1] + 2}` : `Lv.${def.level[0]}~${def.level[1]} 사냥터`;
+    this.el.mapBanner.innerHTML = `<div class="big">${esc(def.name)}</div><div>${esc(sub || '')}</div>`;
+    this.el.mapBanner.classList.remove('show');
+    void this.el.mapBanner.offsetWidth;
+    this.el.mapBanner.classList.add('show');
   }
 
   // ------------------------------------------------------------ panels
@@ -468,18 +496,22 @@ export class Hud {
     }
     if (npc.kind === 'guide') {
       const cls = CLASSES[g.char.classId];
-      return `<p>새싹 마을에 온 걸 환영해요, ${esc(g.char.name)}님!</p>
+      const def = g.world.def;
+      return `<p>${esc(def.name)}에 온 걸 환영해요, ${esc(g.char.name)}님!</p>
         <ul class="guide">
-          <li><b>이동</b>: 땅을 좌클릭하거나 누른 채로 마우스를 움직이세요.</li>
+          <li><b>이동</b>: 땅을 좌클릭하거나 누른 채로 마우스를 움직이세요. 맵 끝의 빛나는 출구로 옆 맵에 갈 수 있어요.</li>
           <li><b>공격</b>: 몬스터를 좌클릭하면 다가가서 계속 공격해요.</li>
           <li><b>단축칸</b>: F5~F12를 누르거나, 휠로 칸을 고른 뒤 휠 클릭으로 사용해요.</li>
           <li><b>성장</b>: ${cls.name}은(는) 레벨업마다 HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}, MP ${cls.growth.mp[0]}~${cls.growth.mp[1]}이 올라요. 운이 좋으면 '축캐', 나쁘면 '저주캐'가 되죠.</li>
           <li><b>보너스 포인트</b>: 10레벨마다 1점, 50레벨 이후엔 레벨업마다 1점을 받아요.</li>
-          <li><b>사냥터</b>: 성문 밖이 가장 쉬워요. ${gateZonesText()}</li>
-          <li>마을에서 멀어질수록, 그리고 북쪽으로 갈수록 강한 몬스터가 나와요.</li>
-          <li>마을 안은 안전지대라 몬스터가 들어오지 못해요.</li>
+          <li><b>이 마을 출구</b>: ${exitsText(def)}</li>
+          <li><b>이동술사</b>: 골드를 내면 다른 마을 · 필드, 던전 입구까지 데려다줘요.</li>
+          <li><b>던전</b>: 7곳, 각각 지하 7층까지 있고 마지막 층에 보스가 있어요. 입구는 필드 안의 동굴이에요.</li>
+          <li><b>필드 보스</b>: 필드마다 정해진 시각에만 나타나서 ${BOSS_SCHEDULE.stay}분 동안 머물러요. 이동술사에게 시간표가 있어요.</li>
+          <li>마을은 안전지대라 몬스터가 들어오지 못해요.</li>
         </ul>`;
     }
+    if (npc.kind === 'teleporter') return this.teleporterHtml();
     const shop = SHOPS[npc.kind];
     if (!shop) return '';
     const rows = shop.map((id) => {
@@ -498,6 +530,36 @@ export class Hud {
       <small class="hint">판매는 인벤토리 창의 판매 버튼으로 합니다. (구입가의 50%)</small>`;
   }
 
+  teleporterHtml() {
+    const g = this.game;
+    const now = g.now();
+    const dests = teleportDestinations();
+    const row = (d) => {
+      const here = d.kind === 'village' && d.map === g.world.id;
+      const afford = g.char.gold >= d.cost;
+      let extra = '';
+      if (d.kind === 'field') {
+        const f = MAPS[d.map];
+        const w = bossWindow(f.fieldBoss.offset, now);
+        const boss = MONSTERS[f.fieldBoss.type].name;
+        const killed = g.char.fieldBossKills[f.id] === w.start;
+        extra = w.active && !killed
+          ? `<small class="boss-on">보스 ${esc(boss)} 출현 중 (~${formatClock(w.end)})</small>`
+          : `<small>보스 ${esc(boss)} ${formatClock(w.next)}</small>`;
+      }
+      if (d.kind === 'dungeon') extra = `<small>${esc(d.where)} 안 · 7층 보스</small>`;
+      return `<div class="tp-row ${here ? 'here' : ''}">
+        <div class="info"><b>${esc(d.name)}</b> <small>${d.levelText || `Lv.${d.level}`}</small>${extra ? `<br>${extra}` : ''}</div>
+        <span class="price">${d.cost}G</span>
+        <button data-tp="${d.id}" ${here || !afford ? 'disabled' : ''}>${here ? '현재 위치' : '이동'}</button>
+      </div>`;
+    };
+    const group = (kind, title) => `<h4>${title}</h4>${dests.filter((d) => d.kind === kind).map(row).join('')}`;
+    return `<p>어디로 보내드릴까요? 던전은 입구 앞까지만 보내드려요.</p>
+      <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>
+      ${group('village', '마을')}${group('field', `필드 <small>(필드 보스는 매시 정해진 분에 ${BOSS_SCHEDULE.stay}분간 출현)</small>`)}${group('dungeon', '던전 입구')}`;
+  }
+
   bindPanelEvents() {
     const g = this.game;
     this.root.addEventListener('click', (e) => {
@@ -508,6 +570,7 @@ export class Hud {
       else if (t.dataset.sell) g.sell(Number(t.dataset.sell));
       else if (t.dataset.buy) g.buy(t.dataset.buy, Number(t.dataset.qty));
       else if (t.dataset.npc === 'heal') g.healAtHealer();
+      else if (t.dataset.tp) g.teleport(t.dataset.tp);
     });
     this.root.addEventListener('dblclick', (e) => {
       const cell = e.target.closest('[data-inv]');

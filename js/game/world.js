@@ -1,13 +1,14 @@
-// 월드 맵 (시드 고정 절차 생성 → 모든 접속에서 같은 지형)
+// 맵 생성 (맵마다 시드 고정 절차 생성 → 모든 접속에서 같은 지형)
 //
-// 48칸 격자 COLS × ROWS (8 × 7 = 384 × 336 타일).
-//   마을 칸을 중심으로 가까운 고리부터(같은 고리 안에서는 동쪽부터 시계방향) 사냥터를 난이도 순으로 배치합니다.
-//   사냥터가 차지하지 않은 칸은 호수/산.
-// 칸 경계를 따라 길이 나 있어 모든 사냥터가 이어집니다.
-import { SPAWN_ZONES } from '../data/monsters.js';
+// 맵 종류 (js/data/maps.js 의 정의를 받아 만듦)
+//   village : 성벽으로 둘러싼 마을 + 동/서 출구. 맵 전체가 안전지대 (몬스터 없음)
+//   field   : 지형 + 동/서를 잇는 길, 던전 입구, 필드 보스 터, 사냥 구역(격자)
+//   dungeon : 방과 통로. 올라가는 계단(1층은 필드 입구로), 내려가는 계단, 마지막 층은 보스 방
+// 포탈(portals)에 들어서면 다른 맵으로 이동, spots 는 도착 지점 이름표 (west/east/center/up/down/entrance:d1 ...)
+import { MAPS } from '../data/maps.js';
 
 export const TILE_SIZE = 32;
-export const WORLD_VERSION = 4; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 마을로 초기화
+export const WORLD_VERSION = 5; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 시작 마을로 초기화
 
 export const T = {
   GRASS: 0, DIRT: 1, TREE: 2, WATER: 3, WALL: 4, FLOOR: 5,
@@ -17,45 +18,6 @@ export const T = {
 };
 
 const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE, T.ICE, T.CRYSTAL, T.CORAL, T.SHELF, T.CACTUS]);
-
-const CELL = 48, COLS = 8, ROWS = 7;
-const VCELL = { x: 3, y: 3 }; // 마을 칸
-const OX = VCELL.x * CELL, OY = VCELL.y * CELL; // 마을 칸의 왼쪽 위
-const at = (dx, dy) => [OX + dx, OY + dy]; // 마을 칸 기준 좌표
-const VC = { x: OX + 24, y: OY + 24 }; // 마을 중심 타일
-
-// 초보자의 마을(새싹 마을) — 성벽 포함 범위, 안전지대
-export const VILLAGE = { x0: OX + 12, y0: OY + 12, x1: OX + 36, y1: OY + 36, name: '새싹 마을' };
-
-const cellRect = (cx, cy, pad = 3) => ({ x0: cx * CELL + pad, y0: cy * CELL + pad, x1: (cx + 1) * CELL - pad, y1: (cy + 1) * CELL - pad });
-
-// 칸 순서 = 사냥터 난이도 순서
-//  1) 마을 중심에서 가까운 칸일수록 쉬움 (직선거리 → 성문 바로 앞 4칸이 가장 쉬운 사냥터)
-//  2) 같은 거리면 시작 방향(남쪽 성문, 처음 서 있는 곳)에 가까울수록 쉬움 → 남쪽은 쉽고 북쪽으로 갈수록 어려움
-export const VILLAGE_CELL = VCELL;
-const START_ANGLE = Math.PI / 2; // 남쪽 (화면 좌표는 y 가 아래로 증가)
-export const CELL_ORDER = (() => {
-  const cells = [];
-  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-    if (x === VCELL.x && y === VCELL.y) continue;
-    const dx = x - VCELL.x, dy = y - VCELL.y;
-    let ang = Math.atan2(dy, dx) - START_ANGLE;
-    ang = ((ang % (Math.PI * 2)) + Math.PI * 3) % (Math.PI * 2) - Math.PI; // -π ~ π
-    cells.push({ x, y, d: Math.round(Math.hypot(dx, dy) * 1000), off: Math.round(Math.abs(ang) * 1000), cw: ang });
-  }
-  // 거리 → 시작 방향과의 각도 → 시계방향 먼저
-  return cells.sort((a, b) => a.d - b.d || a.off - b.off || b.cw - a.cw);
-})();
-
-// 사냥터 → 칸 (모듈을 불러올 때 한 번)
-const CELL_BIOME = new Map();
-CELL_ORDER.forEach(({ x, y }, i) => {
-  const zone = SPAWN_ZONES[i];
-  if (!zone) { CELL_BIOME.set(`${x},${y}`, (x + y) % 2 ? 'lake' : 'mountain'); return; }
-  zone.rect = cellRect(x, y);
-  zone.cell = { x, y };
-  CELL_BIOME.set(`${x},${y}`, zone.biome);
-});
 
 function mulberry32(seed) {
   return () => {
@@ -128,24 +90,41 @@ const FILL = {
 // 길 위에 덮을 때: 물/용암 위는 다리(나무 바닥)
 const roadTile = (t) => (t === T.WATER || t === T.LAVA ? T.FLOOR : T.DIRT);
 
+// 던전 테마별 바닥/벽/장식
+const PALETTES = {
+  cave: { floor: [T.STONE, T.ASH], wall: T.ROCK, deco: T.ROCK, dark: 0.55 },
+  mine: { floor: [T.DIRT, T.STONE], wall: T.ROCK, deco: T.ROCK, dark: 0.5 },
+  coral: { floor: [T.SAND, T.STONE], wall: T.CORAL, deco: T.WATER, dark: 0.45 },
+  tower: { floor: [T.FLOOR, T.STONE], wall: T.WALL, deco: T.ROCK, dark: 0.35 },
+  library: { floor: [T.FLOOR], wall: T.SHELF, deco: T.SHELF, dark: 0.4 },
+  volcano: { floor: [T.ASH, T.STONE], wall: T.ROCK, deco: T.LAVA, dark: 0.45 },
+  void: { floor: [T.VOID], wall: T.CRYSTAL, deco: T.CRYSTAL, dark: 0.55 },
+};
+
 export class World {
-  constructor(seed = 20261118) {
-    this.w = COLS * CELL;
-    this.h = ROWS * CELL;
+  constructor(def) {
+    this.def = def;
+    this.id = def.id;
+    this.type = def.type;
+    this.w = def.w;
+    this.h = def.h;
     this.tiles = new Uint8Array(this.w * this.h);
     this.variant = new Uint8Array(this.w * this.h);
-    this.rng = mulberry32(seed);
-    this.noise = makeNoise(seed, 6);
-    this.spawn = { x: VC.x + 0.5, y: VC.y + 5.5 };
-    this.generate();
-    const npc = (id, kind, name, dx, dy, color) => ({ id, kind, name, x: OX + dx + 0.5, y: OY + dy + 0.5, color });
-    this.npcs = [
-      npc('npc_merchant', 'merchant', '잡화상 브론', 17, 18, '#c98a3a'),
-      npc('npc_smith', 'smith', '대장장이 고른', 31, 18, '#7a5a48'),
-      npc('npc_healer', 'healer', '치유사 엘린', 17, 30, '#e8e8f8'),
-      npc('npc_guide', 'guide', '안내원 토마', 27, 27, '#5aa0c8'),
-    ];
+    this.rng = mulberry32(def.seed);
+    this.noise = makeNoise(def.seed, 6);
+    this.portals = [];
+    this.npcs = [];
+    this.zones = [];
+    this.spots = {};
+    this.safe = def.type === 'village';
+    this.dark = 0;
+    for (let i = 0; i < this.w * this.h; i++) this.variant[i] = Math.floor(this.rng() * 256);
+    if (def.type === 'village') this.genVillage();
+    else if (def.type === 'field') this.genField();
+    else this.genDungeon();
+    this.spawn = this.spots.center;
     for (const n of this.npcs) { n.radius = 0.35; n.isNpc = true; }
+    this.sealPockets();
   }
 
   idx(x, y) { return y * this.w + x; }
@@ -158,68 +137,222 @@ export class World {
     this.tiles[this.idx(x, y)] = t;
   }
 
-  biomeAt(x, y) {
-    return CELL_BIOME.get(`${Math.floor(x / CELL)},${Math.floor(y / CELL)}`) || 'meadow';
+  // ------------------------------------------------------------ 그리기 도구
+  fillBiome(biome) {
+    const f = BIOMES[biome] || BIOMES.meadow;
+    for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) {
+      this.tiles[this.idx(x, y)] = f(this.rng(), this.noise(x, y), x, y);
+    }
+    this.fillTile = FILL[biome] ?? T.ROCK;
   }
 
-  generate() {
-    const { w, h, rng, noise } = this;
-    const V = VILLAGE;
-    const nearVillage = (x, y) => x >= V.x0 - 3 && x <= V.x1 + 3 && y >= V.y0 - 3 && y <= V.y1 + 3;
+  rect(x0, y0, x1, y1, t) {
+    for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++)
+      for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) this.set(x, y, typeof t === 'function' ? t(x, y) : t);
+  }
 
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = this.idx(x, y);
-        this.variant[i] = Math.floor(rng() * 256);
-        const r = rng();
-        if (nearVillage(x, y)) { this.tiles[i] = T.GRASS; continue; }
-        this.tiles[i] = BIOMES[this.biomeAt(x, y)](r, noise(x, y), x, y);
-      }
+  road(x0, y0, x1, y1) { this.rect(x0, y0, x1, y1, (x, y) => roadTile(this.get(x, y))); }
+
+  // 폭 3칸 ㄱ자 길
+  roadLine(ax, ay, bx, by) {
+    this.road(ax, ay - 1, bx, ay + 1);
+    this.road(bx - 1, ay, bx + 1, by);
+  }
+
+  clearing(cx, cy, r, t = T.DIRT) {
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if (Math.hypot(x - cx, y - cy) <= r + 0.3) this.set(x, y, t);
     }
+  }
 
-    // 격자 길: 칸 경계마다 2칸 폭 + 마을 성문에서 이어지는 십자길
-    const road = (x0, y0, x1, y1) => {
-      for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++)
-        for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) this.set(x, y, roadTile(this.get(x, y)));
+  border(t, keep = () => false) {
+    for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) {
+      if ((x < 2 || y < 2 || x >= this.w - 2 || y >= this.h - 2) && !keep(x, y)) this.set(x, y, t);
+    }
+  }
+
+  portal(kind, cx, cy, w, h, to, label) {
+    const p = {
+      id: `${kind}:${this.portals.length}`, kind, to, label,
+      cx, cy, rect: { x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 },
     };
-    for (let c = 1; c < COLS; c++) road(c * CELL - 1, 2, c * CELL, h - 3);
-    for (let c = 1; c < ROWS; c++) road(2, c * CELL - 1, w - 3, c * CELL);
-    road(VC.x - 1, 2, VC.x + 1, h - 3);
-    road(2, VC.y - 1, w - 3, VC.y + 1);
-
-    // 마을: 성벽 + 바닥 + 성문
-    for (let y = V.y0; y <= V.y1; y++) {
-      for (let x = V.x0; x <= V.x1; x++) {
-        const edge = x === V.x0 || x === V.x1 || y === V.y0 || y === V.y1;
-        this.set(x, y, edge ? T.WALL : T.FLOOR);
-      }
-    }
-    for (let d = -1; d <= 1; d++) {
-      this.set(VC.x + d, V.y0, T.DIRT); this.set(VC.x + d, V.y1, T.DIRT);
-      this.set(V.x0, VC.y + d, T.DIRT); this.set(V.x1, VC.y + d, T.DIRT);
-    }
-    // 마을 중앙 광장 길 + 분수 + 장식 나무
-    road(...at(16, 23), ...at(32, 25));
-    road(...at(23, 16), ...at(25, 32));
-    this.set(...at(24, 22), T.WATER);
-    for (const [dx, dy] of [[14, 14], [34, 14], [14, 34], [34, 34], [21, 14], [27, 14]]) this.set(...at(dx, dy), T.TREE);
-
-    // 월드 외곽 나무 울타리
-    for (let i = 0; i < Math.max(w, h); i++) {
-      for (let k = 0; k < 2; k++) {
-        this.set(i, k, T.TREE); this.set(i, h - 1 - k, T.TREE);
-        this.set(k, i, T.TREE); this.set(w - 1 - k, i, T.TREE);
-      }
-    }
-    this.sealPockets();
+    this.portals.push(p);
+    return p;
   }
 
-  // 마을에서 걸어서 닿지 않는 빈 땅은 주변 지형으로 메움 (갈 수 없는 곳에 몬스터가 생기지 않게)
+  // 동/서 출구: 맵 끝의 길 + 포탈 + 도착 지점
+  edgeExits(cy) {
+    const ex = this.def.exits;
+    if (ex.west) {
+      this.road(0, cy - 1, 6, cy + 1);
+      this.portal('exit', 1, cy + 0.5, 2, 3, ex.west, `← ${MAPS[ex.west.map].name}`);
+      this.spots.west = { x: 4.5, y: cy + 0.5 };
+    }
+    if (ex.east) {
+      this.road(this.w - 7, cy - 1, this.w - 1, cy + 1);
+      this.portal('exit', this.w - 1, cy + 0.5, 2, 3, ex.east, `${MAPS[ex.east.map].name} →`);
+      this.spots.east = { x: this.w - 4.5, y: cy + 0.5 };
+    }
+  }
+
+  // ------------------------------------------------------------ 마을
+  genVillage() {
+    const d = this.def;
+    this.fillBiome(d.biome);
+    const cy = Math.floor(this.h / 2), cx = Math.floor(this.w / 2);
+    const town = { x0: 12, y0: 8, x1: this.w - 13, y1: this.h - 9 };
+    this.town = town;
+    // 마을 밖 둘레는 풀밭 위주로 (지형은 테마 색만)
+    this.rect(town.x0 - 4, town.y0 - 4, town.x1 + 4, town.y1 + 4, (x, y) => (this.rng() < 0.08 ? T.FLOWER : T.GRASS));
+    this.rect(town.x0, town.y0, town.x1, town.y1, (x, y) =>
+      (x === town.x0 || x === town.x1 || y === town.y0 || y === town.y1 ? T.WALL : T.FLOOR));
+    this.border(this.fillTile === T.WATER ? T.TREE : this.fillTile);
+    if (d.exits.west) this.road(0, cy - 1, town.x0 + 2, cy + 1);
+    if (d.exits.east) this.road(town.x1 - 2, cy - 1, this.w - 1, cy + 1);
+    this.edgeExits(cy);
+    // 광장 길 · 분수 · 나무
+    this.road(town.x0 + 2, cy - 1, town.x1 - 2, cy + 1);
+    this.road(cx - 1, town.y0 + 2, cx + 1, town.y1 - 2);
+    this.rect(cx - 1, cy - 5, cx, cy - 4, T.WATER);
+    for (const [x, y] of [[town.x0 + 2, town.y0 + 2], [town.x1 - 2, town.y0 + 2], [town.x0 + 2, town.y1 - 2], [town.x1 - 2, town.y1 - 2]]) this.set(x, y, T.TREE);
+
+    const npc = (kind, name, x, y, color) => this.npcs.push({ id: `npc_${kind}`, kind, name, x: x + 0.5, y: y + 0.5, color });
+    const names = VILLAGE_NPC_NAMES[d.id] || VILLAGE_NPC_NAMES.v1;
+    npc('merchant', names[0], town.x0 + 6, town.y0 + 6, '#c98a3a');
+    npc('smith', names[1], town.x1 - 6, town.y0 + 6, '#7a5a48');
+    npc('healer', names[2], town.x0 + 6, town.y1 - 6, '#e8e8f8');
+    npc('teleporter', names[3], cx + 5, cy - 4, '#9a6ad8');
+    npc('guide', names[4], cx - 5, cy + 4, '#5aa0c8');
+    this.spots.center = { x: cx + 0.5, y: cy + 4.5 };
+  }
+
+  // ------------------------------------------------------------ 필드
+  genField() {
+    const d = this.def, rng = this.rng;
+    this.fillBiome(d.biome);
+    const cy = Math.floor(this.h / 2);
+    // 동서를 잇는 구불구불한 큰길
+    const xs = [0, 32, 64, 96, this.w - 1];
+    const ys = xs.map((x, i) => (i === 0 || i === xs.length - 1 ? cy : 28 + Math.floor(rng() * (this.h - 56))));
+    const lastX = d.exits.east ? this.w - 1 : this.w - 8;
+    for (let i = 0; i < xs.length - 1; i++) {
+      this.roadLine(xs[i], ys[i], Math.min(xs[i + 1], lastX), ys[i + 1]);
+    }
+    const roadY = (x) => ys[Math.min(ys.length - 1, Math.round(x / 32))];
+    this.border(this.fillTile, (x, y) => Math.abs(y - cy) <= 1 && ((x < 2 && d.exits.west) || (x >= this.w - 2 && d.exits.east)));
+    this.edgeExits(cy);
+    this.spots.center = { x: 64.5, y: roadY(64) + 0.5 };
+
+    // 던전 입구: 큰길에서 갈라지는 샛길 끝의 동굴
+    d.entrances.forEach((did, j) => {
+      const ex = 80 + j * 14;
+      const ry = roadY(ex);
+      const ey = ry > cy ? 14 : this.h - 16;
+      this.roadLine(ex, ry, ex, ey + 4);
+      this.clearing(ex, ey + 3, 5);
+      this.rect(ex - 4, ey - 3, ex + 4, ey - 1, T.ROCK);
+      this.rect(ex - 1, ey - 1, ex + 1, ey + 1, T.DIRT);
+      const dun = MAPS[`${did}-1`];
+      this.portal('cave', ex + 0.5, ey + 0.5, 3, 2, { map: dun.id, spot: 'up' }, `${dun.name.replace(' 지하 1층', '')} 입구`);
+      this.spots[`entrance:${did}`] = { x: ex + 0.5, y: ey + 4.5 };
+    });
+
+    // 필드 보스 터: 입구 반대쪽 공터
+    const bx = 34, by = roadY(bx) > cy ? 18 : this.h - 20;
+    this.roadLine(bx, roadY(bx), bx, by);
+    this.clearing(bx, by, 6);
+    this.spots.boss = { x: bx + 0.5, y: by + 0.5 };
+
+    // 사냥 구역: 32칸 격자 (출구 근처 10칸은 비워 둠)
+    for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 4; gx++) {
+      const r = { x0: Math.max(10, gx * 32 + 2), y0: gy * 32 + 3, x1: Math.min(this.w - 10, gx * 32 + 30), y1: gy * 32 + 29 };
+      this.zones.push({ id: `z${gy}${gx}`, rect: r, monsters: d.monsters, max: 9 });
+    }
+  }
+
+  // ------------------------------------------------------------ 던전
+  genDungeon() {
+    const d = this.def, rng = this.rng;
+    const pal = PALETTES[d.palette] || PALETTES.cave;
+    this.dark = pal.dark;
+    this.fillTile = pal.wall;
+    this.tiles.fill(pal.wall);
+    const final = d.floorBoss?.final;
+    const rooms = [{ x0: 4, y0: 4, x1: 16, y1: 14 }];
+    if (final) rooms.push({ x0: this.w - 30, y0: this.h - 26, x1: this.w - 5, y1: this.h - 5, boss: true });
+    const overlaps = (a) => rooms.some((b) => a.x0 - 3 <= b.x1 && b.x0 - 3 <= a.x1 && a.y0 - 3 <= b.y1 && b.y0 - 3 <= a.y1);
+    for (let t = 0; t < 300 && rooms.length < 11; t++) {
+      const rw = 9 + Math.floor(rng() * 7), rh = 8 + Math.floor(rng() * 6);
+      const x0 = 3 + Math.floor(rng() * (this.w - rw - 6)), y0 = 3 + Math.floor(rng() * (this.h - rh - 6));
+      const r = { x0, y0, x1: x0 + rw, y1: y0 + rh };
+      if (!overlaps(r)) rooms.push(r);
+    }
+    const center = (r) => ({ x: Math.floor((r.x0 + r.x1) / 2), y: Math.floor((r.y0 + r.y1) / 2) });
+    // 방 바닥 + 장식
+    for (const r of rooms) {
+      this.rect(r.x0, r.y0, r.x1, r.y1, () => pal.floor[Math.floor(rng() * pal.floor.length)]);
+      for (let y = r.y0 + 2; y <= r.y1 - 2; y++) for (let x = r.x0 + 2; x <= r.x1 - 2; x++) {
+        const c = center(r);
+        if (Math.abs(x - c.x) > 2 && Math.abs(y - c.y) > 2 && rng() < 0.03) this.set(x, y, pal.deco);
+      }
+    }
+    // 가까운 방끼리 차례로 통로 연결 (+ 고리 몇 개)
+    const order = [rooms[0]];
+    const left = rooms.slice(1);
+    while (left.length) {
+      const last = center(order[order.length - 1]);
+      left.sort((a, b) => Math.hypot(center(a).x - last.x, center(a).y - last.y) - Math.hypot(center(b).x - last.x, center(b).y - last.y));
+      order.push(left.shift());
+    }
+    const corridor = (a, b) => {
+      const p = center(a), q = center(b);
+      this.rect(p.x - 1, p.y - 1, q.x + 1, p.y + 1, () => pal.floor[0]);
+      this.rect(q.x - 1, p.y - 1, q.x + 1, q.y + 1, () => pal.floor[0]);
+    };
+    for (let i = 1; i < order.length; i++) corridor(order[i - 1], order[i]);
+    for (let i = 0; i + 3 < order.length; i += 3) corridor(order[i], order[i + 3]);
+
+    // 계단
+    const r0 = rooms[0];
+    this.portal('up', r0.x0 + 3.5, r0.y0 + 2, 2, 2, d.up, d.floor === 1 ? '밖으로 나가기' : `지하 ${d.floor - 1}층으로`);
+    this.spots.up = { x: r0.x0 + 3.5, y: r0.y0 + 4.5 };
+    this.spots.center = this.spots.up;
+    const far = rooms.slice(1).sort((a, b) => Math.hypot(center(b).x - 6, center(b).y - 6) - Math.hypot(center(a).x - 6, center(a).y - 6));
+    const last = final ? rooms[1] : far[0];
+    if (d.down) {
+      const c = center(last);
+      this.rect(c.x - 2, c.y - 2, c.x + 2, c.y + 3, pal.floor[0]);
+      this.portal('down', c.x + 0.5, c.y + 0.5, 2, 2, d.down, `지하 ${d.floor + 1}층으로`);
+      this.spots.down = { x: c.x + 0.5, y: c.y + 3 };
+    }
+    // 사냥 구역 = 첫 방을 뺀 모든 방. 층 네임드는 가운데쯤 방, 최종 보스는 보스 방
+    const huntRooms = rooms.slice(1);
+    const named = final ? rooms[1] : far[Math.floor(far.length / 2)];
+    for (const r of huntRooms) {
+      const rect = { x0: r.x0 + 1, y0: r.y0 + 1, x1: r.x1 - 1, y1: r.y1 - 1 };
+      const area = (r.x1 - r.x0) * (r.y1 - r.y0);
+      const zone = { id: `r${this.zones.length}`, rect, monsters: d.monsters, max: Math.max(3, Math.min(8, Math.round(area / 22))) };
+      if (r === named) {
+        const c = center(r);
+        zone.boss = { ...d.floorBoss, rect: { x0: c.x - 1, y0: c.y - 1, x1: c.x + 2, y1: c.y + 2 } };
+        if (final) { zone.max = 4; this.spots.boss = { x: c.x + 0.5, y: c.y + 0.5 }; }
+      }
+      this.zones.push(zone);
+    }
+    this.border(pal.wall);
+  }
+
+  // 도착 지점에서 걸어서 닿지 않는 빈 땅은 막힌 타일로 메움 (갈 수 없는 곳에 몬스터가 생기지 않게)
   sealPockets() {
     const { w, h } = this;
     const seen = new Uint8Array(w * h);
-    const stack = [this.idx(Math.floor(this.spawn.x), Math.floor(this.spawn.y))];
-    seen[stack[0]] = 1;
+    const stack = [];
+    const start = (p) => {
+      if (!p) return;
+      const i = this.idx(Math.floor(p.x), Math.floor(p.y));
+      if (!seen[i]) { seen[i] = 1; stack.push(i); }
+    };
+    start(this.spots.center);
     while (stack.length) {
       const i = stack.pop();
       const x = i % w, y = (i / w) | 0;
@@ -232,20 +365,26 @@ export class World {
         stack.push(j);
       }
     }
+    this.reach = seen;
     let sealed = 0;
     for (let i = 0; i < w * h; i++) {
       if (seen[i] || SOLID.has(this.tiles[i])) continue;
-      this.tiles[i] = FILL[this.biomeAt(i % w, (i / w) | 0)] ?? T.ROCK;
+      this.tiles[i] = this.fillTile ?? T.ROCK;
       sealed++;
     }
     this.sealedTiles = sealed;
   }
 
+  reachable(p) { return !!this.reach?.[this.idx(Math.floor(p.x), Math.floor(p.y))]; }
+
+  portalAt(x, y) {
+    return this.portals.find((p) => x >= p.rect.x0 && x <= p.rect.x1 && y >= p.rect.y0 && y <= p.rect.y1) || null;
+  }
+
   isSolidTile(tx, ty) { return SOLID.has(this.get(tx, ty)); }
 
-  inVillage(x, y) {
-    return x >= VILLAGE.x0 && x < VILLAGE.x1 + 1 && y >= VILLAGE.y0 && y < VILLAGE.y1 + 1;
-  }
+  // 마을 맵은 전체가 안전지대
+  inVillage() { return this.safe; }
 
   // 반지름 r 인 원(사각 근사)이 막혀있는지
   blocked(x, y, r = 0.3, forMonster = false) {
@@ -341,3 +480,13 @@ export class World {
     return null;
   }
 }
+
+// 마을별 NPC 이름: 잡화상, 대장장이, 치유사, 이동술사, 안내원
+const VILLAGE_NPC_NAMES = {
+  v1: ['잡화상 브론', '대장장이 고른', '치유사 엘린', '이동술사 세라', '안내원 토마'],
+  v2: ['잡화상 미나', '대장장이 하겔', '치유사 로웬', '이동술사 키아', '안내원 바르'],
+  v3: ['잡화상 페드로', '대장장이 오스카', '치유사 마리스', '이동술사 니엘', '안내원 해린'],
+  v4: ['잡화상 두란', '대장장이 그라임', '치유사 소냐', '이동술사 베이', '안내원 카르'],
+  v5: ['잡화상 엘사', '대장장이 브욘', '치유사 리브', '이동술사 오린', '안내원 시그'],
+  v6: ['잡화상 아르노', '대장장이 텔론', '치유사 셀레네', '이동술사 이스카', '안내원 노아'],
+};

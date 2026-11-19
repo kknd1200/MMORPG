@@ -2,9 +2,10 @@
 import { CLASSES } from '../data/classes.js';
 import { SKILLS } from '../data/skills.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
-import { MONSTERS, SPAWN_ZONES } from '../data/monsters.js';
+import { MONSTERS } from '../data/monsters.js';
+import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
 import * as S from '../systems/stats.js';
-import { World, VILLAGE, WORLD_VERSION, TILE_SIZE } from './world.js';
+import { World, WORLD_VERSION, TILE_SIZE } from './world.js';
 import { loadSheet, releaseSheet, sheetCellPx } from './sprites.js';
 import { STREAM, planZones, planArt, viewRect, pointInRect } from './zones.js';
 import { Renderer } from './render.js';
@@ -24,6 +25,7 @@ const passive = (def, kind) => def.passive?.find((p) => p.kind === kind)?.value 
 
 export const HOTBAR_KEYS = ['F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'];
 const PICK_RADIUS = 0.75;
+const FIELD_BOSS_ZONE = 'fieldboss';
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export class Game {
@@ -33,12 +35,16 @@ export class Game {
     this.cls = CLASSES[character.classId];
     this.onSave = onSave;
     this.onExit = onExit;
-    this.world = new World();
     this.renderer = new Renderer(canvas);
+    this.worlds = new Map(); // 한 번 만든 맵은 다시 쓰기 (지형만, 몬스터는 들어갈 때마다 새로)
 
-    // 맵이 바뀐 뒤 처음 접속하면 예전 위치 대신 마을에서 시작
-    let start = character.worldVersion === WORLD_VERSION ? character.pos : null;
+    // 맵 구조가 바뀐 뒤 처음 접속하면 예전 위치 대신 시작 마을에서
+    const valid = character.worldVersion === WORLD_VERSION && MAPS[character.mapId];
+    const mapId = valid ? character.mapId : START_MAP;
+    let start = valid ? character.pos : null;
     character.worldVersion = WORLD_VERSION;
+    character.fieldBossKills ??= {};
+    this.world = this.getWorld(mapId);
     if (!start || this.world.blocked(start.x, start.y)) start = { ...this.world.spawn };
     this.player = {
       id: 'player', x: start.x, y: start.y, radius: 0.3, facing: { x: 0, y: 1 },
@@ -69,12 +75,14 @@ export class Game {
     // 심리스 구역 스트리밍: 화면 근처 사냥터만 몬스터 배치 (zones.js)
     this.activeZones = new Set();
     this.artZones = new Set();
-    this.zoneById = new Map(SPAWN_ZONES.map((z) => [z.id, z]));
+    this.tempPortals = [];
+    this.portalReadyAt = 0;
+    this.clockOffset = 0; // 필드 보스 시간 확인용 (테스트에서 시계를 앞당길 때)
 
     this.hud = new Hud(hudRoot, this);
-    this.streamZones();
+    this.enterMap(this.world, start, true);
     this.bindInput();
-    this.log(`${this.char.name}님, ${VILLAGE.name}에 오신 것을 환영합니다!`, 'system');
+    this.log(`${this.char.name}님, ${this.world.def.name}에 오신 것을 환영합니다!`, 'system');
     this.log('좌클릭(누른 채 유지)으로 이동, 몬스터 좌클릭으로 공격합니다. 안내원에게 말을 걸어보세요.', 'system');
   }
 
@@ -108,7 +116,14 @@ export class Game {
 
   save() {
     const p = this.player;
-    this.char.pos = p.dead ? { ...this.world.spawn } : { x: p.x, y: p.y };
+    if (p.dead) {
+      const home = this.getWorld(this.world.def.home);
+      this.char.mapId = home.id;
+      this.char.pos = { ...home.spawn };
+    } else {
+      this.char.mapId = this.world.id;
+      this.char.pos = { x: p.x, y: p.y };
+    }
     this.onSave?.(this.char);
   }
 
@@ -123,6 +138,7 @@ export class Game {
     this.hover = this.pick(w.x, w.y);
 
     this.updatePlayer(dt);
+    this.checkPortal();
     this.tickStatus();
     this.updateMonsters(dt);
     this.updateEffects(dt);
@@ -422,9 +438,9 @@ export class Game {
   streamZones() {
     const { hw, hh } = this.viewHalf();
     const view = this.player;
-    const z = planZones(SPAWN_ZONES, this.activeZones, view, hw, hh);
+    const z = planZones(this.world.zones, this.activeZones, view, hw, hh);
     for (const zone of z.deactivate) this.deactivateZone(zone);
-    const a = planArt(SPAWN_ZONES, this.artZones, view, hw, hh);
+    const a = planArt(this.world.zones, this.artZones, view, hw, hh);
     for (const zone of a.unload) {
       this.artZones.delete(zone.id);
       for (const name of this.zoneSheets(zone).keys()) releaseSheet(name);
@@ -472,14 +488,14 @@ export class Game {
     if (m.dead) return true;
     if (m.state === 'chase' || this.onScreen(m, 2)) return false;
     // 살아 있던 보스/네임드는 다시 들어오면 바로 등장
-    if (m.isBoss) this.bossRespawnAt[m.zone] = 0;
+    if (m.isBoss) this.bossRespawnAt[this.bossKey(m.zone)] = 0;
     return true;
   }
 
   respawnTick() {
     this.monsters = this.monsters.filter((m) => {
       if (m.dead) return this.time - m.deathTime < 0.8;
-      return this.activeZones.has(m.zone) || !this.despawnable(m);
+      return this.activeZones.has(m.zone) || m.zone === FIELD_BOSS_ZONE || !this.despawnable(m);
     });
     const alive = new Map();
     for (const m of this.monsters) {
@@ -490,16 +506,20 @@ export class Game {
       if ((alive.get(id) || 0) < zone.max && Math.random() < 0.5) this.spawnMonster(zone);
       if (zone.boss) this.bossTick(zone);
     }
+    if (this.world.def.fieldBoss) this.fieldBossTick();
   }
+
+  bossKey(zoneId) { return `${this.world.id}:${zoneId}`; }
 
   bossTick(zone) {
     const b = zone.boss;
     const alive = this.monsters.some((m) => m.type === b.type && m.zone === zone.id && !m.dead);
     if (alive) return;
-    const at = this.bossRespawnAt[zone.id] ?? 0; // 첫 등장은 즉시
+    const key = this.bossKey(zone.id);
+    const at = this.bossRespawnAt[key] ?? 0; // 첫 등장은 즉시
     if (this.time < at) return;
     if (this.spawnMonster(zone, true, b.type, b.rect)) {
-      this.bossRespawnAt[zone.id] = Infinity;
+      this.bossRespawnAt[key] = Infinity;
       // 네임드는 조용히, 보스는 처치 후 다시 나타날 때만 알림 (구역에 들어갈 때마다 알리지 않음)
       if (at > 0 && MONSTERS[b.type].rank !== 'guard') this.log(`보스 ${MONSTERS[b.type].name}이(가) ${zone.theme || zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
     }
@@ -703,10 +723,16 @@ export class Game {
     m.deathTime = this.time;
     m.slamTarget = null;
     if (m.isBoss) {
-      const zone = SPAWN_ZONES.find((z) => z.id === m.zone);
-      this.bossRespawnAt ??= {};
-      this.bossRespawnAt[m.zone] = this.time + (zone?.boss?.respawn ?? 120);
-      this.log(`${def.rank === 'guard' ? '네임드' : '보스'} ${def.name}을(를) 쓰러뜨렸습니다!`, 'level');
+      const wd = this.world.def;
+      if (m.zone === FIELD_BOSS_ZONE) {
+        this.char.fieldBossKills[wd.id] = bossWindow(wd.fieldBoss.offset, this.now()).start;
+        this.log(`[필드 보스] ${def.name}을(를) 쓰러뜨렸습니다! 다음 출현: ${formatClock(bossWindow(wd.fieldBoss.offset, this.now()).next)}`, 'level');
+      } else {
+        const zone = this.world.zones.find((z) => z.id === m.zone);
+        this.bossRespawnAt[this.bossKey(m.zone)] = this.time + (zone?.boss?.respawn ?? 120);
+        this.log(`${def.rank === 'guard' ? '네임드' : '보스'} ${def.name}을(를) 쓰러뜨렸습니다!`, 'level');
+        if (zone?.boss?.final) this.openReturnPortal(m);
+      }
       this.effects.push({ type: 'ring', x: m.x, y: m.y, r: 2.5, t: 0, life: 1, color: '#ffd24a' });
     }
     const gold = S.randInt(def.gold[0], def.gold[1]);
@@ -752,10 +778,10 @@ export class Game {
   respawn() {
     const p = this.player;
     p.dead = false;
-    p.x = this.world.spawn.x; p.y = this.world.spawn.y;
     this.char.hp = this.char.maxHp;
     this.char.mp = Math.max(this.char.mp, Math.floor(this.char.maxMp / 2));
-    this.log(`${VILLAGE.name}에서 부활했습니다.`, 'system');
+    this.changeMap(this.world.def.home, 'center', true);
+    this.log(`${this.world.def.name}에서 부활했습니다.`, 'system');
     this.save();
   }
 
@@ -814,12 +840,11 @@ export class Game {
     if (eff.mp) { ch.mp = Math.min(ch.maxMp, ch.mp + eff.mp); this.floatText(this.player, `MP +${eff.mp}`, '#7ab8ff'); }
     if (eff.buff) this.addBuff(eff.buff, it.icon.color);
     if (eff.teleport) {
+      // 가장 가까운 마을로 귀환
+      this.changeMap(this.world.def.home, 'center', true);
       const p = this.player;
-      p.x = this.world.spawn.x; p.y = this.world.spawn.y;
-      p.action = null; p.moveTarget = null;
-      for (const m of this.monsters) if (m.state === 'chase') m.state = 'return';
       this.effects.push({ type: 'ring', x: p.x, y: p.y, r: 1.5, t: 0, life: 0.7, color: '#c9b37a' });
-      this.log(`${VILLAGE.name}(으)로 귀환했습니다.`, 'system');
+      this.log(`${this.world.def.name}(으)로 귀환했습니다.`, 'system');
     }
     this.removeItemAt(idx, 1);
     this.itemReadyAt = this.time + 0.4;
@@ -933,11 +958,118 @@ export class Game {
 
   log(msg, type = 'info') { this.hud?.log(msg, type); }
 
-  zoneName() {
+  zoneName() { return mapTitle(this.world.def); }
+
+  now() { return Date.now() + this.clockOffset; }
+
+  // ------------------------------------------------------------ 맵 이동
+  getWorld(id) {
+    let w = this.worlds.get(id);
+    if (!w) { w = new World(MAPS[id]); this.worlds.set(id, w); }
+    return w;
+  }
+
+  enterMap(world, pos, first = false) {
+    // 이전 맵의 몬스터 · 그림 정리
+    if (!first) {
+      for (const z of this.world.zones) {
+        if (this.artZones.has(z.id)) for (const name of this.zoneSheets(z).keys()) releaseSheet(name);
+      }
+    }
+    this.world = world;
+    this.zoneById = new Map(world.zones.map((z) => [z.id, z]));
+    this.monsters = [];
+    this.effects = [];
+    this.tempPortals = [];
+    this.activeZones.clear();
+    this.artZones.clear();
     const p = this.player;
-    if (this.world.inVillage(p.x, p.y)) return `${VILLAGE.name} (안전지대)`;
-    const z = SPAWN_ZONES.find((zn) => p.x >= zn.rect.x0 && p.x <= zn.rect.x1 && p.y >= zn.rect.y0 && p.y <= zn.rect.y1);
-    return z ? z.name : '마을 주변 들판';
+    p.x = pos.x; p.y = pos.y;
+    p.action = null; p.moveTarget = null;
+    this.clearPath(p);
+    this.mouse.left = false; this.mouse.mode = null;
+    this.camera.x = p.x; this.camera.y = p.y;
+    this.portalReadyAt = this.time + 0.6;
+    this.openNpc = null;
+    this.hud.onMapChange(first);
+    this.streamZones();
+    if (world.def.fieldBoss) this.fieldBossTick(true);
+  }
+
+  changeMap(mapId, spot = 'center', quiet = false) {
+    const w = this.getWorld(mapId);
+    const pos = w.spots[spot] || w.spawn;
+    this.enterMap(w, { ...pos });
+    this.hud.flashMap(this.world.def);
+    if (!quiet) this.log(`${mapTitle(w.def)}에 들어왔습니다.`, 'system');
+    this.save();
+  }
+
+  checkPortal() {
+    const p = this.player;
+    if (p.dead || this.time < this.portalReadyAt) return;
+    const portal = this.world.portalAt(p.x, p.y)
+      || this.tempPortals.find((q) => p.x >= q.rect.x0 && p.x <= q.rect.x1 && p.y >= q.rect.y0 && p.y <= q.rect.y1);
+    if (portal) this.changeMap(portal.to.map, portal.to.spot);
+  }
+
+  // 던전 최종 보스를 잡으면 보스 방에 입구로 돌아가는 포탈이 열림
+  openReturnPortal(m) {
+    const to = this.world.def.exitToEntrance;
+    if (!to) return;
+    const cx = m.x, cy = m.y + 3;
+    this.tempPortals.push({
+      id: 'return', kind: 'return', to, label: '던전 입구로 돌아가기', cx, cy,
+      rect: { x0: cx - 1, y0: cy - 1, x1: cx + 1, y1: cy + 1 },
+    });
+    this.log('보스 방에 입구로 돌아가는 포탈이 열렸습니다.', 'system');
+  }
+
+  // 이동술사: 마을 · 필드는 그 맵으로, 던전은 입구 앞까지
+  teleport(destId) {
+    const npc = this.openNpc;
+    const dest = teleportDestinations().find((d) => d.id === destId);
+    if (!dest || npc?.kind !== 'teleporter') return;
+    if (dest.map === this.world.id && dest.kind === 'village') { this.log('이미 이 마을에 있습니다.', 'warn'); return; }
+    if (this.char.gold < dest.cost) { this.log(`골드가 부족합니다. (${dest.cost} 골드 필요)`, 'warn'); return; }
+    this.char.gold -= dest.cost;
+    this.hud.closePanel('npc');
+    this.changeMap(dest.map, dest.spot, true);
+    this.log(`${dest.cost} 골드를 내고 ${dest.name}(으)로 이동했습니다.`, 'system');
+    this.hud.markDirty('inv', 'char');
+  }
+
+  // ------------------------------------------------------------ 필드 보스 (정해진 시간에만 등장)
+  fieldBossTick(entering = false) {
+    const wd = this.world.def;
+    const fb = wd.fieldBoss;
+    const win = bossWindow(fb.offset, this.now());
+    const alive = this.monsters.find((m) => m.zone === FIELD_BOSS_ZONE && !m.dead);
+    const def = MONSTERS[fb.type];
+    if (win.active && !alive && this.char.fieldBossKills[wd.id] !== win.start) {
+      const spot = this.world.spots.boss;
+      const zone = { id: FIELD_BOSS_ZONE, rect: { x0: spot.x - 2, y0: spot.y - 2, x1: spot.x + 2, y1: spot.y + 2 }, monsters: [] };
+      loadSheet(def.art.sheet, sheetCellPx(def) * (this.renderer.dpr || 1) * 1.1);
+      if (this.spawnMonster(zone, true, fb.type, zone.rect)) {
+        this.log(`[필드 보스] ${def.name}이(가) ${entering ? '출현 중입니다' : '나타났습니다'}! (${formatClock(win.end)}까지)`, 'rare');
+      }
+    } else if (!win.active && alive) {
+      this.monsters = this.monsters.filter((m) => m !== alive);
+      this.log(`[필드 보스] ${def.name}이(가) 사라졌습니다.`, 'system');
+    }
+  }
+
+  fieldBossStatus() {
+    const fb = this.world.def.fieldBoss;
+    if (!fb) return '';
+    const def = MONSTERS[fb.type];
+    const now = this.now();
+    const win = bossWindow(fb.offset, now);
+    if (win.active && this.char.fieldBossKills[this.world.id] !== win.start) {
+      return `필드 보스 ${def.name} 출현 중 (~${formatClock(win.end)})`;
+    }
+    const mins = Math.ceil((win.next - now) / 60000);
+    return `필드 보스 ${def.name}: ${formatClock(win.next)} 출현 (${mins}분 후)`;
   }
 
   // ------------------------------------------------------------ input

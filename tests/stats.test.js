@@ -110,9 +110,9 @@ test('경험치 획득 시 연속 레벨업', () => {
 
 // ---------------------------------------------------------------- 몬스터 데이터
 import fs from 'node:fs';
-import { MONSTERS, SPAWN_ZONES, FIELD_REGIONS } from '../js/data/monsters.js';
+import { MONSTERS } from '../js/data/monsters.js';
+import '../js/data/maps.js'; // 맵에 배치하면서 몬스터가 등록됨
 import { ROSTER } from '../js/data/rebirth-roster.js';
-import { World } from '../js/game/world.js';
 
 test('원본 몬스터 300종: 그림 시트 파일 존재, 시트 안 행 번호 0~5', () => {
   assert.equal(ROSTER.length, 300);
@@ -122,38 +122,14 @@ test('원본 몬스터 300종: 그림 시트 파일 존재, 시트 안 행 번�
   }
 });
 
-test('필드 몬스터 300종 전부: 드롭 아이템 존재, 필수 수치 양수', () => {
-  assert.equal(Object.keys(MONSTERS).length, FIELD_REGIONS.length * 6);
+test('배치된 몬스터 전부: 드롭 아이템 존재, 필수 수치 양수, 레벨 1~99', () => {
+  assert.ok(Object.keys(MONSTERS).length > 300);
   for (const [id, m] of Object.entries(MONSTERS)) {
     for (const k of ['level', 'hp', 'atk', 'exp', 'speed', 'attackRange', 'attackInterval', 'size']) {
       assert.ok(m[k] > 0, `${id}.${k}`);
     }
+    assert.ok(m.level <= 99, `${id} 레벨 ${m.level}`);
     for (const d of m.drops || []) assert.ok(ITEMS[d.item], `${id} 드롭 ${d.item} 없음`);
     if (m.projectile) assert.ok(m.attackRange > 2, `${id}: 원거리인데 사거리가 짧음`);
-  }
-});
-
-test('사냥터 50곳: 가중치 합 1, 일반 5종 + 네임드/보스 1종, 뒤로 갈수록 레벨 상승', () => {
-  assert.equal(SPAWN_ZONES.length, 50);
-  assert.equal(Object.keys(MONSTERS).length, ROSTER.length);
-  let prev = 0;
-  for (const z of SPAWN_ZONES) {
-    const sum = z.monsters.reduce((a, [, w]) => a + w, 0);
-    assert.ok(Math.abs(sum - 1) < 1e-9, `${z.id} 가중치 합 ${sum}`);
-    assert.equal(z.monsters.length, 5, z.id);
-    for (const [t] of z.monsters) assert.equal(MONSTERS[t]?.rank, 'normal', `${z.id}: ${t}`);
-    assert.ok(['guard', 'boss'].includes(MONSTERS[z.boss.type].rank), `${z.id} 네임드`);
-    assert.ok(z.minLevel > prev, `${z.id} 레벨 순서`);
-    prev = z.minLevel;
-  }
-});
-
-test('월드: 모든 사냥터에 자리가 있고 마을에서 걸어서 닿음', () => {
-  const w = new World();
-  for (const z of SPAWN_ZONES) {
-    assert.ok(z.rect, `${z.id} 위치 없음`);
-    const c = w.findOpenTileIn(z.rect);
-    assert.ok(c, `${z.id}: 빈 자리 없음`);
-    assert.ok(w.findPath(w.spawn.x, w.spawn.y, c.x, c.y, 400000), `${z.id}: 길 없음`);
   }
 });

@@ -14,11 +14,16 @@
      ?static 을 붙이면 애니메이션 없이 고정 프레임 (스크린샷용) -->
 <h2>직업 × 8방향 (걷기 / 공격 / 시전)</h2>
 <canvas id="chars"></canvas>
-<h2>사냥터별 몬스터 (?static: 대기 / 애니메이션: 대기 → 공격 → 스킬 반복)</h2>
+<h2>필드 · 던전 층별 몬스터 (?static: 대기 / 애니메이션: 대기 → 공격 → 스킬 반복)</h2>
 <canvas id="mons"></canvas>
 <script type="module">
 import { LOOKS, drawHumanoid, drawMonsterSprite } from '../js/game/sprites.js';
-import { MONSTERS, SPAWN_ZONES } from '../js/data/monsters.js';
+import { MONSTERS } from '../js/data/monsters.js';
+import { MAPS, mapTitle } from '../js/data/maps.js';
+// 몬스터가 나오는 맵 (필드 10 + 던전 49층)
+const AREAS = Object.values(MAPS).filter((m) => m.monsters).map((m) => ({
+  name: mapTitle(m), ids: [...m.monsters.map(([id]) => id), (m.fieldBoss || m.floorBoss).type],
+}));
 import { ITEMS } from '../js/data/items.js';
 import { CLASS_ORDER, CLASSES } from '../js/data/classes.js';
 
@@ -40,7 +45,7 @@ const label = (ctx, x, y, t) => { ctx.font = 'bold 11px "Malgun Gothic"'; ctx.te
 
 const cc = setup(document.getElementById('chars'), 11 * 64 + 20, CLASS_ORDER.length * 80 + 10);
 const ROW_H = 96, COL_W = 120, LABEL_W = 170;
-const mc = setup(document.getElementById('mons'), LABEL_W + 6 * COL_W, SPAWN_ZONES.length * ROW_H + 10);
+const mc = setup(document.getElementById('mons'), LABEL_W + 7 * COL_W, AREAS.length * ROW_H + 10);
 
 function frame(time) {
   const t = STATIC ? 0.5 : time / 1000;
@@ -66,11 +71,11 @@ function frame(time) {
 
   ground(mc, mc.canvas.width / dpr, mc.canvas.height / dpr);
   const cycle = STATIC ? 0 : (t % 3);
-  SPAWN_ZONES.forEach((z, zi) => {
+  AREAS.forEach((z, zi) => {
     const y = zi * ROW_H + 82;
     mc.textAlign = 'left'; mc.font = 'bold 12px "Malgun Gothic"'; mc.fillStyle = '#fff';
     mc.fillText(z.name, 8, y - 30);
-    const ids = [...z.monsters.map(([id]) => id), z.boss.type];
+    const ids = z.ids;
     ids.forEach((id, i) => {
       const def = MONSTERS[id];
       const x = LABEL_W + i * COL_W + COL_W / 2;

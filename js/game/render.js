@@ -1,5 +1,5 @@
 // 캔버스 렌더링 (모든 그래픽은 도형으로 그린 플레이스홀더 — 추후 스프라이트로 교체)
-import { TILE_SIZE as TS, T, VILLAGE } from './world.js';
+import { TILE_SIZE as TS, T } from './world.js';
 import { MONSTERS } from '../data/monsters.js';
 import { ITEMS } from '../data/items.js';
 import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
@@ -67,10 +67,16 @@ export class Renderer {
     }
 
     // 마을 표지
-    ctx.font = `bold 14px ${FONT}`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255,240,200,0.9)';
-    ctx.fillText(`${VILLAGE.name} (초보자의 마을)`, ox + ((VILLAGE.x0 + VILLAGE.x1) / 2 + 0.5) * TS, oy + (VILLAGE.y0 - 0.4) * TS);
+    if (world.town) {
+      const t = world.town;
+      ctx.font = `bold 15px ${FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,240,200,0.95)';
+      ctx.fillText(world.def.name, ox + ((t.x0 + t.x1) / 2 + 0.5) * TS, oy + (t.y0 - 0.4) * TS);
+    }
+
+    // 출구 · 던전 입구 · 계단 · 귀환 포탈
+    for (const q of [...world.portals, ...game.tempPortals]) this.drawPortal(q, ox, oy, game.time);
 
     // 이동 목표 표시
     const p = game.player;
@@ -98,6 +104,63 @@ export class Renderer {
     }
 
     this.drawEffects(game, ox, oy);
+
+    // 던전은 어둡게: 캐릭터 주변만 밝음
+    if (world.dark) {
+      const px = ox + p.x * TS, py = oy + p.y * TS - 12;
+      const g = ctx.createRadialGradient(px, py, TS * 4, px, py, Math.max(this.w, this.h) * 0.6);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, `rgba(0,0,0,${world.dark})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, this.w, this.h);
+    }
+  }
+
+  drawPortal(q, ox, oy, time) {
+    const { ctx } = this;
+    const x0 = ox + q.rect.x0 * TS, y0 = oy + q.rect.y0 * TS;
+    const w = (q.rect.x1 - q.rect.x0) * TS, h = (q.rect.y1 - q.rect.y0) * TS;
+    const cx = ox + q.cx * TS, cy = oy + q.cy * TS;
+    if (cx < -200 || cy < -200 || cx > this.w + 200 || cy > this.h + 200) return;
+    const pulse = 0.5 + 0.5 * Math.sin(time * 3);
+    ctx.save();
+    if (q.kind === 'exit') {
+      const g = ctx.createLinearGradient(x0, 0, x0 + w, 0);
+      g.addColorStop(0, `rgba(110,224,255,${0.15 + pulse * 0.25})`);
+      g.addColorStop(1, `rgba(110,224,255,${0.15 + pulse * 0.25})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(x0, y0, w, h);
+    } else if (q.kind === 'cave') {
+      // 바위 동굴 입구
+      ctx.fillStyle = '#1a1512';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 6, w * 0.55, h * 0.75, 0, Math.PI, 0);
+      ctx.lineTo(cx + w * 0.55, cy + 10);
+      ctx.lineTo(cx - w * 0.55, cy + 10);
+      ctx.fill();
+      ctx.strokeStyle = `rgba(200,122,255,${0.4 + pulse * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (q.kind === 'up' || q.kind === 'down') {
+      // 계단
+      for (let i = 0; i < 4; i++) {
+        const k = q.kind === 'down' ? i : 3 - i;
+        ctx.fillStyle = `rgb(${110 - k * 20},${100 - k * 20},${90 - k * 18})`;
+        ctx.fillRect(x0 + 2, y0 + 2 + i * (h - 4) / 4, w - 4, (h - 4) / 4 - 1);
+      }
+      ctx.strokeStyle = `rgba(200,122,255,${0.4 + pulse * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x0 + 1, y0 + 1, w - 2, h - 2);
+    } else {
+      // 귀환 포탈
+      ctx.strokeStyle = `rgba(255,220,120,${0.5 + pulse * 0.5})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.6, h * 0.35, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = `rgba(255,220,120,${0.15 + pulse * 0.2})`;
+      ctx.fill();
+    }
+    ctx.restore();
+    nameTag(ctx, cx, y0 - 6, q.label, q.kind === 'exit' ? '#9eeaff' : '#e0b8ff');
   }
 
   drawShadow(sx, sy, r) {
