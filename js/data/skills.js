@@ -21,11 +21,11 @@ export const SKILLS = {
     desc: '무기에 힘을 실어 강하게 내려칩니다.',
   },
   battle_cry: {
-    id: 'battle_cry', classId: 'knight', name: '투지', level: 5,
+    id: 'battle_cry', classId: 'knight', name: '투지', level: 5, party: true,
     kind: 'buff', buff: { id: 'battle_cry', name: '투지', atk: 3, duration: 30, icon: 'roar' },
     mp: 8, cooldown: 40, color: '#ff8a4a',
     fx: { sheet: 'knight_a5', at: 'self', scale: 1.5, z: 30 },
-    desc: '30초 동안 일반공격력 +3.',
+    desc: '파티 전원 30초 동안 일반공격력 +3.',
   },
   iron_wall: {
     id: 'iron_wall', classId: 'knight', name: '강철 방벽', level: 10,
@@ -121,11 +121,11 @@ export const SKILLS = {
     desc: '얼음 화살로 4초 동안 대상을 느리게 합니다.',
   },
   forest_blessing: {
-    id: 'forest_blessing', classId: 'elf', name: '숲의 축복', level: 50,
+    id: 'forest_blessing', classId: 'elf', name: '숲의 축복', level: 50, party: true,
     kind: 'buff', buff: { id: 'forest_blessing', name: '숲의 축복', atk: 4, def: 3, duration: 60, icon: 'seed' },
     mp: 25, cooldown: 90, color: '#6affb0',
     fx: { sheet: 'archer_a8', at: 'self', scale: 1.6, z: 34 },
-    desc: '60초 동안 일반공격력 +4, 방어력 +3.',
+    desc: '파티 전원 60초 동안 일반공격력 +4, 방어력 +3.',
   },
 
   // ---------------------------------------------------------------- 마법사 (지능)
@@ -199,14 +199,14 @@ export const SKILLS = {
     kind: 'heal', healIntCoef: 1.2, healPerLevel: 2,
     mp: 6, cooldown: 3, color: '#8cffb0',
     fx: { sheet: 'priest_a5', at: 'self', scale: 1.5, z: 6 },
-    desc: 'HP를 회복합니다. (지능 × 1.2 + 레벨 × 2)',
+    desc: 'HP가 가장 낮은 파티원을 회복합니다. (지능 × 1.2 + 레벨 × 2)',
   },
   blessing: {
-    id: 'blessing', classId: 'priest', name: '축복', level: 5,
+    id: 'blessing', classId: 'priest', name: '축복', level: 5, party: true,
     kind: 'buff', buff: { id: 'blessing', name: '축복', atk: 2, def: 2, duration: 60, icon: 'scroll' },
     mp: 10, cooldown: 60, color: '#ffe680',
     fx: { sheet: 'priest_a8', at: 'self', scale: 1.6, z: 30 },
-    desc: '60초 동안 일반공격력 +2, 방어력 +2.',
+    desc: '파티 전원 60초 동안 일반공격력 +2, 방어력 +2.',
   },
   holy_bolt: {
     id: 'holy_bolt', classId: 'priest', name: '성스러운 화살', level: 15,
@@ -243,6 +243,64 @@ export const SKILLS = {
     fx: { sheet: 'priest_a7', at: 'target', scale: 2.2, z: 20 },
     desc: '빛의 창이 쏟아져 대상 주변 2.8칸을 꿰뚫습니다.',
   },
+
+  // ---------------------------------------------------------------- 전사 (힘, 용병)
+  ground_smash: {
+    id: 'ground_smash', classId: 'warrior', name: '대지 강타', level: 1,
+    kind: 'damage', element: 'physical', stat: 'str', coef: 0.16,
+    mp: 3, cooldown: 2, range: null, color: '#ffc86a',
+    fx: { sheet: 'warrior_a1', at: 'target', scale: 1.2, z: 14 },
+    desc: '도끼로 땅째 내려찍습니다.',
+  },
+  crush: {
+    id: 'crush', classId: 'warrior', name: '분쇄', level: 5,
+    kind: 'damage', element: 'physical', stat: 'str', coef: 0.22,
+    mp: 5, cooldown: 4, range: null, color: '#ffd86a',
+    fx: { sheet: 'warrior_a2', at: 'target', scale: 1.3, z: 24 },
+    desc: '온 힘을 실어 대상을 분쇄합니다.',
+  },
+  rend: {
+    id: 'rend', classId: 'warrior', name: '찢어발기기', level: 10,
+    kind: 'damage', element: 'physical', stat: 'str', coef: 0.14, dot: 0.05, dotTime: 5,
+    mp: 6, cooldown: 5, range: null, color: '#ff5a5a',
+    fx: { sheet: 'warrior_a3', at: 'target', scale: 1.2, z: 26 },
+    desc: '상처를 찢어 5초 동안 출혈 피해를 줍니다.',
+  },
+  berserk: {
+    id: 'berserk', classId: 'warrior', name: '광폭화', level: 15,
+    kind: 'buff', buff: { id: 'berserk', name: '광폭화', atk: 5, duration: 30, icon: 'roar' },
+    mp: 8, cooldown: 45, color: '#ff8a3a',
+    fx: { sheet: 'warrior_a4', at: 'self', scale: 1.4, z: 30 },
+    desc: '30초 동안 일반공격력 +5.',
+  },
+  war_banner: {
+    id: 'war_banner', classId: 'warrior', name: '전투 깃발', level: 20, party: true,
+    kind: 'buff', buff: { id: 'war_banner', name: '전투 깃발', atk: 3, def: 2, duration: 60, icon: 'roar' },
+    mp: 12, cooldown: 90, color: '#ffd84a',
+    fx: { sheet: 'warrior_a5', at: 'self', scale: 1.5, z: 30 },
+    desc: '파티 전원 60초 동안 일반공격력 +3, 방어력 +2.',
+  },
+  venom_axe: {
+    id: 'venom_axe', classId: 'warrior', name: '독도끼', level: 30,
+    kind: 'aoe_target', element: 'physical', stat: 'str', coef: 0.18, radius: 2, dot: 0.03, dotTime: 5,
+    mp: 14, cooldown: 8, range: null, color: '#8aff5a',
+    fx: { sheet: 'warrior_a6', at: 'target', scale: 1.8, z: 18 },
+    desc: '독을 머금은 도끼로 대상 주변 2칸을 휩씁니다.',
+  },
+  spin_cleave: {
+    id: 'spin_cleave', classId: 'warrior', name: '회전 베기', level: 40,
+    kind: 'aoe', element: 'physical', stat: 'str', coef: 0.2, radius: 2.5,
+    mp: 16, cooldown: 7, color: '#ffe8a0',
+    fx: { sheet: 'warrior_a7', at: 'self', scale: 2.2, z: 12 },
+    desc: '도끼를 휘돌려 주변 2.5칸의 적을 벱니다.',
+  },
+  quake: {
+    id: 'quake', classId: 'warrior', name: '대지 진동', level: 50,
+    kind: 'aoe_target', element: 'physical', stat: 'str', coef: 0.45, radius: 3,
+    mp: 28, cooldown: 14, range: null, color: '#ffc86a',
+    fx: { sheet: 'warrior_a8', at: 'target', scale: 2.4, z: 20 },
+    desc: '땅을 뒤흔들어 대상 주변 3칸을 무너뜨립니다.',
+  },
 };
 
 // 기본 공격 · 상태이상 · 레벨업 이펙트
@@ -251,6 +309,7 @@ export const BASIC_FX = {
   elf: { sheet: 'archer_basic', scale: 0.9, z: 24, proj: 'flight_arrow_steel' },
   mage: { sheet: 'mage_basic', scale: 0.8, z: 26 },
   priest: { sheet: 'priest_basic', scale: 0.85, z: 26 },
+  warrior: { sheet: 'warrior_basic', scale: 0.95, z: 22 },
 };
 
 export const STATUS_FX = {

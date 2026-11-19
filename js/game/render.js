@@ -149,7 +149,7 @@ export class Renderer {
       list.push({ d: cx + cy, s, x: sx, y: sy });
     }
     for (const q of portals) if (q.kind === 'cave') list.push({ d: q.cx + q.cy - 0.6, cave: q });
-    for (const e of [...world.npcs, ...game.monsters, p]) {
+    for (const e of [...world.npcs, ...game.monsters, ...game.party.map((u) => u.ent), p]) {
       const sx = this.px(e.x, e.y), sy = this.py(e.x, e.y);
       if (sx < -120 || sy < -40 || sx > this.w + 120 || sy > this.h + 160) continue;
       list.push({ d: e.x + e.y, e, x: sx, y: sy });
@@ -171,6 +171,7 @@ export class Renderer {
       else if (it.cave) this.drawCave(it.cave, t);
       else if (it.e === p) this.drawPlayer(game, it.x, it.y);
       else if (it.e.isNpc) this.drawNpc(it.e, it.x, it.y, hoverId === it.e.id, t);
+      else if (it.e.isMerc) this.drawMerc(game, it.e.unit, it.x, it.y);
       else this.drawMonster(it.e, it.x, it.y, targetId === it.e.id, hoverId === it.e.id, t);
     }
 
@@ -306,6 +307,26 @@ export class Renderer {
       time: game.time,
     });
     if (!ghost) nameTag(ctx, sx, sy - 74, ch.name, '#ffffff');
+  }
+
+  // 용병: 도트 캐릭터 + 초록 이름표 + 작은 HP 바
+  drawMerc(game, u, sx, sy) {
+    const { ctx } = this;
+    const e = u.ent, ch = u.char;
+    this.drawShadow(sx, sy, 13);
+    const hurtT = game.time - e.lastHurt;
+    drawHumanoid(ctx, sx, sy, {
+      look: LOOKS[ch.classId] || LOOKS.knight,
+      sprite: game.spriteOf(u),
+      facing: screenDir(e.facing), walk: e.walkPhase, moving: e.moving,
+      attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / 0.4,
+      hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
+    });
+    if (e.dead) return;
+    const top = sy - 74;
+    nameTag(ctx, sx, top, ch.name, game.selectedId === u.id ? '#ffe680' : '#9effa0');
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(sx - 15, top + 3, 30, 4);
+    ctx.fillStyle = '#4ad04a'; ctx.fillRect(sx - 14, top + 4, 28 * Math.max(0, ch.hp / ch.maxHp), 2);
   }
 
   drawNpc(n, sx, sy, hovered, time) {

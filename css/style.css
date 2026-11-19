@@ -216,3 +216,40 @@ img.icon.img { padding: 0; background: #0c0d0a; object-fit: cover; image-renderi
 img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1a1714; }
 .gender-pick { display: flex; gap: 6px; margin: 10px 0 4px; }
 .gender-pick button.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
+
+/* 파티 */
+.hud-party { position: absolute; left: 12px; top: 150px; display: flex; flex-direction: column; gap: 4px; width: 230px; }
+.pframe { display: flex; gap: 6px; align-items: center; padding: 4px; background: rgba(15,13,10,0.78); border: 1px solid var(--panel-border); border-radius: 5px; cursor: pointer; }
+.pframe.selected, .hud-portrait.selected { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.pframe.dead { opacity: 0.5; filter: grayscale(1); }
+.pframe img { width: 36px; height: 36px; image-rendering: pixelated; border-radius: 3px; background: #1a1714; }
+.pinfo { flex: 1; min-width: 0; }
+.pname { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbar { height: 5px; background: #1a1714; border-radius: 2px; margin-top: 2px; overflow: hidden; }
+.pbar i { display: block; height: 100%; }
+.pbar.hp i { background: #d0463c; } .pbar.mp i { background: #3f74d8; }
+.hud-portrait { cursor: pointer; }
+.auto-btn.on { background: #3e5a22; border-color: #8acf5a; color: #e8ffd8; font-weight: bold; }
+.panel[data-panel="party"] { left: 250px; top: 120px; width: 470px; }
+.ptabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.ptab { display: flex; align-items: center; gap: 4px; padding: 3px 8px 3px 3px; }
+.ptab img { width: 26px; height: 26px; image-rendering: pixelated; }
+.ptab.selected { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.pdetail { display: flex; gap: 10px; align-items: center; line-height: 1.7; }
+.pdetail button { padding: 2px 8px; font-size: 12px; }
+.pslots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.pslot { position: relative; display: flex; gap: 6px; align-items: center; padding: 6px; background: #1b1914; border: 1px solid #3a3226; border-radius: 4px; cursor: grab; min-height: 54px; }
+.pslot.empty { border-style: dashed; color: var(--muted); }
+.pslot .num { position: absolute; left: 3px; top: 1px; font-size: 10px; color: var(--gold); }
+.pslot img.icon.img, .pslot .icon { width: 38px; height: 38px; }
+.icon.blank { background: #12100c; border: 1px dashed #3a3226; }
+.pslot-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pslot select { font-size: 11px; background: #12100c; color: var(--text); border: 1px solid var(--panel-border); border-radius: 3px; }
+.pskills { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.pskill { display: flex; gap: 4px; align-items: center; padding: 3px; background: #1b1914; border: 1px solid #3a3226; border-radius: 4px; cursor: grab; font-size: 11px; }
+.pskill.locked { opacity: 0.4; cursor: default; }
+.pskill img.icon.img { width: 30px; height: 30px; }
+.merc-row { display: grid; grid-template-columns: 52px 1fr auto auto; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(107,90,58,0.35); }
+.merc-row .portrait { width: 48px; height: 48px; }
+.merc-row .price { color: var(--gold); }
+.equip-who { margin: 4px 0; font-size: 12px; }

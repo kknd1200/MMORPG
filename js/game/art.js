@@ -40,7 +40,7 @@ export function heroFrames(key) {
 export const portrait = (key) => `portraits/${key}.webp`;
 
 // NPC 그림 (플레이어 직업이 아닌 「환생 루프」 캐릭터)
-export const NPC_SPRITES = { merchant: 'novice', smith: 'warrior', healer: 'priest_female', guide: 'archer_male', teleporter: 'mage_male' };
+export const NPC_SPRITES = { merchant: 'novice', smith: 'warrior', healer: 'priest_female', guide: 'archer_male', teleporter: 'mage_male', mercenary: 'paladin' };
 
 // ---------------------------------------------------------------- 스킬 이펙트
 export const FX = { cell: 96, cols: 4, frames: 16 };

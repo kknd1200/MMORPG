@@ -8,6 +8,7 @@ import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestina
 import { MONSTERS } from '../data/monsters.js';
 import { url as artUrl, fxIcon, statusIcon, portrait } from './art.js';
 import { heroKey } from '../data/classes.js';
+import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, learnedSkills } from '../systems/party.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -53,6 +54,7 @@ export class Hud {
         <div class="bar exp"><div class="fill"></div><span></span></div>
         <div class="hud-buffs"></div>
       </div>
+      <div class="hud-party"></div>
       <div class="hud-topright">
         <div class="hud-zone"></div>
         <div class="hud-boss"></div>
@@ -64,6 +66,8 @@ export class Hud {
         <div class="hud-hint">휠: 칸 선택 · 휠 클릭: 사용 · F5~F12: 바로 사용 · 드래그로 등록 · 우클릭: 비우기</div>
       </div>
       <div class="hud-buttons">
+        <button class="auto-btn" data-auto>자동사냥: 끔</button>
+        <button data-toggle="party">파티 (P)</button>
         <button data-toggle="char">캐릭터 (C)</button>
         <button data-toggle="inv">인벤토리 (I)</button>
         <button data-toggle="skills">스킬 (K)</button>
@@ -71,6 +75,7 @@ export class Hud {
       </div>
       <section class="panel" data-panel="char"><header><span>캐릭터 정보</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel" data-panel="inv"><header><span>인벤토리</span><button class="close">×</button></header><div class="body"></div></section>
+      <section class="panel" data-panel="party"><header><span>파티 · 스킬 배치</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel" data-panel="skills"><header><span>스킬</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel" data-panel="npc"><header><span class="npc-title"></span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel small" data-panel="menu"><header><span>메뉴</span><button class="close">×</button></header>
@@ -88,6 +93,8 @@ export class Hud {
     this.el = {
       name: r.querySelector('.hud-name'),
       portrait: r.querySelector('.hud-portrait'),
+      party: r.querySelector('.hud-party'),
+      autoBtn: r.querySelector('[data-auto]'),
       hp: r.querySelector('.bar.hp'),
       mp: r.querySelector('.bar.mp'),
       exp: r.querySelector('.bar.exp'),
@@ -164,6 +171,11 @@ export class Hud {
     this.el.boss.textContent = bossText;
     this.el.boss.style.display = bossText ? '' : 'none';
 
+    this.renderPartyFrames();
+    this.el.autoBtn.textContent = { manual: '자동사냥: 끔', normal: '자동사냥: 일반공격', skill: '자동사냥: 스킬 사용' }[g.autoMode];
+    this.el.autoBtn.classList.toggle('on', g.autoMode !== 'manual');
+    this.el.portrait.classList.toggle('selected', g.selectedId === 'player');
+
     this.updateHotbarCooldowns();
     this.drawMinimap();
 
@@ -173,7 +185,7 @@ export class Hud {
 
     if (!this.dragging) {
       if (this.dirty.has('hotbar')) this.renderHotbar();
-      for (const name of ['char', 'inv', 'skills', 'npc']) {
+      for (const name of ['char', 'inv', 'skills', 'npc', 'party']) {
         if (this.dirty.has(name) && this.open.has(name)) this.renderPanel(name);
       }
       this.dirty.clear();
@@ -389,7 +401,7 @@ export class Hud {
   }
 
   escape() {
-    const order = ['npc', 'skills', 'inv', 'char'];
+    const order = ['npc', 'party', 'skills', 'inv', 'char'];
     const top = order.find((n) => this.open.has(n));
     if (top) this.closePanel(top);
     else this.togglePanel('menu');
@@ -401,6 +413,12 @@ export class Hud {
     else if (action === 'save') { g.save(); this.log('저장되었습니다.', 'system'); this.closePanel('menu'); }
     else if (action === 'select') g.exit('select');
     else if (action === 'logout') g.exit('logout');
+  }
+
+  selectUnit(id) {
+    this.game.selectedId = id;
+    this.markDirty('party', 'char', 'inv');
+    this.lastPartyHtml = null;
   }
 
   openNpc(npc) {
@@ -416,11 +434,81 @@ export class Hud {
     else if (name === 'inv') body.innerHTML = this.invHtml();
     else if (name === 'skills') body.innerHTML = this.skillsHtml();
     else if (name === 'npc') body.innerHTML = this.npcHtml();
+    else if (name === 'party') body.innerHTML = this.partyHtml();
+  }
+
+  // ------------------------------------------------------------ 파티
+  renderPartyFrames() {
+    const g = this.game;
+    const html = g.party.map((u) => {
+      const ch = u.char, cls = CLASSES[ch.classId];
+      return `<div class="pframe ${g.selectedId === u.id ? 'selected' : ''} ${u.ent.dead ? 'dead' : ''}" data-sel="${u.id}" title="클릭: 선택 · 파티 창">
+        <img src="${artUrl(portrait(g.spriteOf(u)))}" alt="">
+        <div class="pinfo"><div class="pname"><b>Lv.${ch.level}</b> ${esc(ch.name)} <span style="color:${cls.color}">${cls.name}</span></div>
+          <div class="pbar hp"><i style="width:${Math.max(0, ch.hp / ch.maxHp) * 100}%"></i></div>
+          <div class="pbar mp"><i style="width:${Math.max(0, ch.mp / ch.maxMp) * 100}%"></i></div></div>
+      </div>`;
+    }).join('');
+    if (html !== this.lastPartyHtml) { this.el.party.innerHTML = html; this.lastPartyHtml = html; }
+  }
+
+  partyHtml() {
+    const g = this.game, u = g.selUnit(), ch = u.char, cls = CLASSES[ch.classId];
+    const tabs = g.units().map((x) => `<button class="ptab ${x === u ? 'selected' : ''}" data-sel="${x.id}">
+      <img src="${artUrl(portrait(g.spriteOf(x)))}" alt="">${esc(x.char.name)}${x.isLeader ? ' ★' : ''}</button>`).join('');
+    const learned = new Set(learnedSkills(ch));
+    const slots = [];
+    for (let i = 0; i < SKILL_SLOTS; i++) {
+      const sl = ch.skillSlots?.[i];
+      const sk = sl && SKILLS[sl.id];
+      slots.push(`<div class="pslot ${sk ? '' : 'empty'}" data-pslot="${i}" ${sk ? `draggable="true" data-drag='${JSON.stringify({ type: 'pslot', from: i })}'` : ''} title="${sk ? '끌어서 순서 바꾸기 · 우클릭: 비우기' : '아래 스킬을 끌어다 놓으세요'}">
+        <span class="num">${i + 1}</span>${sk ? skillIcon(sk) : '<span class="icon blank"></span>'}
+        <div class="pslot-info"><b>${sk ? esc(sk.name) : '비어 있음'}</b>
+        ${sk ? `<select data-slotcond="${i}">${Object.entries(CONDITIONS).map(([k, v]) => `<option value="${k}" ${sl.cond === k ? 'selected' : ''}>${v}</option>`).join('')}</select>` : ''}</div>
+      </div>`);
+    }
+    const list = [...cls.skills].sort((a, b) => SKILLS[a].level - SKILLS[b].level).map((id) => {
+      const sk = SKILLS[id], ok = learned.has(id);
+      return `<div class="pskill ${ok ? '' : 'locked'}" ${ok ? `draggable="true" data-drag='${JSON.stringify({ type: 'pskill', id })}'` : ''} title="${esc(sk.name)} (Lv.${sk.level} · MP ${sk.mp} · ${sk.cooldown}초)\n${esc(sk.desc)}">
+        ${skillIcon(sk)}<small>${esc(sk.name)}<br>Lv.${sk.level}</small></div>`;
+    }).join('');
+    const d = g.derived(u);
+    return `<div class="ptabs">${tabs}</div>
+      <div class="pdetail">
+        <img class="portrait" src="${artUrl(portrait(g.spriteOf(u)))}" alt="">
+        <div><b>${esc(ch.name)}</b> <span style="color:${cls.color}">${cls.name}</span> · Lv.${ch.level} ${u.isLeader ? '<small>(대표 캐릭터)</small>' : '<small>(용병)</small>'}<br>
+          HP ${Math.ceil(ch.hp)} / ${ch.maxHp} · MP ${Math.floor(ch.mp)} / ${ch.maxMp} · 공격 ${d.attack} · 방어 ${d.defense}<br>
+          <button data-open="char">캐릭터 정보</button> <button data-open="inv">장비 바꾸기</button>
+          ${u.isLeader ? '' : `<button class="danger" data-dismiss="${u.id}">내보내기</button>`}</div>
+      </div>
+      <h4>스킬 칸 <small>앞 칸부터, 조건이 맞고 재사용이 끝난 스킬을 자동으로 씁니다</small></h4>
+      <div class="pslots">${slots.join('')}</div>
+      <h4>스킬 <small>끌어서 위 칸에 놓기</small></h4>
+      <div class="pskills">${list}</div>
+      <small class="hint">자동사냥 '일반공격'일 때는 스킬을 쓰지 않습니다. 파티 버프(투지 · 축복 · 숲의 축복 · 전투 깃발)는 파티 전원에게 걸리고, 치유는 HP가 가장 낮은 파티원에게 갑니다.</small>`;
+  }
+
+  mercHtml() {
+    const g = this.game;
+    const offers = g.mercOffers();
+    const full = g.party.length >= MAX_MERCS;
+    const rows = offers.map((o) => {
+      const cls = CLASSES[o.classId];
+      return `<div class="merc-row">
+        <img class="portrait" src="${artUrl(portrait(o.look))}" alt="">
+        <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small></div>
+        <span class="price">${o.price.toLocaleString()}G</span>
+        <button data-hire="${o.offerId}" ${full || g.char.gold < o.price ? 'disabled' : ''}>고용</button>
+      </div>`;
+    }).join('') || '<p>지금은 고용할 용병이 없습니다. 잠시 뒤 다시 오세요.</p>';
+    return `<p>함께 싸울 용병을 찾나? 실력은 내가 보증하지. (파티 ${g.party.length} / ${MAX_MERCS}명)</p>
+      <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>${rows}
+      <small class="hint">용병 목록은 1시간마다 바뀝니다. 고용한 용병은 따로 레벨업하며, 성장 주사위에 따라 축캐 · 저주캐가 될 수 있습니다.</small>`;
   }
 
   charHtml() {
-    const g = this.game, ch = g.char, cls = CLASSES[ch.classId];
-    const d = g.derived();
+    const g = this.game, su = g.selUnit(), ch = su.char, cls = CLASSES[ch.classId];
+    const d = g.derived(su);
     const grade = S.luckGrade(ch);
     const sign = (v) => (v >= 0 ? `+${Math.round(v)}` : `${Math.round(v)}`);
     const stats = STAT_KEYS.map((k) => `
@@ -435,7 +523,7 @@ export class Hud {
     return `
       <div class="char-head">
         <div><b>${esc(ch.name)}</b> <span style="color:${cls.color}">${cls.name}</span> · Lv.${ch.level}</div>
-        <div class="gold">골드 ${ch.gold.toLocaleString()}</div>
+        <div class="gold">${su.isLeader ? `골드 ${g.char.gold.toLocaleString()}` : '용병'}</div>
       </div>
       <div class="grade-box g-${grade.id}">
         <div class="grade-title">${grade.label}</div>
@@ -461,10 +549,10 @@ export class Hud {
   }
 
   invHtml() {
-    const g = this.game, ch = g.char;
+    const g = this.game, ch = g.char, su = g.selUnit();
     const shopOpen = !!(this.game.openNpc && SHOPS[this.game.openNpc.kind]);
     const eq = (slot, label) => {
-      const id = ch.equipment[slot];
+      const id = su.char.equipment[slot];
       return `<div class="equip-slot">${label}: ${id ? `${itemIcon(id)} ${esc(ITEMS[id].name)} <button data-unequip="${slot}">해제</button>` : '<i>없음</i>'}</div>`;
     };
     const cells = [];
@@ -472,7 +560,7 @@ export class Hud {
       const e = ch.inventory[i];
       if (!e) { cells.push('<div class="cell empty"></div>'); continue; }
       const it = ITEMS[e.id];
-      const usable = it.type === 'consumable' || canEquip(e.id, ch.classId);
+      const usable = it.type === 'consumable' || canEquip(e.id, su.char.classId);
       const tip = `${it.name}\n${it.desc}${it.type !== 'consumable' && !usable ? '\n(장착 불가)' : ''}\n더블클릭: ${it.type === 'consumable' ? '사용' : '장착'}${shopOpen ? `\n판매가 ${sellPrice(e.id)} 골드` : ''}`;
       cells.push(`<div class="cell ${usable ? '' : 'nouse'}" draggable="true" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}' title="${esc(tip)}">
         ${itemIcon(e.id)}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
@@ -480,6 +568,7 @@ export class Hud {
     }
     return `
       <div class="gold">골드 ${ch.gold.toLocaleString()}</div>
+      <div class="equip-who">장비: <b>${esc(su.char.name)}</b> <small>(${CLASSES[su.char.classId].name} · 파티 창에서 다른 파티원 선택)</small></div>
       ${eq('weapon', '무기')}${eq('armor', '갑옷')}
       <div class="grid">${cells.join('')}</div>
       <small class="hint">더블클릭: 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 상점에 판매' : ''}</small>`;
@@ -530,12 +619,16 @@ export class Hud {
           <li><b>보너스 포인트</b>: 10레벨마다 1점, 50레벨 이후엔 레벨업마다 1점을 받아요.</li>
           <li><b>이 마을 출구</b>: ${exitsText(def)}</li>
           <li><b>이동술사</b>: 골드를 내면 다른 마을 · 필드, 던전 입구까지 데려다줘요.</li>
+          <li><b>파티</b>: 용병단장에게 골드를 내고 용병을 최대 3명 고용할 수 있어요. 파티원은 나를 따라다니며 근처 적과 알아서 싸워요. 몬스터를 클릭하면 모두 그 대상을 집중 공격해요.</li>
+          <li><b>스킬 배치</b>: 파티 창(P)에서 파티원마다 스킬 칸 4개에 스킬을 넣고 순서와 조건을 정해요. 앞 칸부터 자동으로 써요.</li>
+          <li><b>자동사냥</b>: 오른쪽 아래 버튼(A)으로 끔 → 일반공격만 → 스킬까지 사용 순서로 바뀌어요. 켜면 파티가 스스로 적을 찾아다녀요.</li>
           <li><b>던전</b>: 7곳, 각각 지하 7층까지 있고 마지막 층에 보스가 있어요. 입구는 필드 안의 동굴이에요.</li>
           <li><b>필드 보스</b>: 필드마다 정해진 시각에만 나타나서 ${BOSS_SCHEDULE.stay}분 동안 머물러요. 이동술사에게 시간표가 있어요.</li>
           <li>마을은 안전지대라 몬스터가 들어오지 못해요.</li>
         </ul>`;
     }
     if (npc.kind === 'teleporter') return this.teleporterHtml();
+    if (npc.kind === 'mercenary') return this.mercHtml();
     const shop = SHOPS[npc.kind];
     if (!shop) return '';
     const rows = shop.map((id) => {
@@ -595,6 +688,37 @@ export class Hud {
       else if (t.dataset.buy) g.buy(t.dataset.buy, Number(t.dataset.qty));
       else if (t.dataset.npc === 'heal') g.healAtHealer();
       else if (t.dataset.tp) g.teleport(t.dataset.tp);
+      else if (t.dataset.hire) g.hireMerc(t.dataset.hire);
+      else if (t.dataset.dismiss) { if (confirm('이 용병을 파티에서 내보낼까요? (장비는 인벤토리로 돌아옵니다)')) g.dismissMerc(t.dataset.dismiss); }
+      else if (t.dataset.sel) this.selectUnit(t.dataset.sel);
+      else if (t.dataset.open) this.openPanel(t.dataset.open);
+      else if (t.hasAttribute('data-auto')) g.cycleAutoMode();
+    });
+    this.root.addEventListener('click', (e) => {
+      const f = e.target.closest('.pframe[data-sel]');
+      if (f) { this.selectUnit(f.dataset.sel); if (!this.open.has('party')) this.openPanel('party'); }
+      if (e.target.closest('.hud-portrait')) this.selectUnit('player');
+    });
+    this.root.addEventListener('change', (e) => {
+      const sel = e.target.closest('select[data-slotcond]');
+      if (sel) g.setSlotCond(g.selectedId, Number(sel.dataset.slotcond), sel.value);
+    });
+    // 파티 스킬 칸: 끌어다 놓기 / 순서 바꾸기 / 우클릭 비우기
+    this.root.addEventListener('dragover', (e) => { if (e.target.closest('.pslot')) e.preventDefault(); });
+    this.root.addEventListener('drop', (e) => {
+      const slot = e.target.closest('.pslot');
+      if (!slot) return;
+      e.preventDefault();
+      this.dragging = false;
+      let data;
+      try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+      const i = Number(slot.dataset.pslot);
+      if (data.type === 'pslot') g.swapSkillSlot(g.selectedId, data.from, i);
+      else if (data.type === 'pskill' || data.type === 'skill') g.setSkillSlot(g.selectedId, i, { id: data.id });
+    });
+    this.root.addEventListener('contextmenu', (e) => {
+      const slot = e.target.closest('.pslot');
+      if (slot) { e.preventDefault(); g.setSkillSlot(g.selectedId, Number(slot.dataset.pslot), null); }
     });
     this.root.addEventListener('dblclick', (e) => {
       const cell = e.target.closest('[data-inv]');

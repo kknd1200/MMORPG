@@ -89,6 +89,27 @@ export const CLASSES = {
     startEquipment: { weapon: 'training_mace', armor: 'cloth_armor' },
     color: '#d8b43c',
   },
+  // 용병 전용 직업 (캐릭터 생성에는 없음)
+  warrior: {
+    id: 'warrior',
+    name: '전사',
+    role: '근접 광전사 (용병)',
+    description: '거대한 도끼를 휘두르는 용병 전사. HP 성장이 높고 공격력이 강합니다.',
+    primaryStat: 'str',
+    attackType: 'melee',
+    attackRange: 1.3,
+    attackInterval: 1.05,
+    projectile: null,
+    baseAttack: 11,
+    baseStats: { str: 15, dex: 8, int: 7, con: 13 },
+    start: { hp: 45, mp: 15 },
+    growth: { hp: [9, 13], mp: [2, 4] },
+    skills: ['ground_smash', 'crush', 'rend', 'berserk', 'war_banner', 'venom_axe', 'spin_cleave', 'quake'],
+    sprites: { m: 'warrior', f: 'warrior_female' }, defaultGender: 'm', fx: 'warrior',
+    startEquipment: { weapon: 'training_axe', armor: 'cloth_armor' },
+    color: '#c8642c',
+    hireOnly: true,
+  },
 };
 
 // 캐릭터 생성 화면에 표시되는 순서

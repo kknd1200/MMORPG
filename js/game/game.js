@@ -3,6 +3,7 @@ import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
 import { preload, heroFrames, fxSheet, fxIcon, statusIcon, NPC_SPRITES } from './art.js';
 import { heroKey } from '../data/classes.js';
+import { MAX_MERCS, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp, MERC_LOOKS } from '../systems/party.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS } from '../data/monsters.js';
 import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
@@ -60,8 +61,15 @@ export class Game {
       character.hotbar = Array.from({ length: 8 }, (_, i) => character.hotbar?.[i] ?? null);
     }
 
-    this.buffs = [];
-    this.cooldowns = {};
+    // 파티: 리더(내 캐릭터) + 용병. 전투 · 스킬 · 버프는 모두 '파티원(unit)' 단위로 처리
+    this.leader = { id: 'player', isLeader: true, char: character, ent: this.player, buffs: [], cooldowns: {}, gcd: 0 };
+    this.player.unit = this.leader;
+    fillSlots(character);
+    character.party ??= [];
+    this.party = character.party.map((c, i) => this.makeMercUnit(c, start, i));
+    this.autoMode = character.autoMode || 'manual'; // manual | normal | skill
+    this.focusId = null;
+    this.selectedId = 'player';
     this.itemReadyAt = 0;
     this.effects = [];
     this.monsters = [];
@@ -84,10 +92,9 @@ export class Game {
 
     // 그림 미리 불러오기: 내 캐릭터 · NPC · 직업 스킬 이펙트 · 아이콘
     this.heroKey = heroKey(character.classId, character.gender);
-    const fxKeys = [...this.cls.skills.map((id) => SKILLS[id]), BASIC_FX[character.classId]].flatMap((x) => [x?.fx?.sheet || x?.sheet, x?.proj]).filter(Boolean);
+    preload([...Object.values(NPC_SPRITES).map((k) => `heroes/${k}/attack-1.webp`), 'heroes/paladin/attack-1.webp']);
+    for (const u of this.units()) this.preloadUnit(u);
     preload([
-      ...heroFrames(this.heroKey), ...Object.values(NPC_SPRITES).map((k) => `heroes/${k}/attack-1.webp`),
-      ...fxKeys.map(fxSheet), ...this.cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet)),
       ...Object.values(STATUS_FX).map((f) => fxSheet(f.sheet)), fxSheet(LEVELUP_FX.sheet),
       ...['bleed', 'burn', 'frost', 'poison', 'shock', 'guard', 'roar', 'instinct', 'seed', 'scroll', 'potion'].map(statusIcon),
     ]);
@@ -97,6 +104,260 @@ export class Game {
     this.bindInput();
     this.log(`${this.char.name}님, ${this.world.def.name}에 오신 것을 환영합니다!`, 'system');
     this.log('좌클릭(누른 채 유지)으로 이동, 몬스터 좌클릭으로 공격합니다. 안내원에게 말을 걸어보세요.', 'system');
+  }
+
+  // 리더의 버프 · 재사용 시간 (예전 코드와 호환)
+  get buffs() { return this.leader.buffs; }
+  set buffs(v) { this.leader.buffs = v; }
+  get cooldowns() { return this.leader.cooldowns; }
+  set cooldowns(v) { this.leader.cooldowns = v; }
+
+  // ------------------------------------------------------------ 파티
+  units() { return [this.leader, ...this.party]; }
+  aliveUnits() { return this.units().filter((u) => !u.ent.dead); }
+  unitById(id) { return this.units().find((u) => u.ent.id === id || u.id === id) || null; }
+  selUnit() { return this.unitById(this.selectedId) || this.leader; }
+  clsOf(u) { return CLASSES[u.char.classId]; }
+  spriteOf(u) { return u.isLeader ? this.heroKey : (u.char.look || heroKey(u.char.classId, u.char.gender)); }
+
+  makeMercUnit(char, near, i = 0) {
+    fillSlots(char);
+    const off = [[-1.2, 0.8], [0.8, 1.3], [-0.6, 2]][i % 3];
+    const ent = {
+      id: `merc:${char.id}`, isMerc: true, x: near.x + off[0], y: near.y + off[1], radius: 0.3, facing: { x: 0, y: 1 },
+      action: null, attackTimer: Math.random() * 0.5, lastHurt: -99, dead: char.hp <= 0, respawnAt: 0, walkPhase: 0, moving: false,
+    };
+    const u = { id: ent.id, char, ent, buffs: [], cooldowns: {}, gcd: 0, target: null };
+    ent.unit = u;
+    if (ent.dead) ent.respawnAt = 30;
+    return u;
+  }
+
+  preloadUnit(u) {
+    const cls = this.clsOf(u);
+    const fx = [...cls.skills.map((id) => SKILLS[id]), BASIC_FX[u.char.classId]].flatMap((x) => [x?.fx?.sheet || x?.sheet, x?.proj]).filter(Boolean);
+    preload([...heroFrames(this.spriteOf(u)), ...fx.map(fxSheet), ...cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet))]);
+  }
+
+  // 용병단장: 이 마을의 용병 목록 (1시간마다 바뀜)
+  mercOffers() {
+    const def = this.world.def;
+    const hour = Math.floor(this.now() / 3600000);
+    return mercOffers(def.id, Math.max(1, Math.min(def.level[0], this.char.level)), hour, 4, this.units().map((u) => u.char.name))
+      .filter((o) => !(this.char.hiredOffers || []).includes(o.offerId));
+  }
+
+  hireMerc(offerId) {
+    const o = this.mercOffers().find((x) => x.offerId === offerId);
+    if (!o || this.openNpc?.kind !== 'mercenary') return;
+    if (this.party.length >= MAX_MERCS) { this.log(`용병은 최대 ${MAX_MERCS}명까지 고용할 수 있습니다.`, 'warn'); return; }
+    if (this.char.gold < o.price) { this.log(`골드가 부족합니다. (${o.price} 골드 필요)`, 'warn'); return; }
+    this.char.gold -= o.price;
+    const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const mc = createMerc(o, id);
+    this.char.party.push(mc);
+    (this.char.hiredOffers ??= []).push(o.offerId);
+    const u = this.makeMercUnit(mc, this.player, this.party.length);
+    this.party.push(u);
+    this.preloadUnit(u);
+    this.fx({ sheet: 'priest_a5', scale: 1.2, z: 6 }, u.ent);
+    this.log(`${CLASSES[mc.classId].name} ${mc.name}(Lv.${mc.level})을(를) ${o.price} 골드에 고용했습니다.`, 'system');
+    this.hud.markDirty('npc', 'party', 'inv');
+    this.save();
+  }
+
+  dismissMerc(id) {
+    const u = this.party.find((x) => x.id === id);
+    if (!u) return;
+    // 장비는 인벤토리로 돌려받음
+    for (const slot of ['weapon', 'armor']) {
+      const it = u.char.equipment[slot];
+      if (it && !it.startsWith('training_') && it !== 'cloth_armor') this.addItem(it);
+    }
+    this.party = this.party.filter((x) => x !== u);
+    this.char.party = this.char.party.filter((c) => c !== u.char);
+    if (this.selectedId === u.id) this.selectedId = 'player';
+    this.log(`${u.char.name}을(를) 파티에서 내보냈습니다.`, 'system');
+    this.hud.markDirty('party', 'inv', 'char');
+    this.save();
+  }
+
+  setAutoMode(mode) {
+    this.autoMode = mode;
+    this.char.autoMode = mode;
+    const label = { manual: '자동사냥 끔 (이동은 직접, 근처 적은 파티가 자동 전투)', normal: '자동사냥: 일반공격만', skill: '자동사냥: 스킬까지 사용' }[mode];
+    this.log(label, 'system');
+    this.hud.markDirty('auto');
+  }
+
+  cycleAutoMode() {
+    const order = ['manual', 'normal', 'skill'];
+    this.setAutoMode(order[(order.indexOf(this.autoMode) + 1) % order.length]);
+  }
+
+  setSkillSlot(unitId, i, entry) {
+    const u = this.unitById(unitId);
+    if (!u) return;
+    fillSlots(u.char);
+    const slots = u.char.skillSlots;
+    if (entry && !learnedSkills(u.char).includes(entry.id)) { this.log('아직 배우지 않은 스킬입니다.', 'warn'); return; }
+    if (entry) {
+      const dup = slots.findIndex((x) => x && x.id === entry.id);
+      if (dup >= 0 && dup !== i) slots[dup] = slots[i];
+    }
+    slots[i] = entry ? { id: entry.id, cond: entry.cond || slots[i]?.cond || 'always' } : null;
+    this.hud.markDirty('party');
+  }
+
+  swapSkillSlot(unitId, a, b) {
+    const u = this.unitById(unitId);
+    if (!u) return;
+    const s2 = u.char.skillSlots;
+    [s2[a], s2[b]] = [s2[b], s2[a]];
+    this.hud.markDirty('party');
+  }
+
+  setSlotCond(unitId, i, cond) {
+    const u = this.unitById(unitId);
+    if (u?.char.skillSlots[i]) { u.char.skillSlots[i].cond = cond; this.hud.markDirty('party'); }
+  }
+
+  // ------------------------------------------------------------ 파티 자동 전투
+  engageRadius() { return this.autoMode === 'manual' ? 6 : 11; }
+  useSkills() { return this.autoMode !== 'normal'; }
+  userMoving() { const p = this.player; return !!p.moveTarget || (this.mouse.left && this.mouse.mode === 'move'); }
+
+  // 싸울 대상: 집중 대상(내가 클릭한 적) → 지금 대상 → 리더 근처에서 가장 가까운 적
+  pickTarget(u, keep) {
+    const f = this.focusId && this.monsters.find((m) => m.id === this.focusId && !m.dead);
+    if (f) return f;
+    const p = this.player, R = this.engageRadius();
+    if (keep && !keep.dead && this.monsters.includes(keep) && dist(keep, p) < R + 4) return keep;
+    let best = null, bd = Infinity;
+    for (const m of this.monsters) {
+      if (m.dead || m.state === 'return') continue;
+      const dl = dist(m, p);
+      if (dl > R) continue;
+      // 자동사냥이 꺼져 있으면: 우리에게 덤비는 적이나 아주 가까운 적만
+      if (this.autoMode === 'manual' && m.state !== 'chase' && dl > 3.5) continue;
+      const d = dist(m, u.ent) - (m.state === 'chase' ? 2 : 0);
+      if (d < bd) { bd = d; best = m; }
+    }
+    return best;
+  }
+
+  // 자동사냥: 근처에 적이 없으면 불러온 구역에서 가장 가까운 적을 찾아감
+  roamTarget() {
+    let best = null, bd = 40;
+    for (const m of this.monsters) {
+      if (m.dead || m.state === 'return') continue;
+      const d = dist(m, this.player);
+      if (d < bd) { bd = d; best = m; }
+    }
+    return best;
+  }
+
+  /** 스킬 칸을 앞에서부터 보고, 쓸 수 있는 첫 스킬을 씀. 썼으면 true */
+  autoSkill(u, target) {
+    const slots = u.char.skillSlots || [];
+    const alive = this.aliveUnits();
+    const enemiesNear = target ? this.monsters.filter((m) => !m.dead && dist(m, target) < 3).length : 0;
+    for (const sl of slots) {
+      if (!sl) continue;
+      const sk = SKILLS[sl.id];
+      if (!sk || !this.canCast(sk, true, u)) continue;
+      if (!condOk(sl.cond, u, { units: alive, enemiesNear, target })) continue;
+      if (sk.kind === 'buff') {
+        if (!target) continue;
+        const who = sk.party ? alive : [u];
+        if (who.every((t) => t.buffs.some((b) => b.id === sk.buff.id))) continue;
+      }
+      if (sk.kind === 'heal' && !alive.some((t) => t.char.hp < t.char.maxHp * 0.8)) continue;
+      if (sk.kind === 'restore' && u.char.mp > u.char.maxMp * 0.5) continue;
+      if (sk.kind === 'aoe' && !this.monsters.some((m) => !m.dead && dist(m, u.ent) <= sk.radius + m.radius)) continue;
+      if (TARGETED.has(sk.kind)) {
+        if (!target || dist(u.ent, target) > this.skillRange(sk, u) + target.radius) continue;
+        this.castTargetSkill(sk, target, u);
+      } else {
+        this.castSelfSkill(sk, u);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  updateParty(dt) {
+    this.leaderAI(dt);
+    this.party.forEach((u, i) => this.mercAI(u, i, dt));
+  }
+
+  // 리더: 내가 움직이지 않을 때는 근처 적을 자동으로 공격, 자동사냥이면 적을 찾아다님
+  leaderAI(dt) {
+    const p = this.player, L = this.leader;
+    L.gcd -= dt;
+    if (p.dead || this.userMoving() || p.action?.type === 'talk' || p.action?.type === 'skill') return;
+    if (!p.action) {
+      let t = this.pickTarget(L, null);
+      if (!t && this.autoMode !== 'manual') t = this.roamTarget();
+      if (t) p.action = { type: 'attack', targetId: t.id, auto: true };
+    }
+    if (this.useSkills() && p.action?.type === 'attack' && L.gcd <= 0) {
+      const t = this.findEntity(p.action.targetId);
+      L.gcd = t && !t.isNpc && this.autoSkill(L, t) ? 0.7 : 0.25;
+    } else if (this.useSkills() && !p.action && L.gcd <= 0) {
+      L.gcd = this.autoSkill(L, null) ? 0.7 : 0.4; // 싸우지 않을 때도 치유 · 명상
+    }
+  }
+
+  // 용병: 리더 뒤를 따라다니다가 적이 있으면 싸우고, 스킬 칸 순서대로 스킬 사용
+  mercAI(u, i, dt) {
+    const e = u.ent, p = this.player;
+    e.attackTimer -= dt;
+    e.attackAnim = Math.max(0, (e.attackAnim || 0) - dt);
+    e.castAnim = Math.max(0, (e.castAnim || 0) - dt);
+    e.moving = false;
+    u.gcd -= dt;
+    if (e.dead) return;
+    const cls = this.clsOf(u);
+    const dl = dist(e, p);
+    if (dl > 25 || (dl > 10 && e.stuck > 2)) {
+      // 너무 멀어지면 리더 곁으로 순간 이동
+      e.x = p.x; e.y = p.y; this.clearPath(e); e.stuck = 0;
+    }
+    const speed = this.derived(u).speed * (dl > 4 ? 1.3 : 1);
+    if (dl > 12 || p.dead) u.target = null;
+    else if (!this.userMoving() || dl < 5) u.target = this.pickTarget(u, u.target);
+    else u.target = null;
+    const t = u.target;
+    if (t) {
+      if (this.useSkills() && u.gcd <= 0) {
+        if (this.autoSkill(u, t)) { u.gcd = 0.8; return; }
+        u.gcd = 0.3;
+      }
+      const range = cls.attackRange + t.radius;
+      if (dist(e, t) > range) {
+        const r = this.navigate(e, t, speed, dt);
+        e.moving = r === 'moving';
+      } else {
+        this.clearPath(e);
+        this.face(e, t);
+        if (e.attackTimer <= 0) { e.attackTimer = cls.attackInterval; this.unitAttack(u, t); }
+      }
+    } else {
+      if (this.useSkills() && u.gcd <= 0) u.gcd = this.autoSkill(u, null) ? 0.8 : 0.5;
+      // 리더 뒤쪽 대형
+      const f = p.facing, bx = -f.x, by = -f.y, qx = -by, qy = bx;
+      const slot = [[1.4, 1], [1.4, -1], [2.5, 0]][i % 3];
+      const goal = { x: p.x + bx * slot[0] + qx * slot[1], y: p.y + by * slot[0] + qy * slot[1] };
+      if (dist(e, goal) > 0.7) {
+        const r = this.navigate(e, goal, speed, dt);
+        e.moving = r === 'moving';
+        e.stuck = r === 'stuck' ? (e.stuck || 0) + dt : 0;
+      } else if (!p.moving && dl < 4) {
+        this.face(e, { x: e.x + p.facing.x, y: e.y + p.facing.y });
+      }
+    }
+    if (e.moving) e.walkPhase += dt * speed * 3.2;
   }
 
   // ------------------------------------------------------------ loop
@@ -142,15 +403,18 @@ export class Game {
 
   update(dt) {
     this.time += dt;
-    const before = this.buffs.length;
-    this.buffs = this.buffs.filter((b) => b.until > this.time);
-    if (this.buffs.length !== before) this.hud.markDirty('char');
+    for (const u of this.units()) {
+      const before = u.buffs.length;
+      u.buffs = u.buffs.filter((b) => b.until > this.time);
+      if (u.buffs.length !== before) this.hud.markDirty('char');
+    }
 
     const w = this.renderer.screenToWorld(this.mouse.sx, this.mouse.sy, this.camera);
     this.mouse.wx = w.x; this.mouse.wy = w.y;
     this.hover = this.pick();
 
     this.updatePlayer(dt);
+    this.updateParty(dt);
     this.checkPortal();
     if (this.pending.length) {
       const due = this.pending.filter((h) => h.at <= this.time);
@@ -178,7 +442,7 @@ export class Game {
   }
 
   // ------------------------------------------------------------ player
-  derived() { return S.derivedStats(this.char, this.buffs); }
+  derived(u = this.leader) { return S.derivedStats(u.char, u.buffs); }
 
   moveEntity(e, tx, ty, speed, dt, forMonster) {
     const dx = tx - e.x, dy = ty - e.y;
@@ -222,7 +486,7 @@ export class Game {
     return this.cls.attackRange;
   }
 
-  skillRange(sk) { return sk.range ?? this.cls.attackRange; }
+  skillRange(sk, u = this.leader) { return sk.range ?? this.clsOf(u).attackRange; }
 
   findEntity(id) {
     return this.monsters.find((m) => m.id === id && !m.dead) || this.world.npcs.find((n) => n.id === id) || null;
@@ -284,27 +548,31 @@ export class Game {
     }
   }
 
-  playerAttack(m) {
-    const ch = this.char;
-    const stat = ch.stats[this.cls.primaryStat];
+  playerAttack(m) { this.unitAttack(this.leader, m); }
+
+  // 일반공격 (리더 · 용병 공통)
+  unitAttack(u, m) {
+    const ch = u.char, e = u.ent;
+    const stat = ch.stats[this.clsOf(u).primaryStat];
     const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
-    this.player.attackAnim = 0.3;
-    const bfx = BASIC_FX[this.char.classId] || BASIC_FX.knight;
-    const delay = bfx.proj ? this.addProjectile(this.player, m, 'sheet', '#f5e6c8', bfx.proj) : 0.08;
-    if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m); return; }
-    this.fx(bfx, m, delay, this.leftOf(this.player, m));
-    this.damageMonster(m, S.normalDamage(this.derived().attack, m.armor), '#ffffff', delay);
+    e.attackAnim = 0.3;
+    this.face(e, m);
+    const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
+    const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj) : 0.08;
+    if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m, u); return; }
+    this.fx(bfx, m, delay, this.leftOf(e, m));
+    this.damageMonster(m, S.normalDamage(this.derived(u).attack, m.armor), u.isLeader ? '#ffffff' : '#d8e8ff', delay, u);
   }
 
   // ------------------------------------------------------------ skills
-  canCast(sk, quiet = false) {
-    const ch = this.char;
+  canCast(sk, quiet = false, u = this.leader) {
+    const ch = u.char;
     const fail = (msg) => { if (!quiet) this.log(msg, 'warn'); return false; };
     if (!sk) return false;
-    if (this.player.dead) return false;
+    if (u.ent.dead) return false;
     if (sk.classId !== ch.classId) return fail('이 직업은 사용할 수 없는 스킬입니다.');
     if (ch.level < sk.level) return fail(`${sk.name}: 레벨 ${sk.level}부터 사용할 수 있습니다.`);
-    if (this.time < (this.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
+    if (this.time < (u.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
     if (ch.mp < sk.mp) return fail('마나가 부족합니다.');
     return true;
   }
@@ -343,17 +611,18 @@ export class Game {
     return best;
   }
 
-  spend(sk) {
-    this.char.mp -= sk.mp;
-    this.cooldowns[sk.id] = this.time + sk.cooldown;
+  spend(sk, u = this.leader) {
+    u.char.mp -= sk.mp;
+    u.cooldowns[sk.id] = this.time + sk.cooldown;
   }
 
   // 대상을 정하는 스킬: 단일 · 대상 주변 범위 · 연쇄
-  castTargetSkill(sk, m) {
-    const ch = this.char, p = this.player;
-    this.spend(sk);
+  castTargetSkill(sk, m, u = this.leader) {
+    const ch = u.char, p = u.ent;
+    this.spend(sk, u);
+    this.face(p, m);
     const stat = ch.stats[sk.stat];
-    const atk = this.derived().attack;
+    const atk = this.derived(u).attack;
     p.attackAnim = 0.35;
     p.castAnim = 0.4;
     this.floatText(p, sk.name, sk.color, 13);
@@ -396,7 +665,7 @@ export class Game {
       if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
         if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
-        this.skillHit(sk, t, stat, atk, i, dl);
+        this.skillHit(sk, t, stat, atk, i, dl, u);
       }
     });
   }
@@ -414,45 +683,55 @@ export class Game {
 
   mSpeed(m, def) { return def.speed * (m.slowUntil > this.time ? 0.6 : 1); }
 
-  skillHit(sk, m, stat, atk, i = 0, delay = 0) {
-    const ch = this.char;
+  skillHit(sk, m, stat, atk, i = 0, delay = 0, u = this.leader) {
+    const ch = u.char;
     const magic = sk.element === 'magic';
     const chance = magic ? S.magicHitChance(stat, ch.level, m) : S.physicalHitChance(stat, ch.level, m);
-    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m); return; }
+    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
     const raw = S.skillDamage(stat, atk, sk.coef);
     const dmg = magic ? S.magicMitigate(raw, m.mr) : S.physicalMitigate(raw, m.armor);
     if (sk.slow) m.slowUntil = this.time + sk.slow;
     if (sk.dot) m.dot = { dmg: Math.max(1, Math.round(stat * atk * sk.dot)), until: this.time + sk.dotTime, next: this.time + 1, color: sk.color };
-    this.damageMonster(m, dmg, sk.color, delay + i * 0.12);
+    this.damageMonster(m, dmg, sk.color, delay + i * 0.12, u);
   }
 
-  castSelfSkill(sk) {
-    const ch = this.char;
-    const p = this.player;
+  castSelfSkill(sk, u = this.leader) {
+    const ch = u.char;
+    const p = u.ent;
     p.castAnim = 0.4;
-    this.floatText(p, sk.name, sk.color, 13);
     if (sk.kind === 'aoe') {
-      this.spend(sk);
+      this.spend(sk, u);
+      this.floatText(p, sk.name, sk.color, 13);
       this.fx(sk.fx, p, 0, this.facingLeft(p));
-      const atk = this.derived().attack;
+      const atk = this.derived(u).attack;
       const stat = ch.stats[sk.stat];
       for (const m of this.monsters) {
-        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, 0.12);
+        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, 0.12, u);
       }
     } else if (sk.kind === 'buff') {
-      this.spend(sk);
+      this.spend(sk, u);
+      this.floatText(p, sk.name, sk.color, 13);
       this.fx(sk.fx, p, 0, this.facingLeft(p));
-      this.addBuff(sk.buff, sk.color, true);
+      // 파티 버프는 살아 있는 파티원 모두에게
+      const targets = sk.party ? this.aliveUnits() : [u];
+      for (const t of targets) {
+        this.addBuff(sk.buff, sk.color, true, t);
+        if (t !== u) this.fx({ ...sk.fx, scale: sk.fx.scale * 0.6 }, t.ent, 0.1);
+      }
     } else if (sk.kind === 'heal') {
-      if (ch.hp >= ch.maxHp) { this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
-      this.spend(sk);
+      // HP 비율이 가장 낮은 파티원 치유
+      const t = this.aliveUnits().sort((a, b) => a.char.hp / a.char.maxHp - b.char.hp / b.char.maxHp)[0];
+      if (!t || t.char.hp >= t.char.maxHp) { if (u.isLeader) this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
+      this.spend(sk, u);
+      this.floatText(p, sk.name, sk.color, 13);
       const amount = Math.round(ch.stats.int * sk.healIntCoef + ch.level * sk.healPerLevel);
-      ch.hp = Math.min(ch.maxHp, ch.hp + amount);
-      this.floatText(p, `+${amount}`, '#7dff9a');
-      this.fx(sk.fx, p);
+      t.char.hp = Math.min(t.char.maxHp, t.char.hp + amount);
+      this.floatText(t.ent, `+${amount}`, '#7dff9a');
+      this.fx(sk.fx, t.ent);
     } else if (sk.kind === 'restore') {
-      if (ch.mp >= ch.maxMp) { this.log('이미 MP가 가득 찼습니다.', 'warn'); return; }
-      this.spend(sk);
+      if (ch.mp >= ch.maxMp) { if (u.isLeader) this.log('이미 MP가 가득 찼습니다.', 'warn'); return; }
+      this.spend(sk, u);
+      this.floatText(p, sk.name, sk.color, 13);
       const amount = Math.round(ch.maxMp * sk.mpPercent);
       ch.mp = Math.min(ch.maxMp, ch.mp + amount);
       this.floatText(p, `MP +${amount}`, '#7ab8ff');
@@ -460,14 +739,14 @@ export class Game {
     }
   }
 
-  addBuff(buff, color = '#ffe680', fromSkill = false) {
-    this.buffs = this.buffs.filter((b) => b.id !== buff.id);
-    this.buffs.push({ ...buff, icon: buff.icon || STATUS_ICON[buff.id], color, until: this.time + buff.duration });
+  addBuff(buff, color = '#ffe680', fromSkill = false, u = this.leader) {
+    u.buffs = u.buffs.filter((b) => b.id !== buff.id);
+    u.buffs.push({ ...buff, icon: buff.icon || STATUS_ICON[buff.id], color, until: this.time + buff.duration });
     if (!fromSkill) {
-      this.floatText(this.player, buff.name, color, 13);
-      this.effects.push({ type: 'ring', x: this.player.x, y: this.player.y, r: 1, t: 0, life: 0.5, color });
+      this.floatText(u.ent, buff.name, color, 13);
+      this.effects.push({ type: 'ring', x: u.ent.x, y: u.ent.y, r: 1, t: 0, life: 0.5, color });
     }
-    this.log(`${buff.name} 효과가 적용되었습니다. (${buff.duration}초)`, 'info');
+    if (u.isLeader) this.log(`${buff.name} 효과가 적용되었습니다. (${buff.duration}초)`, 'info');
     this.hud.markDirty('char');
   }
 
@@ -604,10 +883,12 @@ export class Game {
     }
   }
 
-  aggro(m) {
+  aggro(m, u = null) {
     if (m.dead || m.state === 'return') return;
     const was = m.state;
     m.state = 'chase';
+    // 때린 파티원을 노림 (이미 노리는 대상이 있으면 가끔만 바꿈)
+    if (u && (!m.targetId || Math.random() < 0.2)) m.targetId = u.ent.id;
     // 무리 생활: 처음 싸움에 휘말리면 주변의 같은 종류가 함께 덤빔
     if (was !== 'chase' && MONSTERS[m.type].social) {
       for (const o of this.monsters) {
@@ -616,22 +897,36 @@ export class Game {
     }
   }
 
+  // 몬스터가 노리는 파티원 (없거나 쓰러졌으면 가장 가까운 파티원)
+  monsterTarget(m, maxD = 14) {
+    let u = m.targetId && this.unitById(m.targetId);
+    if (u && !u.ent.dead) return u;
+    let best = null, bd = maxD;
+    for (const o of this.aliveUnits()) {
+      const d = dist(o.ent, m);
+      if (d < bd) { bd = d; best = o; }
+    }
+    m.targetId = best?.ent.id || null;
+    return best;
+  }
+
   updateMonsters(dt) {
     const p = this.player;
-    const playerSafe = p.dead || this.world.inVillage(p.x, p.y);
+    const playerSafe = this.world.inVillage(p.x, p.y) || this.aliveUnits().length === 0;
     for (const m of this.monsters) {
       if (m.dead) continue;
       const def = MONSTERS[m.type];
       m.attackTimer -= dt;
       m.hurtFlash = Math.max(0, m.hurtFlash - dt);
       m.attackAnim = Math.max(0, m.attackAnim - dt);
-      const pd = dist(m, p);
       // 화면에서 멀리 떨어진 대기 중 몬스터는 계산 생략 (몬스터 수백 마리)
-      if (pd > 36 && m.state === 'idle') { m.moving = false; continue; }
+      if (m.state === 'idle' && dist(m, p) > 36) { m.moving = false; continue; }
       const mend = passive(def, 'mend');
       if (mend && m.hp < m.maxHp * 0.5) m.hp = Math.min(m.maxHp, m.hp + m.maxHp * mend * dt);
       const ox = m.x, oy = m.y;
-      this.monsterBrain(m, def, p, pd, playerSafe, dt);
+      const tu = this.monsterTarget(m, m.state === 'idle' ? (m.isBoss ? 7 : 5) : 14);
+      const te = tu?.ent || p;
+      this.monsterBrain(m, def, te, tu ? dist(m, te) : 999, playerSafe || !tu, dt, tu);
       m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
       if (m.moving) m.walkPhase += dt * def.speed * 4;
       // 독 같은 지속 피해
@@ -642,7 +937,7 @@ export class Game {
     }
   }
 
-  monsterBrain(m, def, p, pd, playerSafe, dt) {
+  monsterBrain(m, def, p, pd, playerSafe, dt, tu) {
     {
       // 보스 내려찍기: 예고가 끝나면 그 자리에 범위 피해
       if (m.slamTarget && this.time >= m.slamAt) this.resolveSlam(m, def);
@@ -662,18 +957,18 @@ export class Game {
           if (r !== 'moving') m.wanderTarget = null;
         }
       } else if (m.state === 'chase') {
-        if (playerSafe || dist(m, m.home) > (m.isBoss ? 18 : 14)) { m.state = 'return'; return; }
+        if (playerSafe || dist(m, m.home) > (m.isBoss ? 18 : 14)) { m.state = 'return'; m.targetId = null; return; }
         const slam = def.boss?.slam;
         if (slam && this.time >= (m.nextSlam ?? (m.nextSlam = this.time + 3)) && pd < slam.radius + 2) {
-          this.startSlam(m, slam);
+          this.startSlam(m, slam, p);
           return;
         }
         if (pd <= def.attackRange + p.radius) {
           this.face(m, p);
           if (m.attackTimer <= 0) {
             m.attackTimer = def.attackInterval * (1 - passive(def, 'haste'));
-            if (def.active?.length && m.nextSkill > 0 && this.time >= m.nextSkill) this.monsterSkill(m, def);
-            else this.monsterAttack(m, def);
+            if (def.active?.length && m.nextSkill > 0 && this.time >= m.nextSkill) this.monsterSkill(m, def, tu);
+            else this.monsterAttack(m, def, tu);
             if (!m.nextSkill) m.nextSkill = this.time + 2 + Math.random() * 3;
           }
         } else {
@@ -689,8 +984,7 @@ export class Game {
     }
   }
 
-  startSlam(m, slam) {
-    const p = this.player;
+  startSlam(m, slam, p = this.player) {
     m.slamTarget = { x: p.x, y: p.y };
     m.slamAt = this.time + slam.windup;
     m.nextSlam = this.time + slam.interval;
@@ -706,95 +1000,123 @@ export class Game {
     m.animKind = 'skill'; m.animDur = 0.5; m.attackAnim = 0.5;
     this.effects.push({ type: 'ring', x: at.x, y: at.y, r: slam.radius, t: 0, life: 0.45, color: '#ff8a3a' });
     this.effects.push({ type: 'shake', t: 0, life: 0.3, power: 6 });
-    const p = this.player;
-    if (p.dead || m.dead || dist(p, at) > slam.radius + p.radius) return;
-    const dmg = S.monsterDamage(def.atk * slam.mult, this.derived().defense);
-    this.hurtPlayer(dmg, def);
+    if (m.dead) return;
+    // 예고 범위 안의 파티원 모두 피해
+    for (const u of this.aliveUnits()) {
+      if (dist(u.ent, at) > slam.radius + u.ent.radius) continue;
+      this.hurtUnit(u, S.monsterDamage(def.atk * slam.mult, this.derived(u).defense), def);
+    }
   }
 
-  monsterAttack(m, def) {
+  monsterAttack(m, def, u = this.leader) {
     m.animKind = 'attack'; m.animDur = 0.4; m.attackAnim = 0.4;
+    const e = u.ent;
     if (def.projectile) {
-      this.addProjectile(m, this.player, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
+      this.addProjectile(m, e, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
     } else {
-      this.effects.push({ type: 'slash', x: this.player.x, y: this.player.y, t: 0, life: 0.2, color: '#ff6060' });
+      this.effects.push({ type: 'slash', x: e.x, y: e.y, t: 0, life: 0.2, color: '#ff6060' });
     }
-    this.monsterHit(m, def, 1);
+    this.monsterHit(m, def, 1, 0, u);
   }
 
   // 몬스터 한 번의 타격: 명중 판정 → 피해. 맞으면 true
-  monsterHit(m, def, mult, delay = 0) {
-    const ch = this.char;
-    const d = this.derived();
+  monsterHit(m, def, mult, delay = 0, u = this.leader) {
+    const ch = u.char;
+    const d = this.derived(u);
     // 마법 공격은 방어력을 절반만 적용
     const pdef = def.magic ? d.defense / 2 : d.defense;
     const hit = S.monsterHitChance(def.level, ch.level, pdef) + passive(def, 'focus');
-    if (Math.random() >= hit) { this.floatText(this.player, 'MISS', '#bbbbbb', 15, delay); return false; }
+    if (Math.random() >= hit) { this.floatText(u.ent, 'MISS', '#bbbbbb', 15, delay); return false; }
     let atk = def.atk * mult;
     const fury = passive(def, 'fury');
     if (fury && m.hp < m.maxHp * 0.5) atk *= 1 + fury;
     let dmg = S.monsterDamage(atk, pdef);
-    const expose = this.buffs.reduce((a, b) => a + (b.expose || 0), 0);
+    const expose = u.buffs.reduce((a, b) => a + (b.expose || 0), 0);
     if (expose) dmg = Math.round(dmg * (1 + expose));
-    this.hurtPlayer(dmg, def, delay);
+    this.hurtUnit(u, dmg, def, delay);
     return true;
   }
 
   // 몬스터 스킬 (원본 「환생 루프」 액티브): 배율 피해 × 타수 + 상태이상
-  monsterSkill(m, def) {
+  monsterSkill(m, def, u = this.leader) {
     const sk = def.active[Math.floor(Math.random() * def.active.length)];
     m.nextSkill = this.time + def.skillCooldown * (0.8 + Math.random() * 0.4);
     m.animKind = 'skill'; m.animDur = 0.6; m.attackAnim = 0.6;
-    const p = this.player;
+    const p = u.ent;
     const color = EFFECT_COLOR[sk.effect] || def.color;
     this.floatText(m, sk.name, color, 13);
     if (def.projectile) this.addProjectile(m, p, def.projectile, color);
     this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, def.projectile ? 0.25 : 0.12);
     let landed = false;
     for (let i = 0; i < (sk.pulses || 1); i++) {
-      if (this.player.dead) break;
-      if (this.monsterHit(m, def, sk.mult, i * 0.15)) landed = true;
+      if (p.dead) break;
+      if (this.monsterHit(m, def, sk.mult, i * 0.15, u)) landed = true;
     }
-    if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def);
+    if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def, u);
   }
 
-  applyStatus(effect, def) {
+  applyStatus(effect, def, u = this.leader) {
     const st = STATUS[effect];
-    if (!st || this.player.dead) return;
+    if (!st || u.ent.dead) return;
     const tick = Math.max(1, Math.round(def.atk * 0.12));
-    this.buffs = this.buffs.filter((b) => b.id !== st.id);
-    this.buffs.push({ ...st, icon: STATUS_ICON[st.id], color: EFFECT_COLOR[effect], until: this.time + st.duration, debuff: true,
+    u.buffs = u.buffs.filter((b) => b.id !== st.id);
+    u.buffs.push({ ...st, icon: STATUS_ICON[st.id], color: EFFECT_COLOR[effect], until: this.time + st.duration, debuff: true,
       dot: st.dot ? tick : 0, nextTick: this.time + 1, src: def.name });
-    this.floatText(this.player, st.name, EFFECT_COLOR[effect], 13, 0.2);
+    this.floatText(u.ent, st.name, EFFECT_COLOR[effect], 13, 0.2);
     this.hud.markDirty('char');
   }
 
   // 지속 피해(출혈·화상·중독) 처리
   tickStatus() {
-    for (const b of this.buffs) {
-      if (!b.dot || this.time < b.nextTick || this.player.dead) continue;
-      b.nextTick += 1;
-      this.char.hp -= b.dot;
-      this.player.lastHurt = this.time;
-      this.floatText(this.player, `-${b.dot}`, b.color, 13);
-      if (this.char.hp <= 0) this.playerDie({ name: `${b.name}(${b.src})` });
+    for (const u of this.units()) {
+      for (const b of u.buffs) {
+        if (!b.dot || this.time < b.nextTick || u.ent.dead) continue;
+        b.nextTick += 1;
+        this.hurtUnit(u, b.dot, { name: `${b.name}(${b.src})` }, 0, b.color);
+      }
     }
   }
 
-  hurtPlayer(dmg, def, delay = 0) {
-    const ch = this.char;
-    if (this.player.dead) return;
+  hurtPlayer(dmg, def, delay = 0) { this.hurtUnit(this.leader, dmg, def, delay); }
+
+  hurtUnit(u, dmg, def, delay = 0, color = '#ff5050') {
+    const ch = u.char, e = u.ent;
+    if (e.dead) return;
     ch.hp -= dmg;
-    this.player.lastHurt = this.time;
-    this.floatText(this.player, `-${dmg}`, '#ff5050', 15, delay);
-    if (ch.hp <= 0) this.playerDie(def);
+    e.lastHurt = this.time;
+    this.floatText(e, `-${dmg}`, u.isLeader ? color : '#ff9a7a', u.isLeader ? 15 : 13, delay);
+    if (ch.hp > 0) return;
+    if (u.isLeader) this.playerDie(def);
+    else this.mercDie(u, def);
   }
 
-  damageMonster(m, dmg, color, delay = 0) {
+  mercDie(u, def) {
+    u.char.hp = 0;
+    u.ent.dead = true;
+    u.ent.respawnAt = this.time + 30;
+    u.ent.action = null;
+    u.target = null;
+    this.log(`[파티] ${u.char.name}이(가) ${def.name}에게 쓰러졌습니다. (30초 뒤 회복, 마을에서는 바로)`, 'warn');
+    for (const m of this.monsters) if (m.targetId === u.ent.id) m.targetId = null;
+    this.hud.markDirty('party');
+  }
+
+  reviveMerc(u, full = false) {
+    u.ent.dead = false;
+    u.char.hp = full ? u.char.maxHp : Math.ceil(u.char.maxHp * 0.3);
+    u.char.mp = full ? u.char.maxMp : Math.max(u.char.mp, Math.ceil(u.char.maxMp * 0.3));
+    const p = this.player;
+    u.ent.x = p.x + (Math.random() - 0.5); u.ent.y = p.y + 0.8;
+    if (this.world.blocked(u.ent.x, u.ent.y, u.ent.radius)) { u.ent.x = p.x; u.ent.y = p.y; }
+    this.fx({ sheet: 'priest_a5', scale: 1, z: 6 }, u.ent);
+    this.hud.markDirty('party');
+  }
+
+  damageMonster(m, dmg, color, delay = 0, u = null) {
     // 화살 · 마법이 날아가는 동안은 피해를 미뤘다가 맞는 순간에 적용
     if (delay > 0.03) {
-      this.aggro(m);
-      this.pending.push({ at: this.time + delay, fn: () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0); } });
+      this.aggro(m, u);
+      this.pending.push({ at: this.time + delay, fn: () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0, u); } });
       return;
     }
     const hide = passive(MONSTERS[m.type], 'hide');
@@ -802,7 +1124,7 @@ export class Game {
     m.hp -= dmg;
     m.hurtFlash = 0.12;
     this.floatText(m, `${dmg}`, color, 16, delay);
-    this.aggro(m);
+    this.aggro(m, u);
     if (m.hp <= 0) this.killMonster(m);
   }
 
@@ -827,8 +1149,19 @@ export class Game {
     }
     const gold = S.randInt(def.gold[0], def.gold[1]);
     ch.gold += gold;
-    const ups = S.gainExp(ch, def.exp);
-    this.log(`${def.name}을(를) 처치했습니다. 경험치 +${def.exp}, 골드 +${gold}`, 'loot');
+    // 경험치는 근처(20칸)에 살아 있는 파티원끼리 나눔
+    const sharers = this.aliveUnits().filter((u) => dist(u.ent, m) < 20);
+    if (!sharers.includes(this.leader) && !this.player.dead) sharers.push(this.leader);
+    const each = shareExp(def.exp, sharers.length);
+    let ups = [];
+    for (const u of sharers) {
+      const r = S.gainExp(u.char, each);
+      if (u.isLeader) ups = r;
+      else for (const lv of r) this.onMercLevelUp(u, lv);
+    }
+    this.log(`${def.name}을(를) 처치했습니다. 경험치 +${each}${sharers.length > 1 ? ` (${sharers.length}명)` : ''}, 골드 +${gold}`, 'loot');
+    if (this.focusId === m.id) this.focusId = null;
+    for (const u of this.party) if (u.target === m) u.target = null;
     for (const drop of def.drops || []) {
       if (Math.random() < drop.chance && this.addItem(drop.item)) {
         this.log(`[획득] ${ITEMS[drop.item].name}`, 'rare');
@@ -853,6 +1186,16 @@ export class Game {
     this.save();
   }
 
+  onMercLevelUp(u, r) {
+    this.fx(LEVELUP_FX, u.ent);
+    this.floatText(u.ent, 'LEVEL UP!', '#ffe066', 16);
+    this.log(`[파티] ${u.char.name} 레벨 업! Lv.${r.level} — HP +${r.hpGain}, MP +${r.mpGain}`, 'level');
+    // 용병 보너스 포인트는 주스탯에 자동으로
+    while (u.char.bonusPoints > 0 && S.allocatePoint(u.char, this.clsOf(u).primaryStat));
+    fillSlots(u.char);
+    this.hud.markDirty('party');
+  }
+
   playerDie(def) {
     const p = this.player;
     this.char.hp = 0;
@@ -871,20 +1214,26 @@ export class Game {
     this.char.hp = this.char.maxHp;
     this.char.mp = Math.max(this.char.mp, Math.floor(this.char.maxMp / 2));
     this.changeMap(this.world.def.home, 'center', true);
+    for (const u of this.party) if (u.ent.dead) this.reviveMerc(u, true);
     this.log(`${this.world.def.name}에서 부활했습니다.`, 'system');
     this.save();
   }
 
   regenTick() {
-    const ch = this.char;
-    const p = this.player;
-    if (p.dead) return;
-    const inTown = this.world.inVillage(p.x, p.y);
-    if (!inTown && this.time - p.lastHurt < 6) return;
-    const r = S.regenAmounts(ch);
-    const mult = inTown ? 3 : 1;
-    ch.hp = Math.min(ch.maxHp, ch.hp + r.hp * mult);
-    ch.mp = Math.min(ch.maxMp, ch.mp + r.mp * mult);
+    const inTown = this.world.inVillage(this.player.x, this.player.y);
+    for (const u of this.units()) {
+      const ch = u.char, e = u.ent;
+      if (e.dead) {
+        // 쓰러진 용병: 마을에서는 바로, 밖에서는 30초 뒤 회복
+        if (!u.isLeader && (inTown || this.time >= e.respawnAt)) this.reviveMerc(u, inTown);
+        continue;
+      }
+      if (!inTown && this.time - e.lastHurt < 6) continue;
+      const r = S.regenAmounts(ch);
+      const mult = inTown ? 3 : 1;
+      ch.hp = Math.min(ch.maxHp, ch.hp + r.hp * mult);
+      ch.mp = Math.min(ch.maxMp, ch.mp + r.mp * mult);
+    }
   }
 
   // ------------------------------------------------------------ items
@@ -940,28 +1289,31 @@ export class Game {
     this.itemReadyAt = this.time + 0.4;
   }
 
-  equip(idx) {
-    const ch = this.char;
-    const entry = ch.inventory[idx];
+  // 장비는 내 인벤토리에서, 지금 고른 파티원에게 장착
+  equip(idx, u = this.selUnit()) {
+    const inv = this.char.inventory;
+    const ch = u.char;
+    const entry = inv[idx];
     if (!entry) return;
     const it = ITEMS[entry.id];
-    if (!canEquip(entry.id, ch.classId)) { this.log(`${it.name}은(는) ${this.cls.name}이(가) 장착할 수 없습니다.`, 'warn'); return; }
+    if (!canEquip(entry.id, ch.classId)) { this.log(`${it.name}은(는) ${CLASSES[ch.classId].name}이(가) 장착할 수 없습니다.`, 'warn'); return; }
     const slot = it.type;
     const old = ch.equipment[slot];
-    ch.inventory.splice(idx, 1);
+    inv.splice(idx, 1);
     ch.equipment[slot] = entry.id;
-    if (old) ch.inventory.push({ id: old, qty: 1 });
-    this.log(`${it.name}을(를) 장착했습니다.`, 'info');
+    if (old) inv.push({ id: old, qty: 1 });
+    this.log(`${u.isLeader ? '' : `[${ch.name}] `}${it.name}을(를) 장착했습니다.`, 'info');
+    this.hud.markDirty('party');
     this.hud.markDirty('inv', 'char');
   }
 
-  unequip(slot) {
-    const ch = this.char;
+  unequip(slot, u = this.selUnit()) {
+    const ch = u.char;
     const id = ch.equipment[slot];
     if (!id) return;
-    if (ch.inventory.length >= INVENTORY_SIZE) { this.log('인벤토리가 가득 찼습니다.', 'warn'); return; }
+    if (this.char.inventory.length >= INVENTORY_SIZE) { this.log('인벤토리가 가득 찼습니다.', 'warn'); return; }
     ch.equipment[slot] = null;
-    ch.inventory.push({ id, qty: 1 });
+    this.char.inventory.push({ id, qty: 1 });
     this.log(`${ITEMS[id].name}을(를) 해제했습니다.`, 'info');
     this.hud.markDirty('inv', 'char');
   }
@@ -990,15 +1342,17 @@ export class Game {
   }
 
   healAtHealer() {
+    for (const u of this.units()) {
+      if (u.ent.dead && !u.isLeader) this.reviveMerc(u, true);
+      u.char.hp = u.char.maxHp; u.char.mp = u.char.maxMp;
+    }
     const ch = this.char;
-    ch.hp = ch.maxHp;
-    ch.mp = ch.maxMp;
     this.effects.push({ type: 'ring', x: this.player.x, y: this.player.y, r: 1.2, t: 0, life: 0.6, color: '#8cffb0' });
     this.log('치유사 엘린: 몸과 마음이 회복되었어요. 조심히 다녀오세요!', 'system');
   }
 
-  allocateStat(stat) {
-    if (S.allocatePoint(this.char, stat)) {
+  allocateStat(stat, u = this.selUnit()) {
+    if (S.allocatePoint(u.char, stat)) {
       this.hud.markDirty('char');
       this.save();
     }
@@ -1088,6 +1442,13 @@ export class Game {
     this.clearPath(p);
     this.mouse.left = false; this.mouse.mode = null;
     this.camera.x = p.x; this.camera.y = p.y;
+    this.focusId = null;
+    this.party.forEach((u, i) => {
+      const off = [[-1.2, 0.8], [0.8, 1.3], [-0.6, 2]][i % 3];
+      u.ent.x = p.x + off[0]; u.ent.y = p.y + off[1];
+      if (world.blocked(u.ent.x, u.ent.y, u.ent.radius)) { u.ent.x = p.x; u.ent.y = p.y; }
+      u.ent.action = null; u.target = null; this.clearPath(u.ent);
+    });
     this.portalReadyAt = this.time + 0.6;
     this.openNpc = null;
     this.hud.onMapChange(first);
@@ -1186,6 +1547,7 @@ export class Game {
           p.action = { type: 'talk', targetId: h.id }; p.moveTarget = null; this.mouse.mode = 'npc';
         } else if (h) {
           p.action = { type: 'attack', targetId: h.id }; p.moveTarget = null; this.mouse.mode = 'attack';
+          this.focusId = h.id; // 파티 전원이 이 대상을 집중 공격
         } else {
           this.mouse.mode = 'move';
           p.action = null;
@@ -1247,6 +1609,8 @@ export class Game {
       case 'KeyC': this.hud.togglePanel('char'); break;
       case 'KeyI': this.hud.togglePanel('inv'); break;
       case 'KeyK': this.hud.togglePanel('skills'); break;
+      case 'KeyP': this.hud.togglePanel('party'); break;
+      case 'KeyA': this.cycleAutoMode(); break;
       case 'Escape': this.hud.escape(); break;
       default: return;
     }
