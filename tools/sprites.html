@@ -55,7 +55,7 @@ function frame(time) {
       const attackCol = i === 8, castCol = i === 9, walkFrontCol = i === 10;
       shadow(cc, x, y, 12);
       drawHumanoid(cc, x, y, {
-        look, facing: { x: attackCol || castCol ? 1 : d[0], y: attackCol || castCol ? 0.3 : d[1] },
+        classId: id, look, facing: { x: attackCol || castCol ? 1 : d[0], y: attackCol || castCol ? 0.3 : d[1] },
         walk: STATIC ? 1.2 : t * 10, moving: i < 8 ? !STATIC || i % 2 === 0 : walkFrontCol,
         attack: attackCol ? (STATIC ? 0.45 : (t * 2) % 1) : 0,
         cast: castCol ? 0.6 : 0, weaponColor, armorId: walkFrontCol ? 'chain_mail' : null, time: t,

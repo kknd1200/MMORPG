@@ -1,3 +1,4 @@
+import { preloadHeroSheets } from '../game/hero-sheets.js';
 // All menus use the same class look and body scale as the in-game renderer.
 import { CLASS_ORDER, CLASSES } from '../data/classes.js';
 import { ITEMS } from '../data/items.js';
@@ -15,7 +16,12 @@ export function loginRosterMarkup() {
   }).join('');
 }
 
+const waiting = new WeakSet();
 export function paintAvatars(root) {
+  if (!waiting.has(root)) {
+    waiting.add(root);
+    preloadHeroSheets().then(() => paintAvatars(root));
+  }
   for (const cv of root.querySelectorAll('canvas.avatar')) {
     const cls = CLASSES[cv.dataset.class];
     const look = LOOKS[cv.dataset.class];
@@ -33,7 +39,7 @@ export function paintAvatars(root) {
     ctx.ellipse(layout.width / 2, layout.footY, 12 * layout.scale, 4 * layout.scale, 0, 0, Math.PI * 2);
     ctx.fill();
     drawHumanoid(ctx, layout.width / 2, layout.footY, {
-      look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
+      classId: cv.dataset.class, look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
       scale: layout.scale,
       weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color,
       armorId: cv.dataset.armor || null,

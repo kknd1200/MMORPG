@@ -116,7 +116,7 @@ export class Renderer {
     this.drawShadow(sx, sy, 12);
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
-      look: LOOKS[ch.classId] || LOOKS.knight,
+      classId: ch.classId, look: LOOKS[ch.classId] || LOOKS.knight,
       facing: p.visualFacing || p.facing,
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,

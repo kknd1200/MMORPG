@@ -1,3 +1,4 @@
+import { drawHeroSheet } from './hero-sheets.js';
 import { footPose } from './locomotion.js';
 // 캐릭터 · NPC · 몬스터 그림 (캔버스 도형으로 그리는 클래식 다크 판타지 풍 스프라이트)
 //
@@ -112,6 +113,7 @@ const ARMOR_TINT = {
  *      dead, scale, time }
  */
 export function drawHumanoid(ctx, x, y, s) {
+  if (s.classId && drawHeroSheet(ctx, x, y, s)) return;
   const look = { ...s.look, ...(ARMOR_TINT[s.armorId] || {}) };
   if (look.robe && ARMOR_TINT[s.armorId]) look.robe = shade(look.torso, -0.1);
   const { view, turn, flip } = viewOf(s.facing);
