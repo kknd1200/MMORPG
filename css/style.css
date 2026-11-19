@@ -105,7 +105,7 @@ div.avatar { border-radius: 12px 12px 6px 6px; background: linear-gradient(#3a34
 .hud-boss { margin-bottom: 6px; padding: 2px 8px; background: rgba(40,10,10,0.78); border: 1px solid #8a3a2a; border-radius: 4px; color: #ffb08a; font-size: 12px; display: block; width: fit-content; max-width: 300px; }
 .hud-topright > div { margin-left: auto; }
 .hud-zone { display: block; width: fit-content; margin-bottom: 4px; padding: 3px 10px; background: rgba(15,13,10,0.78); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--gold); display: inline-block; }
-.hud-minimap { display: block; width: 150px; height: auto; margin-left: auto; border: 2px solid var(--panel-border); border-radius: 4px; image-rendering: pixelated; }
+.hud-minimap { display: block; width: 200px; height: auto; background: #0c0d0a; margin-left: auto; border: 2px solid var(--panel-border); border-radius: 4px; image-rendering: pixelated; }
 
 .hud-log { position: absolute; left: 12px; bottom: 96px; width: 420px; max-width: calc(100% - 24px); max-height: 170px; overflow: hidden; padding: 6px 8px; background: rgba(0,0,0,0.4); border-radius: 4px; font-size: 12px; line-height: 1.5; }
 .log-system { color: #9fd0ff; }

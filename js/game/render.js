@@ -1,8 +1,11 @@
-// 캔버스 렌더링 (모든 그래픽은 도형으로 그린 플레이스홀더 — 추후 스프라이트로 교체)
-import { TILE_SIZE as TS, T } from './world.js';
+// 캔버스 렌더링 — 아이소메트릭(마름모 타일) 2.5D 시점
+//   월드 좌표 (x, y) → 화면 ((x − y)·32, (x + y)·16)
+//   바닥은 terrain.js 의 청크 캐시, 벽 · 나무 · 집 · 캐릭터는 깊이(x + y) 순서로 그림
+import { T } from './world.js';
 import { MONSTERS } from '../data/monsters.js';
 import { ITEMS } from '../data/items.js';
 import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
+import { TW, TH, HW, HH, ISO_RX, ISO_RY, Ground, objectSprite, propSprite, drawSprite } from './terrain.js';
 
 // NPC 외형 (사람형 스프라이트 재사용)
 const NPC_LOOKS = {
@@ -10,15 +13,20 @@ const NPC_LOOKS = {
   smith: { skin: '#d8a880', hair: '#2a1a12', hairStyle: 'short', helm: 'none', cape: null, torso: '#5a4a40', tabard: '#3a2a22', trim: '#a08060', legs: '#4a3a30', boots: '#2a1e16', arms: '#d8a880', weapon: 'mace' },
   healer: { skin: '#f0d0b0', hair: '#c8a060', hairStyle: 'long', helm: 'circlet', helmColor: '#e8c860', cape: '#a8b8d8', torso: '#e8e8f8', robe: '#dcdcf0', trim: '#8aa8e0', legs: '#c8c8e0', boots: '#6a6a8a', arms: '#e8e8f8', weapon: 'none' },
   guide: { skin: '#ecc8a4', hair: '#3a2a1a', hairStyle: 'short', helm: 'hood', helmColor: '#3a6a8a', cape: '#2a4a6a', torso: '#5aa0c8', trim: '#e0d090', legs: '#3a4a5a', boots: '#2a2a2a', arms: '#5aa0c8', weapon: 'staff' },
+  teleporter: { skin: '#f0d4b8', hair: '#dcdcf0', hairStyle: 'long', helm: 'hood', helmColor: '#4a2a7a', cape: '#3a2068', torso: '#6a3aa8', robe: '#4a2a80', trim: '#e0c878', legs: '#3a2a5a', boots: '#2a1e36', arms: '#6a3aa8', weapon: 'staff' },
 };
 
-const GRASS = ['#4c8a3a', '#4f8f3d', '#4a8538', '#53923f'];
 const FONT = '"Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+const TAU = Math.PI * 2;
+
+// 월드 방향 → 화면 방향 (캐릭터가 바라보는 쪽 그림 고르기용)
+const screenDir = (f) => ({ x: f.x - f.y, y: (f.x + f.y) * 0.5 });
 
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.ox = 0; this.oy = 0;
     this.resize();
   }
 
@@ -33,15 +41,33 @@ export class Renderer {
   }
 
   screenToWorld(sx, sy, cam) {
-    return { x: (sx - this.w / 2) / TS + cam.x, y: (sy - this.h / 2) / TS + cam.y };
+    const a = (sx - this.w / 2) / HW, b = (sy - this.h / 2) / HH;
+    return { x: cam.x + (a + b) / 2, y: cam.y + (b - a) / 2 };
   }
+
+  worldToScreen(x, y, cam) {
+    return { x: this.w / 2 + (x - y - (cam.x - cam.y)) * HW, y: this.h / 2 + (x + y - cam.x - cam.y) * HH };
+  }
+
+  // 화면을 덮는 월드 범위의 반지름(타일) — 몬스터 구역 켜기/끄기 계산용
+  viewHalfTiles() { return (this.w / TW + this.h / TH) / 2 + 1; }
+
+  px(x, y) { return this.ox + (x - y) * HW; }
+  py(x, y) { return this.oy + (x + y) * HH; }
 
   draw(game) {
     const { ctx } = this;
     const cam = game.camera;
+    const world = game.world;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    ctx.fillStyle = '#10140e';
+    ctx.fillStyle = '#0c0d0a';
     ctx.fillRect(0, 0, this.w, this.h);
+    if (this.world !== world) {
+      this.world = world;
+      this.ground = new Ground(world);
+      this.objs = new Array(world.w * world.h);
+      this.props = world.props.map((p) => ({ p, s: propSprite(p) }));
+    }
 
     // 화면 흔들림 (보스 내려찍기 등)
     let shx = 0, shy = 0;
@@ -50,117 +76,203 @@ export class Renderer {
       const p = fx.power * (1 - fx.t / fx.life);
       shx += (Math.random() - 0.5) * 2 * p; shy += (Math.random() - 0.5) * 2 * p;
     }
-    const ox = Math.round(this.w / 2 - cam.x * TS + shx);
-    const oy = Math.round(this.h / 2 - cam.y * TS + shy);
-    const tx0 = Math.floor(cam.x - this.w / 2 / TS) - 1;
-    const ty0 = Math.floor(cam.y - this.h / 2 / TS) - 1;
-    const tx1 = Math.ceil(cam.x + this.w / 2 / TS) + 1;
-    const ty1 = Math.ceil(cam.y + this.h / 2 / TS) + 1;
+    this.ox = Math.round(this.w / 2 - (cam.x - cam.y) * HW + shx);
+    this.oy = Math.round(this.h / 2 - (cam.x + cam.y) * HH + shy);
 
-    const world = game.world;
-    for (let ty = ty0; ty <= ty1; ty++) {
-      for (let tx = tx0; tx <= tx1; tx++) {
-        if (tx < 0 || ty < 0 || tx >= world.w || ty >= world.h) continue;
-        const i = world.idx(tx, ty);
-        drawTile(ctx, world.tiles[i], world.variant[i], ox + tx * TS, oy + ty * TS, game.time);
+    // 화면에 걸치는 월드 타일 범위 (아래쪽은 키 큰 나무 · 벽 때문에 넉넉히)
+    const c = [[0, 0], [this.w, 0], [0, this.h + 240], [this.w, this.h + 240]].map(([sx, sy]) => this.screenToWorld(sx, sy, cam));
+    const tx0 = Math.max(0, Math.floor(Math.min(...c.map((p) => p.x))) - 1);
+    const tx1 = Math.min(world.w - 1, Math.ceil(Math.max(...c.map((p) => p.x))) + 1);
+    const ty0 = Math.max(0, Math.floor(Math.min(...c.map((p) => p.y))) - 1);
+    const ty1 = Math.min(world.h - 1, Math.ceil(Math.max(...c.map((p) => p.y))) + 1);
+
+    // 1) 바닥 청크
+    const g = this.ground;
+    for (let cy = Math.floor(ty0 / 16); cy <= Math.floor(ty1 / 16); cy++) {
+      for (let cx = Math.floor(tx0 / 16); cx <= Math.floor(tx1 / 16); cx++) {
+        const rc = g.chunkRect(cx, cy);
+        const X = rc.X0 + this.ox, Y = rc.Y0 + this.oy;
+        if (X > this.w || Y > this.h || X + rc.W < 0 || Y + rc.H < 0) continue;
+        const ch = g.get(cx, cy, true);
+        ctx.drawImage(ch.canvas, X, Y, rc.W, rc.H);
       }
     }
 
-    // 마을 표지
-    if (world.town) {
-      const t = world.town;
-      ctx.font = `bold 15px ${FONT}`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(255,240,200,0.95)';
-      ctx.fillText(world.def.name, ox + ((t.x0 + t.x1) / 2 + 0.5) * TS, oy + (t.y0 - 0.4) * TS);
+    // 2) 바닥 위 움직이는 것: 물결 · 용암 빛
+    const t = game.time;
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      const i = world.idx(tx, ty), tile = world.tiles[i];
+      if (tile !== T.WATER && tile !== T.LAVA) continue;
+      const v = world.variant[i];
+      const sx = this.px(tx + 0.5, ty + 0.5), sy = this.py(tx + 0.5, ty + 0.5);
+      if (sx < -40 || sx > this.w + 40 || sy < -20 || sy > this.h + 20) continue;
+      if (tile === T.WATER && v % 3 === 0) {
+        const k = (t * 0.6 + v * 0.13) % 1;
+        ctx.strokeStyle = `rgba(190,225,240,${0.28 * Math.sin(k * Math.PI)})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.ellipse(sx + (v % 9) - 4, sy + (v % 5) - 2, 8 + k * 10, (8 + k * 10) * 0.35, 0, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+      } else if (tile === T.LAVA && v % 2 === 0) {
+        ctx.fillStyle = `rgba(255,190,80,${0.12 + 0.12 * Math.sin(t * 2.2 + v)})`;
+        ctx.beginPath(); ctx.ellipse(sx, sy, 22, 11, 0, 0, TAU); ctx.fill();
+      }
     }
 
-    // 출구 · 던전 입구 · 계단 · 귀환 포탈
-    for (const q of [...world.portals, ...game.tempPortals]) this.drawPortal(q, ox, oy, game.time);
-
-    // 이동 목표 표시
+    // 3) 바닥에 깔리는 것: 출구 · 계단 · 귀환 포탈, 이동 목표, 보스 공격 예고
+    const portals = [...world.portals, ...game.tempPortals];
+    for (const q of portals) if (q.kind !== 'cave') this.drawPortal(q, t);
     const p = game.player;
     if (p.moveTarget && !p.action) {
-      const mx = ox + p.moveTarget.x * TS, my = oy + p.moveTarget.y * TS;
+      const mx = this.px(p.moveTarget.x, p.moveTarget.y), my = this.py(p.moveTarget.x, p.moveTarget.y);
       ctx.strokeStyle = 'rgba(255,255,255,0.6)';
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(mx, my, 8, 4, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(mx, my, 10, 5, 0, 0, TAU); ctx.stroke();
     }
+    this.drawGroundEffects(game);
 
-    // 바닥에 깔리는 효과 (보스 공격 예고)는 캐릭터보다 먼저
-    this.drawGroundEffects(game, ox, oy);
+    // 4) 솟은 것 + 캐릭터를 깊이 순서로
+    const list = [];
+    const objs = this.objs;
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+      const i = world.idx(tx, ty);
+      let s = objs[i];
+      if (s === undefined) { s = objectSprite(world, world.tiles[i], world.variant[i], i); objs[i] = s; }
+      if (!s) continue;
+      const sx = this.px(tx + 0.5, ty + 0.5), sy = this.py(tx + 0.5, ty + 0.5);
+      if (sx + s.w < 0 || sx - s.w > this.w || sy - s.ay > this.h || sy + (s.h - s.ay) < 0) continue;
+      list.push({ d: tx + ty + 1, s, x: sx, y: sy });
+    }
+    for (const { p: pr, s } of this.props) {
+      const cx = pr.x0 + pr.w / 2, cy = pr.y0 + pr.h / 2;
+      const sx = this.px(cx, cy), sy = this.py(cx, cy);
+      if (sx + s.w < 0 || sx - s.w > this.w || sy - s.ay > this.h || sy + (s.h - s.ay) < 0) continue;
+      list.push({ d: cx + cy, s, x: sx, y: sy });
+    }
+    for (const q of portals) if (q.kind === 'cave') list.push({ d: q.cx + q.cy - 0.6, cave: q });
+    for (const e of [...world.npcs, ...game.monsters, p]) {
+      const sx = this.px(e.x, e.y), sy = this.py(e.x, e.y);
+      if (sx < -120 || sy < -40 || sx > this.w + 120 || sy > this.h + 160) continue;
+      list.push({ d: e.x + e.y, e, x: sx, y: sy });
+    }
+    list.sort((a, b) => a.d - b.d);
 
     const targetId = p.action?.targetId;
     const hoverId = game.hover?.id;
-    const ents = [...world.npcs, ...game.monsters, p].sort((a, b) => a.y - b.y);
-    for (const e of ents) {
-      const sx = ox + e.x * TS, sy = oy + e.y * TS;
-      if (sx < -60 || sy < -60 || sx > this.w + 60 || sy > this.h + 60) continue;
-      if (e === p) this.drawPlayer(game, sx, sy);
-      else if (e.isNpc) this.drawNpc(e, sx, sy, hoverId === e.id, game.time);
-      else this.drawMonster(e, sx, sy, targetId === e.id, hoverId === e.id, game.time);
+    // 내 캐릭터 몸통 영역: 뒤에 그려지는 벽 · 지붕 · 나무와 겹치면 반투명 윤곽을 다시 그림
+    const pbx = this.px(p.x, p.y), pby = this.py(p.x, p.y);
+    let drawnPlayer = false, covered = false;
+    for (const it of list) {
+      if (it.e === p) drawnPlayer = true;
+      else if (drawnPlayer && !covered && it.s) {
+        const x0 = it.x - it.s.ax, y0 = it.y - it.s.ay;
+        covered = x0 < pbx + 10 && x0 + it.s.w > pbx - 10 && y0 < pby - 6 && y0 + it.s.h > pby - 40;
+      }
+      if (it.s) drawSprite(ctx, it.s, it.x, it.y);
+      else if (it.cave) this.drawCave(it.cave, t);
+      else if (it.e === p) this.drawPlayer(game, it.x, it.y);
+      else if (it.e.isNpc) this.drawNpc(it.e, it.x, it.y, hoverId === it.e.id, t);
+      else this.drawMonster(it.e, it.x, it.y, targetId === it.e.id, hoverId === it.e.id, t);
     }
 
-    this.drawEffects(game, ox, oy);
+    // 벽 뒤에 가려진 내 캐릭터는 반투명으로 한 번 더
+    if (covered) {
+      ctx.globalAlpha = 0.4;
+      this.drawPlayer(game, pbx, pby, true);
+      ctx.globalAlpha = 1;
+    }
+
+    this.drawEffects(game);
+
+    // 이름표는 맨 위에
+    for (const q of portals) {
+      const lx = this.px(q.cx, q.cy), ly = this.py(q.cx, q.cy);
+      nameTag(ctx, lx, ly - (q.kind === 'cave' ? 58 : 26), q.label, q.kind === 'exit' ? '#9eeaff' : '#e0b8ff');
+    }
 
     // 던전은 어둡게: 캐릭터 주변만 밝음
     if (world.dark) {
-      const px = ox + p.x * TS, py = oy + p.y * TS - 12;
-      const g = ctx.createRadialGradient(px, py, TS * 4, px, py, Math.max(this.w, this.h) * 0.6);
-      g.addColorStop(0, 'rgba(0,0,0,0)');
-      g.addColorStop(1, `rgba(0,0,0,${world.dark})`);
-      ctx.fillStyle = g;
+      const sx = this.px(p.x, p.y), sy = this.py(p.x, p.y) - 20;
+      const gr = ctx.createRadialGradient(sx, sy, 150, sx, sy, Math.max(this.w, this.h) * 0.62);
+      gr.addColorStop(0, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, `rgba(0,0,0,${world.dark + 0.15})`);
+      ctx.fillStyle = gr;
+      ctx.fillRect(0, 0, this.w, this.h);
+    } else {
+      // 필드 · 마을도 가장자리를 살짝 어둡게 (분위기)
+      const gr = ctx.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.45, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75);
+      gr.addColorStop(0, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = gr;
       ctx.fillRect(0, 0, this.w, this.h);
     }
   }
 
-  drawPortal(q, ox, oy, time) {
+  drawPortal(q, time) {
     const { ctx } = this;
-    const x0 = ox + q.rect.x0 * TS, y0 = oy + q.rect.y0 * TS;
-    const w = (q.rect.x1 - q.rect.x0) * TS, h = (q.rect.y1 - q.rect.y0) * TS;
-    const cx = ox + q.cx * TS, cy = oy + q.cy * TS;
-    if (cx < -200 || cy < -200 || cx > this.w + 200 || cy > this.h + 200) return;
     const pulse = 0.5 + 0.5 * Math.sin(time * 3);
+    const r = q.rect;
+    const corners = [[r.x0, r.y0], [r.x1, r.y0], [r.x1, r.y1], [r.x0, r.y1]].map(([x, y]) => [this.px(x, y), this.py(x, y)]);
+    const cx = this.px(q.cx, q.cy), cy = this.py(q.cx, q.cy);
+    if (cx < -200 || cy < -200 || cx > this.w + 200 || cy > this.h + 200) return;
+    const path = () => { ctx.beginPath(); corners.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); };
     ctx.save();
     if (q.kind === 'exit') {
-      const g = ctx.createLinearGradient(x0, 0, x0 + w, 0);
-      g.addColorStop(0, `rgba(110,224,255,${0.15 + pulse * 0.25})`);
-      g.addColorStop(1, `rgba(110,224,255,${0.15 + pulse * 0.25})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(x0, y0, w, h);
-    } else if (q.kind === 'cave') {
-      // 바위 동굴 입구
-      ctx.fillStyle = '#1a1512';
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 6, w * 0.55, h * 0.75, 0, Math.PI, 0);
-      ctx.lineTo(cx + w * 0.55, cy + 10);
-      ctx.lineTo(cx - w * 0.55, cy + 10);
-      ctx.fill();
-      ctx.strokeStyle = `rgba(200,122,255,${0.4 + pulse * 0.5})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      path();
+      ctx.fillStyle = `rgba(110,224,255,${0.12 + pulse * 0.18})`; ctx.fill();
+      ctx.strokeStyle = `rgba(160,236,255,${0.4 + pulse * 0.4})`; ctx.lineWidth = 2; ctx.stroke();
+      // 빛기둥
+      const gr = ctx.createLinearGradient(cx, cy - 70, cx, cy);
+      gr.addColorStop(0, 'rgba(110,224,255,0)'); gr.addColorStop(1, `rgba(110,224,255,${0.18 + pulse * 0.12})`);
+      ctx.fillStyle = gr; ctx.fillRect(cx - 26, cy - 70, 52, 70);
     } else if (q.kind === 'up' || q.kind === 'down') {
-      // 계단
-      for (let i = 0; i < 4; i++) {
-        const k = q.kind === 'down' ? i : 3 - i;
-        ctx.fillStyle = `rgb(${110 - k * 20},${100 - k * 20},${90 - k * 18})`;
-        ctx.fillRect(x0 + 2, y0 + 2 + i * (h - 4) / 4, w - 4, (h - 4) / 4 - 1);
+      // 계단: 아래로 꺼지는 구멍(down) / 위로 오르는 단(up)
+      path();
+      ctx.fillStyle = q.kind === 'down' ? '#141210' : '#5a544c'; ctx.fill();
+      for (let i = 1; i <= 4; i++) {
+        const k = i / 5;
+        const sh = q.kind === 'down' ? i * 3 : -i * 4;
+        ctx.beginPath();
+        corners.forEach(([x, y], j) => {
+          const px = cx + (x - cx) * (1 - k * 0.55), py = cy + (y - cy) * (1 - k * 0.55) + sh;
+          if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+        });
+        ctx.closePath();
+        const c = q.kind === 'down' ? 90 - i * 16 : 110 + i * 10;
+        ctx.fillStyle = `rgb(${c},${c - 6},${c - 12})`; ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1; ctx.stroke();
       }
-      ctx.strokeStyle = `rgba(200,122,255,${0.4 + pulse * 0.5})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x0 + 1, y0 + 1, w - 2, h - 2);
+      path();
+      ctx.strokeStyle = `rgba(200,122,255,${0.4 + pulse * 0.5})`; ctx.lineWidth = 2; ctx.stroke();
     } else {
       // 귀환 포탈
-      ctx.strokeStyle = `rgba(255,220,120,${0.5 + pulse * 0.5})`;
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.6, h * 0.35, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = `rgba(255,220,120,${0.15 + pulse * 0.2})`;
-      ctx.fill();
+      ctx.strokeStyle = `rgba(255,220,120,${0.5 + pulse * 0.5})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(cx, cy, 34, 17, 0, 0, TAU); ctx.stroke();
+      ctx.fillStyle = `rgba(255,220,120,${0.15 + pulse * 0.2})`; ctx.fill();
+      const gr = ctx.createLinearGradient(cx, cy - 90, cx, cy);
+      gr.addColorStop(0, 'rgba(255,220,120,0)'); gr.addColorStop(1, `rgba(255,220,120,${0.25 + pulse * 0.15})`);
+      ctx.fillStyle = gr; ctx.fillRect(cx - 24, cy - 90, 48, 90);
     }
     ctx.restore();
-    nameTag(ctx, cx, y0 - 6, q.label, q.kind === 'exit' ? '#9eeaff' : '#e0b8ff');
+  }
+
+  // 던전 입구 동굴: 바위 언덕 + 어두운 입구
+  drawCave(q, time) {
+    const { ctx } = this;
+    const cx = this.px(q.cx, q.cy), cy = this.py(q.cx, q.cy);
+    const pulse = 0.5 + 0.5 * Math.sin(time * 3);
+    const gr = ctx.createLinearGradient(cx - 70, cy - 70, cx + 70, cy + 10);
+    gr.addColorStop(0, '#8c8478'); gr.addColorStop(0.55, '#5e574e'); gr.addColorStop(1, '#2e2a26');
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.moveTo(cx - 78, cy + 8);
+    ctx.quadraticCurveTo(cx - 84, cy - 40, cx - 40, cy - 62);
+    ctx.quadraticCurveTo(cx, cy - 84, cx + 42, cy - 60);
+    ctx.quadraticCurveTo(cx + 86, cy - 38, cx + 76, cy + 10);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(20,18,16,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#0c0a08';
+    ctx.beginPath();
+    ctx.moveTo(cx - 26, cy + 8); ctx.quadraticCurveTo(cx - 28, cy - 34, cx, cy - 38); ctx.quadraticCurveTo(cx + 28, cy - 34, cx + 26, cy + 8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = `rgba(200,122,255,${0.35 + pulse * 0.45})`; ctx.lineWidth = 2; ctx.stroke();
   }
 
   drawShadow(sx, sy, r) {
@@ -171,16 +283,16 @@ export class Renderer {
     ctx.fill();
   }
 
-  drawPlayer(game, sx, sy) {
+  drawPlayer(game, sx, sy, ghost = false) {
     const { ctx } = this;
     const p = game.player;
     const ch = game.char;
     const weapon = ITEMS[ch.equipment?.weapon];
-    this.drawShadow(sx, sy, 12);
+    if (!ghost) this.drawShadow(sx, sy, 12);
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
       look: LOOKS[ch.classId] || LOOKS.knight,
-      facing: p.facing,
+      facing: screenDir(p.facing),
       walk: p.walkPhase,
       moving: p.moving,
       attack: (p.attackAnim || 0) / 0.3,
@@ -191,7 +303,7 @@ export class Renderer {
       dead: p.dead,
       time: game.time,
     });
-    nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
+    if (!ghost) nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
   }
 
   drawNpc(n, sx, sy, hovered, time) {
@@ -221,7 +333,7 @@ export class Renderer {
     // 그림 반폭(px): 시트 몬스터는 실제 몸 폭 기준, 도형 몬스터는 size 기준
     const r = def.art
       ? Math.max(8, (def.art.bodyWidth / def.art.bodyHeight) * MONSTER_UNIT_PX * def.size * 0.45)
-      : def.size * TS;
+      : def.size * 32;
     const fade = m.dead ? Math.max(0, 1 - (time - m.deathTime) / 0.7) : 1;
     ctx.globalAlpha = fade;
     if (m.isBoss && !m.dead) {
@@ -240,7 +352,7 @@ export class Renderer {
       ctx.beginPath(); ctx.ellipse(sx, sy + 2, r + 5, (r + 5) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
-    const height = drawMonsterSprite(ctx, sx, sy, m, def, r, time);
+    const height = drawMonsterSprite(ctx, sx, sy, { ...m, facing: screenDir(m.facing) }, def, r, time);
     ctx.globalAlpha = 1;
     if (m.dead) return;
 
@@ -260,23 +372,23 @@ export class Renderer {
     }
   }
 
-  drawGroundEffects(game, ox, oy) {
+  drawGroundEffects(game) {
     const { ctx } = this;
     for (const fx of game.effects) {
       if (fx.type !== 'telegraph') continue;
       const k = Math.min(1, fx.t / fx.life);
-      const x = ox + fx.x * TS, y = oy + fx.y * TS;
-      const R = fx.r * TS;
+      const x = this.px(fx.x, fx.y), y = this.py(fx.x, fx.y);
+      const RX = fx.r * ISO_RX, RY = fx.r * ISO_RY;
       ctx.fillStyle = 'rgba(255,40,20,0.18)';
-      ctx.beginPath(); ctx.ellipse(x, y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x, y, RX, RY, 0, 0, TAU); ctx.fill();
       ctx.fillStyle = `rgba(255,80,30,${0.25 + k * 0.25})`;
-      ctx.beginPath(); ctx.ellipse(x, y, R * k, R * k * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x, y, RX * k, RY * k, 0, 0, TAU); ctx.fill();
       ctx.strokeStyle = 'rgba(255,120,60,0.9)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.ellipse(x, y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(x, y, RX, RY, 0, 0, TAU); ctx.stroke();
     }
   }
 
-  drawEffects(game, ox, oy) {
+  drawEffects(game) {
     const { ctx } = this;
     for (const fx of game.effects) {
       const k = fx.t / fx.life;
@@ -286,16 +398,17 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        const x = ox + fx.x * TS, y = oy + fx.y * TS - 50 - k * 28;
+        const x = this.px(fx.x, fx.y), y = this.py(fx.x, fx.y) - 56 - k * 28;
         ctx.strokeText(fx.text, x, y);
         ctx.fillStyle = fx.color;
         ctx.fillText(fx.text, x, y);
       } else if (fx.type === 'proj') {
-        const x = ox + (fx.x0 + (fx.x1 - fx.x0) * k) * TS;
-        const y = oy + (fx.y0 + (fx.y1 - fx.y0) * k) * TS - 14;
+        const wx = fx.x0 + (fx.x1 - fx.x0) * k, wy = fx.y0 + (fx.y1 - fx.y0) * k;
+        const x = this.px(wx, wy), y = this.py(wx, wy) - 22;
         ctx.globalAlpha = 1;
         if (fx.kind === 'arrow') {
-          const ang = Math.atan2(fx.y1 - fx.y0, fx.x1 - fx.x0);
+          const dx = fx.x1 - fx.x0, dy = fx.y1 - fx.y0;
+          const ang = Math.atan2((dx + dy) * HH, (dx - dy) * HW);
           ctx.strokeStyle = fx.color; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(ang) * 12, y - Math.sin(ang) * 12); ctx.stroke();
         } else {
@@ -307,185 +420,17 @@ export class Renderer {
       } else if (fx.type === 'ring') {
         ctx.globalAlpha = 1 - k;
         ctx.strokeStyle = fx.color; ctx.lineWidth = 3;
-        const r = fx.r * TS * (0.3 + 0.7 * k);
-        ctx.beginPath(); ctx.ellipse(ox + fx.x * TS, oy + fx.y * TS, r, r * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+        const r = fx.r * (0.3 + 0.7 * k);
+        ctx.beginPath(); ctx.ellipse(this.px(fx.x, fx.y), this.py(fx.x, fx.y), r * ISO_RX, r * ISO_RY, 0, 0, TAU); ctx.stroke();
       } else if (fx.type === 'slash') {
         ctx.globalAlpha = 1 - k;
         ctx.strokeStyle = fx.color; ctx.lineWidth = 3;
-        const x = ox + fx.x * TS, y = oy + fx.y * TS - 14;
-        ctx.beginPath(); ctx.arc(x, y, 12, -0.5 + k * 2, 1 + k * 2); ctx.stroke();
+        const x = this.px(fx.x, fx.y), y = this.py(fx.x, fx.y) - 20;
+        ctx.beginPath(); ctx.arc(x, y, 14, -0.5 + k * 2, 1 + k * 2); ctx.stroke();
       }
     }
     ctx.globalAlpha = 1;
   }
-}
-
-function drawTile(ctx, t, v, x, y, time) {
-  switch (t) {
-    case T.GRASS:
-      ctx.fillStyle = GRASS[v & 3]; ctx.fillRect(x, y, TS, TS);
-      if (v % 7 === 0) { ctx.fillStyle = '#3f7a30'; ctx.fillRect(x + (v % 20), y + ((v >> 3) % 20), 3, 5); }
-      break;
-    case T.FLOWER: {
-      ctx.fillStyle = GRASS[v & 3]; ctx.fillRect(x, y, TS, TS);
-      const cols = ['#f4e04d', '#f08ab0', '#ffffff', '#b28cf0'];
-      for (let i = 0; i < 3; i++) {
-        ctx.fillStyle = cols[(v + i) & 3];
-        ctx.fillRect(x + ((v * (i + 3)) % 26) + 2, y + ((v * (i + 7)) % 26) + 2, 3, 3);
-      }
-      break;
-    }
-    case T.DIRT:
-      ctx.fillStyle = (v & 1) ? '#977a52' : '#9c7f56'; ctx.fillRect(x, y, TS, TS);
-      if (v % 5 === 0) { ctx.fillStyle = '#7f6544'; ctx.fillRect(x + (v % 24), y + ((v >> 2) % 24), 4, 3); }
-      break;
-    case T.SAND:
-      ctx.fillStyle = (v & 1) ? '#d6c28c' : '#dac792'; ctx.fillRect(x, y, TS, TS);
-      break;
-    case T.WATER: {
-      ctx.fillStyle = '#2e6aa3'; ctx.fillRect(x, y, TS, TS);
-      const a = 0.15 + 0.12 * Math.sin(time * 2 + v);
-      ctx.fillStyle = `rgba(200,230,255,${a})`;
-      ctx.fillRect(x + 4 + (v % 12), y + 8 + (v % 14), 10, 2);
-      break;
-    }
-    case T.FLOOR:
-      ctx.fillStyle = (v & 1) ? '#b49c74' : '#ac946c'; ctx.fillRect(x, y, TS, TS);
-      ctx.strokeStyle = 'rgba(80,60,40,0.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TS - 1, TS - 1);
-      break;
-    case T.STONE:
-      ctx.fillStyle = ['#77756f', '#7c7a73', '#73716b', '#807d76'][v & 3]; ctx.fillRect(x, y, TS, TS);
-      if (v % 9 === 0) { ctx.strokeStyle = '#5d5b56'; ctx.beginPath(); ctx.moveTo(x + 6, y + 8); ctx.lineTo(x + 16, y + 18); ctx.lineTo(x + 24, y + 14); ctx.stroke(); }
-      break;
-    case T.ROCK:
-      ctx.fillStyle = '#77756f'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = '#9a978f'; roundRect(ctx, x + 3, y + 2, TS - 6, TS - 5, 5); ctx.fill();
-      ctx.fillStyle = '#b4b1a9'; ctx.fillRect(x + 6, y + 5, TS - 14, 4);
-      break;
-    case T.WALL:
-      ctx.fillStyle = '#5f544b'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = '#7d7064'; ctx.fillRect(x, y, TS, 8);
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.strokeRect(x + 0.5, y + 0.5, TS - 1, TS - 1);
-      break;
-    case T.TREE:
-      ctx.fillStyle = GRASS[v & 3]; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.beginPath(); ctx.ellipse(x + TS / 2, y + TS - 4, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#5a3d22'; ctx.fillRect(x + TS / 2 - 3, y + TS / 2, 6, TS / 2 - 3);
-      ctx.fillStyle = (v & 1) ? '#2e5f2a' : '#336a2e';
-      ctx.beginPath(); ctx.arc(x + TS / 2, y + TS / 2 - 3, 14, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#3f7d37';
-      ctx.beginPath(); ctx.arc(x + TS / 2 - 4, y + TS / 2 - 7, 7, 0, Math.PI * 2); ctx.fill();
-      break;
-    case T.SWAMP: {
-      ctx.fillStyle = (v & 1) ? '#4a6040' : '#4e653f'; ctx.fillRect(x, y, TS, TS);
-      if (v % 4 === 0) { ctx.fillStyle = 'rgba(40,70,60,0.7)'; ctx.beginPath(); ctx.ellipse(x + 8 + (v % 14), y + 10 + (v % 12), 6, 3, 0, 0, Math.PI * 2); ctx.fill(); }
-      if (v % 9 === 0) { ctx.fillStyle = '#7a8a4a'; ctx.fillRect(x + (v % 22) + 3, y + 6, 2, 10); ctx.fillRect(x + (v % 22) + 7, y + 9, 2, 8); }
-      break;
-    }
-    case T.ASH:
-      ctx.fillStyle = ['#46403e', '#4a4442', '#433d3b', '#4d4644'][v & 3]; ctx.fillRect(x, y, TS, TS);
-      if (v % 6 === 0) { ctx.fillStyle = '#5a5250'; ctx.fillRect(x + (v % 24), y + ((v >> 2) % 24), 4, 3); }
-      if (v % 23 === 0) { ctx.fillStyle = `rgba(255,120,40,${0.3 + 0.3 * Math.sin(time * 3 + v)})`; ctx.fillRect(x + (v % 20) + 4, y + 14, 2, 2); }
-      break;
-    case T.DARKGRASS:
-      ctx.fillStyle = ['#2c4a2e', '#2f4e30', '#2a472c', '#325232'][v & 3]; ctx.fillRect(x, y, TS, TS);
-      if (v % 7 === 0) { ctx.fillStyle = '#243d26'; ctx.fillRect(x + (v % 20), y + ((v >> 3) % 20), 3, 5); }
-      break;
-    case T.LAVA: {
-      ctx.fillStyle = '#b8401a'; ctx.fillRect(x, y, TS, TS);
-      const a = 0.35 + 0.25 * Math.sin(time * 2.5 + v * 0.7);
-      ctx.fillStyle = `rgba(255,200,60,${a})`;
-      ctx.beginPath(); ctx.ellipse(x + 8 + (v % 16), y + 8 + ((v >> 2) % 16), 7, 4, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(60,20,10,0.35)'; ctx.fillRect(x + (v % 26), y + ((v >> 3) % 26), 5, 3);
-      break;
-    }
-    case T.GRAVE:
-      ctx.fillStyle = (v & 1) ? '#2c4a2e' : '#2f4e30'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x + 7, y + TS - 7, 18, 4);
-      ctx.fillStyle = '#8a8a92'; roundRect(ctx, x + 9, y + 6, 14, 20, 6); ctx.fill();
-      ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#5a5a62'; ctx.fillRect(x + 15, y + 10, 2, 9); ctx.fillRect(x + 12, y + 13, 8, 2);
-      break;
-    case T.DEADTREE:
-      ctx.fillStyle = (v & 1) ? '#2c4a2e' : '#2a472c'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x + TS / 2, y + TS - 4, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#3a2e28'; ctx.lineCap = 'round';
-      ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 16, y + TS - 3); ctx.lineTo(x + 15, y + 9); ctx.stroke();
-      ctx.lineWidth = 2; ctx.beginPath();
-      ctx.moveTo(x + 15, y + 15); ctx.lineTo(x + 7, y + 6 + (v % 4));
-      ctx.moveTo(x + 15, y + 12); ctx.lineTo(x + 24, y + 4 + (v % 3));
-      ctx.moveTo(x + 15, y + 9); ctx.lineTo(x + 13, y + 2);
-      ctx.stroke();
-      break;
-    case T.SNOW:
-      ctx.fillStyle = ['#e6ebf0', '#eaeff3', '#e2e8ee', '#edf1f5'][v & 3]; ctx.fillRect(x, y, TS, TS);
-      if (v % 6 === 0) { ctx.fillStyle = '#cfd8e2'; ctx.fillRect(x + (v % 24), y + ((v >> 2) % 24), 5, 2); }
-      break;
-    case T.ICE:
-      ctx.fillStyle = '#e6ebf0'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = '#9ccbe6'; roundRect(ctx, x + 2, y + 3, TS - 4, TS - 5, 4); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(x + 6, y + 6, 10, 3); ctx.fillRect(x + 6, y + 10, 3, 6);
-      ctx.strokeStyle = '#6aa8cc'; ctx.lineWidth = 1; ctx.strokeRect(x + 2.5, y + 3.5, TS - 5, TS - 6);
-      break;
-    case T.CRYSTAL: {
-      ctx.fillStyle = (v & 1) ? '#77756f' : '#3a3050'; ctx.fillRect(x, y, TS, TS);
-      const glow = 0.5 + 0.3 * Math.sin(time * 2 + v);
-      ctx.fillStyle = `rgba(170,120,255,${glow * 0.35})`; ctx.beginPath(); ctx.ellipse(x + 16, y + 24, 13, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#9a6ae0';
-      ctx.beginPath(); ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 23, y + 18); ctx.lineTo(x + 16, y + 27); ctx.lineTo(x + 9, y + 18); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#c8a8ff';
-      ctx.beginPath(); ctx.moveTo(x + 16, y + 2); ctx.lineTo(x + 19, y + 18); ctx.lineTo(x + 16, y + 27); ctx.lineTo(x + 13, y + 18); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#7a4ac0';
-      ctx.beginPath(); ctx.moveTo(x + 7, y + 12); ctx.lineTo(x + 11, y + 22); ctx.lineTo(x + 5, y + 26); ctx.closePath(); ctx.fill();
-      break;
-    }
-    case T.CORAL:
-      ctx.fillStyle = (v & 1) ? '#dac792' : '#d6c28c'; ctx.fillRect(x, y, TS, TS);
-      ctx.strokeStyle = ['#e8646e', '#f08a5a', '#d85090'][v % 3]; ctx.lineCap = 'round'; ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(x + 16, y + 28); ctx.lineTo(x + 16, y + 12); ctx.lineTo(x + 10, y + 5);
-      ctx.moveTo(x + 16, y + 17); ctx.lineTo(x + 23, y + 8);
-      ctx.moveTo(x + 16, y + 22); ctx.lineTo(x + 8, y + 16);
-      ctx.stroke();
-      break;
-    case T.SHELF:
-      ctx.fillStyle = '#5a3e26'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = '#3a2614'; ctx.fillRect(x, y + 10, TS, 2); ctx.fillRect(x, y + 21, TS, 2);
-      for (let i = 0; i < 6; i++) {
-        ctx.fillStyle = ['#8a2a2a', '#2a4a8a', '#3a6a3a', '#8a6a2a', '#5a2a6a'][(v + i) % 5];
-        ctx.fillRect(x + 2 + i * 5, y + 2 + ((v + i) % 2), 4, 8);
-        ctx.fillRect(x + 2 + i * 5, y + 13 + ((v + i * 3) % 2), 4, 8);
-      }
-      break;
-    case T.VOID: {
-      ctx.fillStyle = ['#2e2440', '#30263f', '#2b2240', '#332844'][v & 3]; ctx.fillRect(x, y, TS, TS);
-      ctx.strokeStyle = 'rgba(120,90,180,0.25)'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TS - 1, TS - 1);
-      if (v % 11 === 0) { ctx.fillStyle = `rgba(200,170,255,${0.4 + 0.4 * Math.sin(time * 3 + v)})`; ctx.fillRect(x + (v % 24) + 3, y + ((v >> 2) % 24) + 3, 2, 2); }
-      break;
-    }
-    case T.CACTUS:
-      ctx.fillStyle = (v & 1) ? '#d6c28c' : '#dac792'; ctx.fillRect(x, y, TS, TS);
-      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(x + 16, y + 28, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#4a8a46';
-      roundRect(ctx, x + 13, y + 5, 7, 23, 3); ctx.fill();
-      roundRect(ctx, x + 6, y + 11, 5, 9, 2); ctx.fill(); ctx.fillRect(x + 8, y + 17, 6, 3);
-      roundRect(ctx, x + 22, y + 8, 5, 9, 2); ctx.fill(); ctx.fillRect(x + 19, y + 14, 5, 3);
-      ctx.fillStyle = '#6aaa5a'; ctx.fillRect(x + 15, y + 7, 2, 18);
-      break;
-    default:
-      ctx.fillStyle = '#f0f'; ctx.fillRect(x, y, TS, TS);
-  }
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
 }
 
 function nameTag(ctx, x, y, text, color) {

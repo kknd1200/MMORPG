@@ -5,7 +5,7 @@ import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items
 import { MONSTERS } from '../data/monsters.js';
 import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
 import * as S from '../systems/stats.js';
-import { World, WORLD_VERSION, TILE_SIZE } from './world.js';
+import { World, WORLD_VERSION } from './world.js';
 import { loadSheet, releaseSheet, sheetCellPx } from './sprites.js';
 import { STREAM, planZones, planArt, viewRect, pointInRect } from './zones.js';
 import { Renderer } from './render.js';
@@ -24,7 +24,6 @@ const EFFECT_COLOR = { slow: '#8ad0ff', expose: '#ffb38c', bleed: '#ff5a5a', bur
 const passive = (def, kind) => def.passive?.find((p) => p.kind === kind)?.value || 0;
 
 export const HOTBAR_KEYS = ['F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'];
-const PICK_RADIUS = 0.75;
 const FIELD_BOSS_ZONE = 'fieldboss';
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
@@ -135,7 +134,7 @@ export class Game {
 
     const w = this.renderer.screenToWorld(this.mouse.sx, this.mouse.sy, this.camera);
     this.mouse.wx = w.x; this.mouse.wy = w.y;
-    this.hover = this.pick(w.x, w.y);
+    this.hover = this.pick();
 
     this.updatePlayer(dt);
     this.checkPortal();
@@ -426,13 +425,16 @@ export class Game {
   }
 
   // ------------------------------------------------------------ 구역 스트리밍
+  // 아이소메트릭 화면이 덮는 월드 범위 (마름모 → 넉넉한 정사각형)
   viewHalf() {
-    return { hw: this.renderer.w / 2 / TILE_SIZE, hh: this.renderer.h / 2 / TILE_SIZE };
+    const r = this.renderer.viewHalfTiles();
+    return { hw: r, hh: r };
   }
 
   onScreen(pt, margin = 0) {
-    const { hw, hh } = this.viewHalf();
-    return pointInRect(pt, viewRect(this.camera.x, this.camera.y, hw, hh, margin));
+    const s = this.renderer.worldToScreen(pt.x, pt.y, this.camera);
+    const m = margin * 32;
+    return s.x > -m - 40 && s.x < this.renderer.w + m + 40 && s.y > -m - 80 && s.y < this.renderer.h + m + 40;
   }
 
   streamZones() {
@@ -931,12 +933,17 @@ export class Game {
   }
 
   // ------------------------------------------------------------ helpers
-  pick(wx, wy) {
-    let best = null, bd = PICK_RADIUS;
+  // 마우스 아래의 몬스터/NPC — 그림이 발밑에서 위로 서 있으므로 화면 좌표로 판정
+  pick() {
+    let best = null, bd = Infinity;
+    const mx = this.mouse.sx, my = this.mouse.sy;
     for (const e of [...this.monsters, ...this.world.npcs]) {
       if (e.dead) continue;
-      // 캐릭터 그림이 위쪽으로 그려지므로 클릭 판정을 살짝 위로
-      const d = Math.hypot(e.x - wx, e.y - 0.4 - wy);
+      const s = this.renderer.worldToScreen(e.x, e.y, this.camera);
+      const big = e.isBoss ? 1.6 : 1;
+      const dx = mx - s.x, dy = my - s.y;
+      if (Math.abs(dx) > 24 * big || dy < -58 * big || dy > 12) continue;
+      const d = Math.abs(dx) + Math.abs(dy + 24 * big) * 0.5;
       if (d < bd) { bd = d; best = e; }
     }
     return best;
@@ -1133,7 +1140,7 @@ export class Game {
     const w = this.renderer.screenToWorld(this.mouse.sx, this.mouse.sy, this.camera);
     this.mouse.wx = w.x;
     this.mouse.wy = w.y;
-    this.hover = this.pick(w.x, w.y);
+    this.hover = this.pick();
   }
 
   onKey(e) {

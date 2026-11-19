@@ -292,7 +292,7 @@ export class Hud {
       [T.SWAMP]: [72, 96, 60], [T.ASH]: [70, 64, 62], [T.DARKGRASS]: [44, 74, 46], [T.LAVA]: [220, 90, 30],
       [T.GRAVE]: [120, 120, 128], [T.DEADTREE]: [52, 44, 40],
       [T.SNOW]: [228, 234, 240], [T.ICE]: [150, 200, 230], [T.CRYSTAL]: [150, 110, 220], [T.CORAL]: [230, 100, 110],
-      [T.SHELF]: [110, 70, 40], [T.VOID]: [50, 40, 70], [T.CACTUS]: [70, 140, 70],
+      [T.SHELF]: [110, 70, 40], [T.VOID]: [50, 40, 70], [T.CACTUS]: [70, 140, 70], [T.HOUSE]: [150, 74, 52],
     };
     for (let i = 0; i < w.w * w.h; i++) {
       const c = colors[w.tiles[i]] || [0, 0, 0];
@@ -302,39 +302,51 @@ export class Hud {
     this.minimapBase = off;
   }
 
+  // 미니맵은 화면과 같은 방향의 마름모로: 월드 (x, y) → ((x − y)·k + h·k, (x + y)·k/2)
+  mini(x, y) {
+    const k = this.miniK, h = this.game.world.h;
+    return [(x - y) * k + h * k, (x + y) * k / 2];
+  }
+
   drawMinimap() {
     const g = this.game;
     const cv = this.el.minimap, ctx = cv.getContext('2d');
-    const s = cv.width / g.world.w;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(this.minimapBase, 0, 0, cv.width, cv.height);
+    const k = this.miniK, h = g.world.h;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#0c0d0a';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.setTransform(k, k / 2, -k, k / 2, h * k, 0);
+    ctx.drawImage(this.minimapBase, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const dot = (x, y, s) => { const [px, py] = this.mini(x, y); ctx.fillRect(px - s / 2, py - s / 2, s, s); };
     ctx.fillStyle = '#ff5050';
-    for (const m of g.monsters) if (!m.dead && !m.isBoss) ctx.fillRect(m.x * s - 1, m.y * s - 1, 2, 2);
-    // 보스는 크게 깜빡이는 점으로 표시
+    for (const m of g.monsters) if (!m.dead && !m.isBoss) dot(m.x, m.y, 2);
     for (const m of g.monsters) {
       if (m.dead || !m.isBoss) continue;
       ctx.fillStyle = Math.sin(g.time * 6) > 0 ? '#ffd24a' : '#ff3030';
-      ctx.fillRect(m.x * s - 2.5, m.y * s - 2.5, 5, 5);
+      dot(m.x, m.y, 5);
     }
     ctx.fillStyle = '#ffe680';
-    for (const n of g.world.npcs) ctx.fillRect(n.x * s - 1.5, n.y * s - 1.5, 3, 3);
-    // 출구 · 던전 입구 · 계단
+    for (const n of g.world.npcs) dot(n.x, n.y, 3);
     for (const q of [...g.world.portals, ...g.tempPortals]) {
       ctx.fillStyle = q.kind === 'exit' ? '#6ae0ff' : '#c87aff';
-      ctx.fillRect(q.cx * s - 2.5, q.cy * s - 2.5, 5, 5);
+      dot(q.cx, q.cy, 5);
     }
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000';
-    ctx.beginPath(); ctx.arc(g.player.x * s, g.player.y * s, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    const [px, py] = this.mini(g.player.x, g.player.y);
+    ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000';
+    ctx.beginPath(); ctx.arc(px, py, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   }
 
   // 맵이 바뀌면: 미니맵 다시 만들기, NPC 창 닫기
   onMapChange(first) {
     this.buildMinimap();
     if (!first) this.closePanel('npc');
-    this.el.minimap.style.aspectRatio = `${this.game.world.w} / ${this.game.world.h}`;
-    const cv = this.el.minimap;
-    cv.height = Math.round(cv.width * this.game.world.h / this.game.world.w);
+    const cv = this.el.minimap, w = this.game.world;
+    cv.width = 200;
+    this.miniK = cv.width / (w.w + w.h);
+    cv.height = Math.ceil((w.w + w.h) * this.miniK / 2);
+    cv.style.width = '200px';
   }
 
   // 맵 이름 띄우기

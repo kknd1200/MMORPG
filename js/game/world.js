@@ -15,9 +15,10 @@ export const T = {
   STONE: 6, ROCK: 7, FLOWER: 8, SAND: 9,
   SWAMP: 10, ASH: 11, DARKGRASS: 12, LAVA: 13, GRAVE: 14, DEADTREE: 15,
   SNOW: 16, ICE: 17, CRYSTAL: 18, CORAL: 19, SHELF: 20, VOID: 21, CACTUS: 22,
+  HOUSE: 23, // 건물이 차지한 땅 (그림은 props 의 집이 그림)
 };
 
-const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE, T.ICE, T.CRYSTAL, T.CORAL, T.SHELF, T.CACTUS]);
+const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE, T.ICE, T.CRYSTAL, T.CORAL, T.SHELF, T.CACTUS, T.HOUSE]);
 
 function mulberry32(seed) {
   return () => {
@@ -116,6 +117,7 @@ export class World {
     this.npcs = [];
     this.zones = [];
     this.spots = {};
+    this.props = []; // 집 · 분수처럼 여러 칸을 차지하는 큰 그림
     this.safe = def.type === 'village';
     this.dark = 0;
     for (let i = 0; i < this.w * this.h; i++) this.variant[i] = Math.floor(this.rng() * 256);
@@ -123,8 +125,10 @@ export class World {
     else if (def.type === 'field') this.genField();
     else this.genDungeon();
     this.spawn = this.spots.center;
+    this.style = def.type === 'dungeon' ? def.palette : def.type === 'village' ? 'village' : def.biome;
     for (const n of this.npcs) { n.radius = 0.35; n.isNpc = true; }
     this.sealPockets();
+    if (def.type === 'dungeon') this.markInterior();
   }
 
   idx(x, y) { return y * this.w + x; }
@@ -214,6 +218,25 @@ export class World {
     this.road(town.x0 + 2, cy - 1, town.x1 - 2, cy + 1);
     this.road(cx - 1, town.y0 + 2, cx + 1, town.y1 - 2);
     this.rect(cx - 1, cy - 5, cx, cy - 4, T.WATER);
+    this.props.push({ kind: 'fountain', x0: cx - 1, y0: cy - 5, w: 2, h: 2 });
+    // 집 (성벽 안 네 구역, 길과 NPC 자리는 피함)
+    const house = (x0, y0, w, h) => {
+      this.rect(x0, y0, x0 + w - 1, y0 + h - 1, T.HOUSE);
+      this.props.push({ kind: 'house', x0, y0, w, h, style: d.id, seed: x0 * 31 + y0 });
+    };
+    const ox = town.x0, oy = town.y0;
+    house(ox + 8, oy + 2, 6, 5);
+    house(ox + 21, oy + 2, 6, 5);
+    house(ox + 8, oy + 25, 6, 5);
+    house(ox + 22, oy + 23, 7, 5);
+    house(ox + 28, oy + 30, 4, 3);
+    house(ox + 2, oy + 10, 4, 4);
+    house(ox + 30, oy + 10, 4, 4);
+    // 꽃밭
+    const bed = (x0, y0, x1, y1) => this.rect(x0, y0, x1, y1, (x, y) => (this.get(x, y) === T.FLOOR ? T.FLOWER : this.get(x, y)));
+    bed(ox + 9, oy + 10, ox + 14, oy + 13);
+    bed(ox + 21, oy + 9, ox + 26, oy + 11);
+    bed(ox + 29, oy + 19, ox + 33, oy + 21);
     for (const [x, y] of [[town.x0 + 2, town.y0 + 2], [town.x1 - 2, town.y0 + 2], [town.x0 + 2, town.y1 - 2], [town.x1 - 2, town.y1 - 2]]) this.set(x, y, T.TREE);
 
     const npc = (kind, name, x, y, color) => this.npcs.push({ id: `npc_${kind}`, kind, name, x: x + 0.5, y: y + 0.5, color });
@@ -373,6 +396,22 @@ export class World {
       sealed++;
     }
     this.sealedTiles = sealed;
+  }
+
+  // 던전: 사방 8칸이 모두 막힌 벽 속 칸 → 그리지 않고 어둠으로 (얇은 벽만 보이게)
+  markInterior() {
+    const { w, h } = this;
+    this.interior = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!this.isSolidTile(x, y)) continue;
+      let inside = true;
+      for (let dy = -1; dy <= 1 && inside; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        if (!this.isSolidTile(nx, ny)) { inside = false; break; }
+      }
+      this.interior[this.idx(x, y)] = inside ? 1 : 0;
+    }
   }
 
   reachable(p) { return !!this.reach?.[this.idx(Math.floor(p.x), Math.floor(p.y))]; }
