@@ -6,18 +6,18 @@ export const ITEMS = {
   // ---- 소모품 ----
   red_potion: {
     name: '빨간 물약', type: 'consumable', price: 20,
-    effect: { hp: 30 }, icon: { color: '#d9443b', text: 'HP' },
-    desc: 'HP를 30 회복합니다.',
+    effect: { hp: 30, hpPct: 0.08 }, icon: { color: '#d9443b', text: 'HP' },
+    desc: 'HP를 30 + 최대 HP의 8% 회복합니다.',
   },
   orange_potion: {
     name: '주황 물약', type: 'consumable', price: 60,
-    effect: { hp: 80 }, icon: { color: '#e8862c', text: 'HP+' },
-    desc: 'HP를 80 회복합니다.',
+    effect: { hp: 80, hpPct: 0.2 }, icon: { color: '#e8862c', text: 'HP+' },
+    desc: 'HP를 80 + 최대 HP의 20% 회복합니다.',
   },
   blue_potion: {
     name: '파란 물약', type: 'consumable', price: 35,
-    effect: { mp: 25 }, icon: { color: '#3b6ed9', text: 'MP' },
-    desc: 'MP를 25 회복합니다.',
+    effect: { mp: 25, mpPct: 0.1 }, icon: { color: '#3b6ed9', text: 'MP' },
+    desc: 'MP를 25 + 최대 MP의 10% 회복합니다.',
   },
   courage_potion: {
     name: '용기의 물약', type: 'consumable', price: 80,

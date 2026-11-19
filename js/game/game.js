@@ -1,3 +1,4 @@
+import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
@@ -357,7 +358,6 @@ export class Game {
         this.face(e, { x: e.x + p.facing.x, y: e.y + p.facing.y });
       }
     }
-    if (e.moving) e.walkPhase += dt * speed * 2.6;
   }
 
   // 겹치지 않게: 파티원끼리 · 몬스터끼리 · 몬스터와 파티원 사이를 조금씩 밀어냄
@@ -391,6 +391,23 @@ export class Game {
         this.nudge(A, -mx * (A.w / wsum), -my * (A.w / wsum));
         this.nudge(B, mx * (B.w / wsum), my * (B.w / wsum));
       }
+    }
+  }
+
+  // 걸음: 프레임 시간이 아니라 실제로 움직인 거리만큼 발을 내딛음 (locomotion.js)
+  //   느리게 걸으면 발도 느리게, 멈추고 출발할 때는 짧게 섞임
+  gait(dt) {
+    const step = (e, stride) => {
+      const d = e.gx == null ? 0 : Math.hypot(e.x - e.gx, e.y - e.gy);
+      e.gx = e.x; e.gy = e.y;
+      advanceGait(e, e.moving ? d : 0, dt, stride);
+    };
+    for (const u of this.units()) step(u.ent, 2.4);
+    const p = this.player;
+    for (const m of this.monsters) {
+      if (m.dead || (m.state === 'idle' && !m.moving && Math.abs(m.x - p.x) + Math.abs(m.y - p.y) > 40)) continue;
+      const def = MONSTERS[m.type];
+      step(m, monsterStride(def?.family, def?.size));
     }
   }
 
@@ -464,6 +481,7 @@ export class Game {
     this.tickStatus();
     this.updateMonsters(dt);
     this.separate(dt);
+    this.gait(dt);
     this.updateEffects(dt);
 
     this.timers.zone += dt;
@@ -489,13 +507,15 @@ export class Game {
   moveEntity(e, tx, ty, speed, dt, forMonster) {
     const dx = tx - e.x, dy = ty - e.y;
     const d = Math.hypot(dx, dy);
-    if (d < 0.08) return 'arrived';
+    if (d < 0.02) return 'arrived';
     const step = Math.min(d, speed * dt);
     const nx = e.x + (dx / d) * step, ny = e.y + (dy / d) * step;
-    let moved = false;
-    if (!this.world.blocked(nx, e.y, e.radius, forMonster)) { e.x = nx; moved = true; }
-    if (!this.world.blocked(e.x, ny, e.radius, forMonster)) { e.y = ny; moved = true; }
-    e.facing = { x: dx / d, y: dy / d };
+    const oldX = e.x, oldY = e.y;
+    if (!this.world.blocked(nx, e.y, e.radius, forMonster)) e.x = nx;
+    if (!this.world.blocked(e.x, ny, e.radius, forMonster)) e.y = ny;
+    const mx = e.x - oldX, my = e.y - oldY, actual = Math.hypot(mx, my);
+    const moved = actual > 0.00001;
+    if (moved) e.facing = { x: mx / actual, y: my / actual };
     return moved ? 'moving' : 'stuck';
   }
 
@@ -569,7 +589,7 @@ export class Game {
       p.moving = r === 'moving';
       if (r !== 'moving' && !this.mouse.left) { p.moveTarget = null; this.clearPath(p); }
     }
-    if (p.moving) p.walkPhase += dt * speed * 2.6;
+
   }
 
   performAction(action, target) {
@@ -970,7 +990,6 @@ export class Game {
       const te = tu?.ent || p;
       this.monsterBrain(m, def, te, tu ? dist(m, te) : 999, playerSafe || !tu, dt, tu);
       m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
-      if (m.moving) m.walkPhase += dt * def.speed * 4;
       // 독 같은 지속 피해
       if (m.dot && this.time >= m.dot.next) {
         if (this.time > m.dot.until) m.dot = null;
@@ -1317,8 +1336,15 @@ export class Game {
     const eff = it.effect;
     if (eff.hp && ch.hp >= ch.maxHp) { this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
     if (eff.mp && ch.mp >= ch.maxMp) { this.log('이미 MP가 가득 찼습니다.', 'warn'); return; }
-    if (eff.hp) { ch.hp = Math.min(ch.maxHp, ch.hp + eff.hp); this.floatText(this.player, `+${eff.hp}`, '#7dff9a'); }
-    if (eff.mp) { ch.mp = Math.min(ch.maxMp, ch.mp + eff.mp); this.floatText(this.player, `MP +${eff.mp}`, '#7ab8ff'); }
+    // 물약: 고정량 + 최대치 비율 (고레벨에서도 쓸모 있게)
+    if (eff.hp) {
+      const amt = eff.hp + Math.floor(ch.maxHp * (eff.hpPct || 0));
+      ch.hp = Math.min(ch.maxHp, ch.hp + amt); this.floatText(this.player, `+${amt}`, '#7dff9a');
+    }
+    if (eff.mp) {
+      const amt = eff.mp + Math.floor(ch.maxMp * (eff.mpPct || 0));
+      ch.mp = Math.min(ch.maxMp, ch.mp + amt); this.floatText(this.player, `MP +${amt}`, '#7ab8ff');
+    }
     if (eff.buff) this.addBuff(eff.buff, it.icon.color);
     if (eff.teleport) {
       // 가장 가까운 마을로 귀환

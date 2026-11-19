@@ -190,22 +190,31 @@ export function sumBuffs(buffs, key) {
   return (buffs || []).reduce((s, b) => s + (b[key] || 0), 0);
 }
 
-// 일반공격력 = 직업 기본 + 무기 + 버프
+// 레벨 보너스: 일반공격력은 직업별 attackGrowth × (레벨-1), 방어력은 (레벨-1)/4
+export function levelAttack(char) {
+  return Math.floor((char.level - 1) * (CLASSES[char.classId].attackGrowth || 0));
+}
+export function levelDefense(char) {
+  return Math.floor((char.level - 1) / 4);
+}
+
+// 일반공격력 = 직업 기본 + 레벨 보너스 + 무기 + 버프
 export function attackBreakdown(char, buffs = []) {
   const base = CLASSES[char.classId].baseAttack;
+  const level = levelAttack(char);
   const weapon = ITEMS[char.equipment?.weapon]?.atk || 0;
   const buff = sumBuffs(buffs, 'atk');
-  return { base, weapon, buff, total: base + weapon + buff };
+  return { base, level, weapon, buff, total: base + level + weapon + buff };
 }
 
 export function attackPower(char, buffs = []) {
   return attackBreakdown(char, buffs).total;
 }
 
-// 방어력 = 체력/3 + 방어구 + 버프
+// 방어력 = 체력/3 + 레벨 보너스 + 방어구 + 버프
 export function defense(char, buffs = []) {
   const armor = ITEMS[char.equipment?.armor]?.def || 0;
-  return Math.floor(char.stats.con / 3) + armor + sumBuffs(buffs, 'def');
+  return Math.floor(char.stats.con / 3) + levelDefense(char) + armor + sumBuffs(buffs, 'def');
 }
 
 export function moveSpeed(buffs = []) {

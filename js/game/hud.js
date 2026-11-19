@@ -536,7 +536,7 @@ export class Hud {
       <h4>전투 능력</h4>
       <table class="derived">
         <tr><td>HP / MP</td><td>${Math.ceil(ch.hp)} / ${ch.maxHp} · ${Math.floor(ch.mp)} / ${ch.maxMp}</td></tr>
-        <tr><td>일반공격</td><td>${d.attack} <small>(기본 ${ap.base} + 무기 ${ap.weapon} + 버프 ${ap.buff})</small></td></tr>
+        <tr><td>일반공격</td><td>${d.attack} <small>(기본 ${ap.base} + 레벨 ${ap.level} + 무기 ${ap.weapon} + 버프 ${ap.buff})</small></td></tr>
         <tr><td>공격 명중</td><td>${pct(d.hit)} <small>(${STAT_NAMES[cls.primaryStat]} 기준, 동레벨 상대)</small></td></tr>
         <tr><td>마법 명중</td><td>${pct(d.magicHit)} <small>(지능 기준)</small></td></tr>
         <tr><td>방어력</td><td>${d.defense}</td></tr>

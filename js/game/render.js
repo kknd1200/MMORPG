@@ -297,7 +297,7 @@ export class Renderer {
       sprite: game.heroKey,
       facing: screenDir(p.facing),
       walk: p.walkPhase,
-      moving: p.moving,
+      moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / 0.3,
       cast: (p.castAnim || 0) / 0.4,
       weaponColor: weapon?.icon?.color,

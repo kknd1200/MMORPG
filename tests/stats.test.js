@@ -175,3 +175,15 @@ test('새 캐릭터: 성별 저장, 첫 단축칸은 Lv.1 스킬', () => {
   assert.equal(SKILLS[c.hotbar[0].id].level, 1);
   assert.equal(S.createCharacter({ id: 'h', name: '기본', classId: 'elf', stats: alloc('elf', { con: 6 }) }).gender, 'f');
 });
+
+test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 오를수록 HP·공격·경험치 상승', async () => {
+  const B = await import('../js/systems/balance.js');
+  let prev = null;
+  for (const lv of [1, 10, 30, 60, 99]) {
+    const m = B.monsterBase(lv);
+    const kill = m.hp / B.curve(lv).dps;
+    assert.ok(kill >= 2 && kill <= 5, `Lv.${lv} 처치 ${kill.toFixed(1)}초`);
+    if (prev) for (const k of ['hp', 'atk', 'exp']) assert.ok(m[k] > prev[k], `Lv.${lv} ${k}`);
+    prev = m;
+  }
+});

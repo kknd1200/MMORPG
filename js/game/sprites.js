@@ -78,10 +78,14 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
   const dur = m.animDur || 0.3;
   const prog = m.attackAnim > 0 ? 1 - m.attackAnim / dur : 0; // 공격 동작 진행 0→1
   const atk = m.attackAnim > 0 ? Math.sin(prog * Math.PI) : 0; // 0→1→0
-  const walk = m.moving ? Math.sin(m.walkPhase) : 0;
+  const weight = m.walkWeight ?? (m.moving ? 1 : 0);
+  const walk = Math.sin(m.walkPhase || 0) * weight;
   const sheet = def.art && sheetImage(def.art.sheet);
   // 시트 그림은 왼쪽을 보고 그려져 있음 → 오른쪽을 볼 때 뒤집기
-  const flip = sheet ? (m.facing.x > 0.01 ? -1 : 1) : (m.facing.x < -0.01 ? -1 : 1);
+  const facingX = (m.visualFacing || m.facing).x;
+  if (Math.abs(facingX) > 0.18) m.spriteFacing = facingX > 0 ? 1 : -1;
+  const direction = m.spriteFacing || (m.facing.x >= 0 ? 1 : -1);
+  const flip = sheet ? -direction : direction;
   const lungeDir = sheet ? -flip : flip;
   ctx.save();
   ctx.translate(x + lungeDir * atk * r * (sheet ? 0.2 : 0.35), y);
@@ -205,18 +209,37 @@ function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   const bodyPx = MONSTER_UNIT_PX * def.size;
   const s = bodyPx / a.bodyHeight;
   // 이동 중: 통통 튀는 걸음 / 대기 중: 숨쉬기
-  const hop = m.moving ? Math.abs(walk) * Math.max(1.5, bodyPx * 0.07) : 0;
-  const breathe = m.moving ? 1 : 1 + Math.sin(time * 2.2 + m.id) * 0.02;
+  const weight = m.walkWeight ?? (m.moving ? 1 : 0);
+  const family = def.family || 'biped';
+  const floating = ['winged', 'spirit', 'aquatic'].includes(family);
+  const float = floating ? Math.sin(time * 2 + m.id) * Math.min(1.4, bodyPx * 0.025) : 0;
+  const settle = floating ? 0 : (1 - Math.cos((m.walkPhase || 0) * 2)) * Math.min(0.35, bodyPx * 0.008) * weight;
   ctx.save();
-  ctx.translate(0, -hop);
-  ctx.scale(1, breathe);
+  ctx.translate(0, -float - settle);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  const c = sheet.cell;
-  ctx.drawImage(sheet.src, col * c, a.row * c, c, c,
-    -a.centerX * s, -a.footY * s, SHEET_CELL * s, SHEET_CELL * s);
+  // 시트는 화면 크기에 맞춰 줄여 두었으므로 원본 좌표 × k 로 잘라 옴
+  const img = sheet.src, c = sheet.cell, k = c / SHEET_CELL;
+  const sx = col * c, sy = a.row * c;
+  const dx = -a.centerX * s, dy = -a.footY * s;
+  if (m.attackAnim > 0 || m.dead || weight < 0.01 || floating) {
+    ctx.drawImage(img, sx, sy, c, c, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
+  } else {
+    // 상체는 그대로, 하체만 띠 단위로 살짝 앞뒤로 휘어 걷는 느낌 (통째로 튀지 않음)
+    const soft = ['slime', 'serpent', 'plant'].includes(family);
+    const cut = Math.max(0, Math.floor(a.footY - a.bodyHeight * (soft ? 0.38 : family === 'quadruped' ? 0.25 : 0.3)));
+    const cutK = Math.floor(cut * k);
+    ctx.drawImage(img, sx, sy, c, cutK, dx, dy, SHEET_CELL * s, cutK / k * s);
+    const stride = Math.min(soft ? 1.3 : 2, bodyPx * (soft ? 0.025 : 0.035)) * weight;
+    const band = Math.max(1, Math.round(3 * k));
+    for (let row = cutK; row < c; row += band) {
+      const h = Math.min(band, c - row), t = Math.max(0, Math.min(1, (row / k - cut) / Math.max(1, a.footY - cut)));
+      const offset = Math.sin((m.walkPhase || 0) + (soft ? t * 2 : 0)) * Math.sin(t * Math.PI * (soft ? 1 : 0.85)) * stride;
+      ctx.drawImage(img, sx, sy + row, c, h, dx + offset, dy + row / k * s, SHEET_CELL * s, h / k * s + 0.3);
+    }
+  }
   ctx.restore();
-  return bodyPx + hop;
+  return bodyPx + Math.max(0, float + settle);
 }
 
 // 시트를 불러오기 전 잠깐 보이는 도형 그림
