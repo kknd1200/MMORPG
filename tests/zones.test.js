@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SPAWN_ZONES } from '../js/data/monsters.js';
-import { World } from '../js/game/world.js';
+import { World, VILLAGE_CELL } from '../js/game/world.js';
 import { STREAM, planZones, planArt, viewRect, rectsOverlap } from '../js/game/zones.js';
 
 const world = new World(); // SPAWN_ZONES.rect 를 채움
@@ -68,4 +68,21 @@ test('그림은 몬스터보다 먼저 불러오고, 더 멀어져야 해제', (
   const active = activeAt(world.spawn);
   for (const id of active) assert.ok(loaded.has(id), `${id} 그림이 미리 로드되지 않음`);
   assert.ok(loaded.size < SPAWN_ZONES.length / 2);
+});
+
+test('성문 4곳 밖이 가장 쉬운 사냥터 4곳', () => {
+  const easiest = SPAWN_ZONES.slice().sort((a, b) => a.minLevel - b.minLevel).slice(0, 4);
+  for (const z of easiest) {
+    const dx = z.cell.x - VILLAGE_CELL.x, dy = z.cell.y - VILLAGE_CELL.y;
+    assert.equal(Math.abs(dx) + Math.abs(dy), 1, `${z.name} 이 성문 바로 앞이 아님`);
+  }
+  const south = SPAWN_ZONES.find((z) => z.cell.x === VILLAGE_CELL.x && z.cell.y === VILLAGE_CELL.y + 1);
+  assert.equal(south.minLevel, 1, '처음 서 있는 남문 밖이 Lv.1');
+});
+
+test('마을에서 멀수록 사냥터 레벨이 높다', () => {
+  const d = (z) => Math.hypot(z.cell.x - VILLAGE_CELL.x, z.cell.y - VILLAGE_CELL.y);
+  for (const a of SPAWN_ZONES) for (const b of SPAWN_ZONES) {
+    if (d(a) < d(b) - 1e-9) assert.ok(a.minLevel < b.minLevel, `${a.name}(거리 ${d(a).toFixed(2)}) 이 ${b.name}(거리 ${d(b).toFixed(2)}) 보다 어려움`);
+  }
 });

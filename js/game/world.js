@@ -7,7 +7,7 @@
 import { SPAWN_ZONES } from '../data/monsters.js';
 
 export const TILE_SIZE = 32;
-export const WORLD_VERSION = 3; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 마을로 초기화
+export const WORLD_VERSION = 4; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 마을로 초기화
 
 export const T = {
   GRASS: 0, DIRT: 1, TREE: 2, WATER: 3, WALL: 4, FLOOR: 5,
@@ -29,16 +29,22 @@ export const VILLAGE = { x0: OX + 12, y0: OY + 12, x1: OX + 36, y1: OY + 36, nam
 
 const cellRect = (cx, cy, pad = 3) => ({ x0: cx * CELL + pad, y0: cy * CELL + pad, x1: (cx + 1) * CELL - pad, y1: (cy + 1) * CELL - pad });
 
-// 칸 순서: 마을과의 거리(고리) → 동쪽부터 시계방향
+// 칸 순서 = 사냥터 난이도 순서
+//  1) 마을 중심에서 가까운 칸일수록 쉬움 (직선거리 → 성문 바로 앞 4칸이 가장 쉬운 사냥터)
+//  2) 같은 거리면 시작 방향(남쪽 성문, 처음 서 있는 곳)에 가까울수록 쉬움 → 남쪽은 쉽고 북쪽으로 갈수록 어려움
+export const VILLAGE_CELL = VCELL;
+const START_ANGLE = Math.PI / 2; // 남쪽 (화면 좌표는 y 가 아래로 증가)
 export const CELL_ORDER = (() => {
   const cells = [];
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     if (x === VCELL.x && y === VCELL.y) continue;
     const dx = x - VCELL.x, dy = y - VCELL.y;
-    let ang = Math.atan2(dy, dx); if (ang < -1e-9) ang += Math.PI * 2;
-    cells.push({ x, y, ring: Math.max(Math.abs(dx), Math.abs(dy)), ang });
+    let ang = Math.atan2(dy, dx) - START_ANGLE;
+    ang = ((ang % (Math.PI * 2)) + Math.PI * 3) % (Math.PI * 2) - Math.PI; // -π ~ π
+    cells.push({ x, y, d: Math.round(Math.hypot(dx, dy) * 1000), off: Math.round(Math.abs(ang) * 1000), cw: ang });
   }
-  return cells.sort((a, b) => a.ring - b.ring || a.ang - b.ang);
+  // 거리 → 시작 방향과의 각도 → 시계방향 먼저
+  return cells.sort((a, b) => a.d - b.d || a.off - b.off || b.cw - a.cw);
 })();
 
 // 사냥터 → 칸 (모듈을 불러올 때 한 번)

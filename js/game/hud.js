@@ -3,11 +3,23 @@ import { CLASSES, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, STAT_CAP } from '../
 import { SKILLS } from '../data/skills.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import * as S from '../systems/stats.js';
-import { T } from './world.js';
+import { T, VILLAGE_CELL } from './world.js';
+import { SPAWN_ZONES } from '../data/monsters.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pct = (v) => `${Math.round(v * 100)}%`;
+
+// 마을 성문 4곳 밖의 사냥터 안내 (쉬운 순서)
+function gateZonesText() {
+  const dirs = [['남문', 0, 1], ['서문', -1, 0], ['동문', 1, 0], ['북문', 0, -1]];
+  return dirs.map(([label, dx, dy]) => {
+    const z = SPAWN_ZONES.find((zn) => zn.cell && zn.cell.x === VILLAGE_CELL.x + dx && zn.cell.y === VILLAGE_CELL.y + dy);
+    return z ? { label, z } : null;
+  }).filter(Boolean)
+    .sort((a, b) => a.z.minLevel - b.z.minLevel)
+    .map(({ label, z }) => `${label} ${esc(z.name)}`).join(' → ');
+}
 
 function iconHtml(color, text, extra = '') {
   return `<span class="icon" style="--c:${color}">${esc(text)}</span>${extra}`;
@@ -463,7 +475,8 @@ export class Hud {
           <li><b>단축칸</b>: F5~F12를 누르거나, 휠로 칸을 고른 뒤 휠 클릭으로 사용해요.</li>
           <li><b>성장</b>: ${cls.name}은(는) 레벨업마다 HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}, MP ${cls.growth.mp[0]}~${cls.growth.mp[1]}이 올라요. 운이 좋으면 '축캐', 나쁘면 '저주캐'가 되죠.</li>
           <li><b>보너스 포인트</b>: 10레벨마다 1점, 50레벨 이후엔 레벨업마다 1점을 받아요.</li>
-          <li><b>사냥터</b>: 동쪽 초원(Lv.1~3) → 남쪽 숲(Lv.4~8) → 북쪽 폐허(Lv.8~13)</li>
+          <li><b>사냥터</b>: 성문 밖이 가장 쉬워요. ${gateZonesText()}</li>
+          <li>마을에서 멀어질수록, 그리고 북쪽으로 갈수록 강한 몬스터가 나와요.</li>
           <li>마을 안은 안전지대라 몬스터가 들어오지 못해요.</li>
         </ul>`;
     }
