@@ -3,6 +3,12 @@ import {
   CLASSES, STAT_KEYS, STAT_NAMES, CREATION, STAT_CAP, MAX_LEVEL,
 } from '../data/classes.js';
 import { ITEMS } from '../data/items.js';
+import { SKILLS } from '../data/skills.js';
+
+// 직업의 첫 스킬 (가장 낮은 레벨)
+export function firstSkillId(classId) {
+  return [...CLASSES[classId].skills].sort((a, b) => SKILLS[a].level - SKILLS[b].level)[0];
+}
 
 export const randInt = (min, max, rng = Math.random) => min + Math.floor(rng() * (max - min + 1));
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -30,7 +36,7 @@ export function validateAllocation(classId, stats) {
   return { ok: true };
 }
 
-export function createCharacter({ id, name, classId, stats }) {
+export function createCharacter({ id, name, classId, stats, gender }) {
   const check = validateAllocation(classId, stats);
   if (!check.ok) throw new Error(check.error);
   const cls = CLASSES[classId];
@@ -39,6 +45,7 @@ export function createCharacter({ id, name, classId, stats }) {
     id,
     name,
     classId,
+    gender: gender || CLASSES[classId].defaultGender || 'm',
     level: 1,
     exp: 0,
     stats: { ...stats },
@@ -57,7 +64,7 @@ export function createCharacter({ id, name, classId, stats }) {
     ],
     equipment: { ...cls.startEquipment },
     hotbar: [
-      { type: 'skill', id: cls.skills[0] },
+      { type: 'skill', id: firstSkillId(classId) },
       { type: 'item', id: 'red_potion' },
       { type: 'item', id: 'blue_potion' },
       null, null, null, null,

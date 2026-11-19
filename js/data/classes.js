@@ -27,7 +27,8 @@ export const CLASSES = {
     baseStats: { str: 14, dex: 9, int: 8, con: 12 },
     start: { hp: 40, mp: 20 },
     growth: { hp: [8, 12], mp: [3, 5] },
-    skills: ['power_strike', 'battle_cry', 'iron_wall'],
+    skills: ['shield_bash', 'power_strike', 'whirl_slash', 'earth_splitter', 'battle_cry', 'iron_wall', 'charge_strike', 'judgment_blade'],
+    sprites: { m: 'knight', f: 'knight_female' }, defaultGender: 'm', fx: 'knight',
     startEquipment: { weapon: 'training_sword', armor: 'cloth_armor' },
     color: '#c84b3c',
   },
@@ -45,7 +46,8 @@ export const CLASSES = {
     baseStats: { str: 9, dex: 14, int: 10, con: 10 },
     start: { hp: 35, mp: 25 },
     growth: { hp: [6, 10], mp: [4, 7] },
-    skills: ['piercing_shot', 'wind_step', 'triple_shot'],
+    skills: ['piercing_shot', 'triple_shot', 'venom_arrow', 'focus_shot', 'thorn_burst', 'frost_arrow', 'wind_step', 'forest_blessing'],
+    sprites: { f: 'archer', m: 'archer_male' }, defaultGender: 'f', fx: 'archer',
     startEquipment: { weapon: 'training_bow', armor: 'cloth_armor' },
     color: '#3fa45b',
   },
@@ -63,7 +65,8 @@ export const CLASSES = {
     baseStats: { str: 8, dex: 9, int: 15, con: 10 },
     start: { hp: 25, mp: 35 },
     growth: { hp: [4, 7], mp: [7, 11] },
-    skills: ['fire_bolt', 'meditation', 'frost_nova'],
+    skills: ['fire_bolt', 'ice_lance', 'chain_lightning', 'arcane_burst', 'meditation', 'mana_shield', 'frost_nova', 'meteor'],
+    sprites: { f: 'mage', m: 'mage_male' }, defaultGender: 'f', fx: 'mage',
     startEquipment: { weapon: 'training_staff', armor: 'cloth_armor' },
     color: '#4a6fd1',
   },
@@ -81,13 +84,23 @@ export const CLASSES = {
     baseStats: { str: 10, dex: 9, int: 13, con: 11 },
     start: { hp: 30, mp: 30 },
     growth: { hp: [5, 9], mp: [5, 9] },
-    skills: ['holy_light', 'heal', 'blessing'],
+    skills: ['holy_light', 'holy_bolt', 'radiance', 'judgment', 'heal', 'divine_shield', 'wrath', 'blessing'],
+    sprites: { m: 'priest', f: 'priest_female' }, defaultGender: 'm', fx: 'priest',
     startEquipment: { weapon: 'training_mace', armor: 'cloth_armor' },
     color: '#d8b43c',
   },
 };
 
 // 캐릭터 생성 화면에 표시되는 순서
+// 캐릭터 그림 이름 (assets/heroes/<이름>). 성별을 고르지 않은 예전 캐릭터는 defaultGender
+export function heroKey(classId, gender) {
+  const c = CLASSES[classId];
+  if (!c?.sprites) return null;
+  return c.sprites[gender] || c.sprites[c.defaultGender];
+}
+
+export const GENDER_NAMES = { m: '남', f: '여' };
+
 export const CLASS_ORDER = ['knight', 'elf', 'mage', 'priest'];
 
 // 캐릭터 생성 규칙: 직업 기본 스탯 위에 보너스 포인트를 배분

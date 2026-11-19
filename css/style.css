@@ -51,7 +51,7 @@ h4 { margin-top: 14px; font-size: 14px; }
 .slot-card.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
 .slot-card.empty { justify-content: center; color: var(--muted); font-size: 16px; border-style: dashed; }
 .slot-name { font-size: 17px; font-weight: bold; }
-.avatar { width: 44px; height: 64px; margin-bottom: 4px; }
+.avatar { width: 48px; height: 72px; margin-bottom: 4px; }
 div.avatar { border-radius: 12px 12px 6px 6px; background: linear-gradient(#3a342a 0 34%, #2a261e 34%); border: 2px dashed rgba(255,255,255,0.15); height: 56px; }
 
 .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -202,3 +202,17 @@ button.wide { width: 100%; padding: 10px; }
 .tp-row button { padding: 3px 10px; }
 .tp-row .boss-on { color: #ff9a6a; font-weight: bold; }
 .panel[data-panel="npc"] .body { max-height: 60vh; }
+
+/* 「환생 루프」 그림 아이콘 · 초상화 */
+img.icon.img { padding: 0; background: #0c0d0a; object-fit: cover; image-rendering: auto; }
+.slot .content img.icon.img { width: 44px; height: 44px; border-radius: 4px; }
+.skill-row img.icon.img { width: 40px; height: 40px; }
+.hud-status { padding-left: 76px; min-height: 78px; }
+.hud-portrait { position: absolute; left: 8px; top: 8px; width: 62px; height: 62px; border: 2px solid var(--panel-border); border-radius: 4px; background: #1a1714; image-rendering: pixelated; }
+.buff.has-icon { display: inline-flex; align-items: center; gap: 2px; padding: 1px 4px 1px 1px; }
+.buff img { width: 20px; height: 20px; image-rendering: pixelated; }
+.buff em { font-style: normal; }
+.buff.debuff { border-color: #ff6a5a; }
+img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1a1714; }
+.gender-pick { display: flex; gap: 6px; margin: 10px 0 4px; }
+.gender-pick button.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }

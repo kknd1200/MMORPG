@@ -1,8 +1,9 @@
 // 화면 흐름: 로그인 → 캐릭터 선택 → (캐릭터 생성) → 게임
 import * as Store from './systems/storage.js';
 import {
-  CLASSES, CLASS_ORDER, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, CREATION, MAX_CHARACTERS,
+  CLASSES, CLASS_ORDER, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, CREATION, MAX_CHARACTERS, heroKey, GENDER_NAMES,
 } from './data/classes.js';
+import { url as artUrl, portrait } from './game/art.js';
 import { SKILLS } from './data/skills.js';
 import * as S from './systems/stats.js';
 import { Game } from './game/game.js';
@@ -16,7 +17,7 @@ const state = {
   user: null,
   selectedId: null,
   game: null,
-  create: { classId: 'knight', stats: null },
+  create: { classId: 'knight', stats: null, gender: 'm' },
 };
 
 // 캐릭터 선택/생성 화면의 초상: 게임 안과 같은 스프라이트를 작게 그림
@@ -25,14 +26,14 @@ function paintAvatars(root) {
     const look = LOOKS[cv.dataset.class];
     if (!look) continue;
     const dpr = window.devicePixelRatio || 1;
-    const w = 44, h = 64;
+    const w = 48, h = 72;
     cv.width = w * dpr; cv.height = h * dpr;
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.beginPath(); ctx.ellipse(w / 2, h - 5, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
     drawHumanoid(ctx, w / 2, h - 5, {
-      look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
+      look, scale: 1.02, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
       weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color, armorId: cv.dataset.armor || null,
     });
   }
@@ -82,7 +83,7 @@ function renderSlots() {
     const cls = CLASSES[c.classId];
     const grade = S.luckGrade(c);
     html.push(`<button class="slot-card ${c.id === state.selectedId ? 'selected' : ''}" data-id="${c.id}">
-      <canvas class="avatar" data-class="${c.classId}" data-weapon="${c.equipment?.weapon || ''}" data-armor="${c.equipment?.armor || ''}"></canvas>
+      <img class="portrait" src="${artUrl(portrait(heroKey(c.classId, c.gender)))}" alt="">
       <div class="slot-name">${esc(c.name)}</div>
       <div class="slot-class" style="color:${cls.color}">${cls.name}</div>
       <div>Lv.${c.level}</div>
@@ -91,7 +92,6 @@ function renderSlots() {
     </button>`);
   }
   $('#char-slots').innerHTML = html.join('');
-  paintAvatars($('#char-slots'));
   $('#btn-start').disabled = !state.selectedId;
   $('#btn-delete').disabled = !state.selectedId;
 }
@@ -129,6 +129,7 @@ function openCreate() {
 
 function selectClass(classId) {
   state.create.classId = classId;
+  state.create.gender = CLASSES[classId].defaultGender;
   state.create.stats = { ...CLASSES[classId].baseStats };
   renderCreate();
 }
@@ -139,13 +140,15 @@ function renderCreate() {
 
   $('#class-cards').innerHTML = CLASS_ORDER.map((id) => {
     const c = CLASSES[id];
+    const g = id === classId ? state.create.gender : c.defaultGender;
     return `<button class="class-card ${id === classId ? 'selected' : ''}" data-class="${id}" style="--c:${c.color}">
-      <canvas class="avatar" data-class="${id}" data-weapon="${c.startEquipment.weapon}"></canvas><b>${c.name}</b><small>${c.role}</small></button>`;
+      <img class="portrait" src="${artUrl(portrait(heroKey(id, g)))}" alt=""><b>${c.name}</b><small>${c.role}</small></button>`;
   }).join('') + '<div class="class-card disabled"><div class="avatar"></div><b>???</b><small>추후 출시</small></div>';
-  paintAvatars($('#class-cards'));
 
-  const firstSkill = SKILLS[cls.skills[0]];
+  const firstSkill = SKILLS[S.firstSkillId(classId)];
   $('#class-info').innerHTML = `
+    <div class="gender-pick">${['m', 'f'].map((g) => `<button data-gender="${g}" class="${state.create.gender === g ? 'selected' : ''}">
+      <img class="portrait" src="${artUrl(portrait(heroKey(classId, g)))}" alt=""><br>${GENDER_NAMES[g]}</button>`).join('')}</div>
     <p>${cls.description}</p>
     <table>
       <tr><td>주스탯</td><td>${STAT_NAMES[cls.primaryStat]}</td></tr>
@@ -182,6 +185,10 @@ function initCreate() {
   $('#class-cards').addEventListener('click', (e) => {
     const b = e.target.closest('[data-class]');
     if (b) selectClass(b.dataset.class);
+  });
+  $('#class-info').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-gender]');
+    if (b) { state.create.gender = b.dataset.gender; renderCreate(); }
   });
   $('#stat-alloc').addEventListener('click', (e) => {
     const b = e.target.closest('button');

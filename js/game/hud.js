@@ -6,6 +6,8 @@ import * as S from '../systems/stats.js';
 import { T } from './world.js';
 import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
 import { MONSTERS } from '../data/monsters.js';
+import { url as artUrl, fxIcon, statusIcon, portrait } from './art.js';
+import { heroKey } from '../data/classes.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,7 +25,11 @@ function iconHtml(color, text, extra = '') {
   return `<span class="icon" style="--c:${color}">${esc(text)}</span>${extra}`;
 }
 
-function skillIcon(sk) { return iconHtml(sk.color, sk.name.slice(0, 2)); }
+// 스킬 아이콘: 「환생 루프」 아이콘 그림 (assets/skills/<이펙트>-icon.webp)
+function skillIcon(sk) {
+  if (sk.fx?.sheet) return `<img class="icon img" src="${artUrl(fxIcon(sk.fx.sheet))}" alt="${esc(sk.name)}" draggable="false">`;
+  return iconHtml(sk.color, sk.name.slice(0, 2));
+}
 function itemIcon(id) { const it = ITEMS[id]; return iconHtml(it.icon.color, it.icon.text); }
 
 export class Hud {
@@ -40,6 +46,7 @@ export class Hud {
     const r = this.root;
     r.innerHTML = `
       <div class="hud-status">
+        <img class="hud-portrait" alt="" draggable="false">
         <div class="hud-name"></div>
         <div class="bar hp"><div class="fill"></div><span></span></div>
         <div class="bar mp"><div class="fill"></div><span></span></div>
@@ -80,6 +87,7 @@ export class Hud {
     `;
     this.el = {
       name: r.querySelector('.hud-name'),
+      portrait: r.querySelector('.hud-portrait'),
       hp: r.querySelector('.bar.hp'),
       mp: r.querySelector('.bar.mp'),
       exp: r.querySelector('.bar.exp'),
@@ -145,8 +153,12 @@ export class Hud {
     const need = S.expToNext(ch.level);
     this.setBar(this.el.exp, ch.exp, need, `EXP ${(ch.exp / need * 100).toFixed(2)}%`);
 
-    this.el.buffs.innerHTML = g.buffs.map((b) =>
-      `<span class="buff" style="--c:${b.color}" title="${esc(b.name)}">${esc(b.name)} ${Math.ceil(b.until - g.time)}s</span>`).join('');
+    if (!this.el.portrait.src) this.el.portrait.src = artUrl(portrait(heroKey(ch.classId, ch.gender)));
+    this.el.buffs.innerHTML = g.buffs.map((b) => {
+      const left = Math.ceil(b.until - g.time);
+      const ic = b.icon ? `<img src="${artUrl(statusIcon(b.icon))}" alt="">` : '';
+      return `<span class="buff ${b.debuff ? 'debuff' : ''} ${ic ? 'has-icon' : ''}" style="--c:${b.color}" title="${esc(b.name)} (${left}초)">${ic}<em>${ic ? '' : esc(b.name) + ' '}${left}s</em></span>`;
+    }).join('');
     this.el.zone.textContent = g.zoneName();
     const bossText = g.fieldBossStatus();
     this.el.boss.textContent = bossText;
@@ -476,7 +488,7 @@ export class Hud {
   skillsHtml() {
     const g = this.game, ch = g.char, cls = CLASSES[ch.classId];
     const atk = g.derived().attack;
-    const rows = cls.skills.map((id) => {
+    const rows = [...cls.skills].sort((a, b) => SKILLS[a].level - SKILLS[b].level).map((id) => {
       const sk = SKILLS[id];
       const learned = ch.level >= sk.level;
       let formula = '';

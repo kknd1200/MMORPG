@@ -6,14 +6,15 @@ import { MONSTERS } from '../data/monsters.js';
 import { ITEMS } from '../data/items.js';
 import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
 import { TW, TH, HW, HH, ISO_RX, ISO_RY, Ground, objectSprite, propSprite, drawSprite } from './terrain.js';
+import { img, fxSheet, FX, NPC_SPRITES } from './art.js';
 
 // NPC 외형 (사람형 스프라이트 재사용)
 const NPC_LOOKS = {
-  merchant: { skin: '#e8c39c', hair: '#5a3a22', hairStyle: 'short', helm: 'none', cape: null, torso: '#b07a3a', robe: '#8a5a2a', trim: '#e0c070', legs: '#5a4030', boots: '#3a2a1a', arms: '#b07a3a', weapon: 'none' },
-  smith: { skin: '#d8a880', hair: '#2a1a12', hairStyle: 'short', helm: 'none', cape: null, torso: '#5a4a40', tabard: '#3a2a22', trim: '#a08060', legs: '#4a3a30', boots: '#2a1e16', arms: '#d8a880', weapon: 'mace' },
-  healer: { skin: '#f0d0b0', hair: '#c8a060', hairStyle: 'long', helm: 'circlet', helmColor: '#e8c860', cape: '#a8b8d8', torso: '#e8e8f8', robe: '#dcdcf0', trim: '#8aa8e0', legs: '#c8c8e0', boots: '#6a6a8a', arms: '#e8e8f8', weapon: 'none' },
-  guide: { skin: '#ecc8a4', hair: '#3a2a1a', hairStyle: 'short', helm: 'hood', helmColor: '#3a6a8a', cape: '#2a4a6a', torso: '#5aa0c8', trim: '#e0d090', legs: '#3a4a5a', boots: '#2a2a2a', arms: '#5aa0c8', weapon: 'staff' },
-  teleporter: { skin: '#f0d4b8', hair: '#dcdcf0', hairStyle: 'long', helm: 'hood', helmColor: '#4a2a7a', cape: '#3a2068', torso: '#6a3aa8', robe: '#4a2a80', trim: '#e0c878', legs: '#3a2a5a', boots: '#2a1e36', arms: '#6a3aa8', weapon: 'staff' },
+  merchant: { armor: 'cloth', gloves: '#e8c39c', skin: '#e8c39c', hair: '#5a3a22', hairStyle: 'short', helm: 'none', cape: null, torso: '#b07a3a', robe: '#8a5a2a', trim: '#e0c070', legs: '#5a4030', boots: '#3a2a1a', arms: '#b07a3a', weapon: 'none' },
+  smith: { armor: 'leather', gloves: '#4a3a2e', skin: '#d8a880', hair: '#2a1a12', hairStyle: 'short', helm: 'none', cape: null, torso: '#5a4a40', tabard: '#3a2a22', trim: '#a08060', legs: '#4a3a30', boots: '#2a1e16', arms: '#d8a880', weapon: 'mace' },
+  healer: { armor: 'cloth', gloves: '#f0d0b0', skin: '#f0d0b0', hair: '#c8a060', hairStyle: 'long', helm: 'circlet', helmColor: '#e8c860', cape: '#a8b8d8', torso: '#e8e8f8', robe: '#dcdcf0', trim: '#8aa8e0', legs: '#c8c8e0', boots: '#6a6a8a', arms: '#e8e8f8', weapon: 'none' },
+  guide: { armor: 'leather', gloves: '#5a4030', skin: '#ecc8a4', hair: '#3a2a1a', hairStyle: 'short', helm: 'hood', helmColor: '#3a6a8a', cape: '#2a4a6a', torso: '#5aa0c8', trim: '#e0d090', legs: '#3a4a5a', boots: '#2a2a2a', arms: '#5aa0c8', weapon: 'staff' },
+  teleporter: { armor: 'cloth', gloves: '#f0d4b8', skin: '#f0d4b8', hair: '#dcdcf0', hairStyle: 'long', helm: 'hood', helmColor: '#4a2a7a', cape: '#3a2068', torso: '#6a3aa8', robe: '#4a2a80', trim: '#e0c878', legs: '#3a2a5a', boots: '#2a1e36', arms: '#6a3aa8', weapon: 'staff' },
 };
 
 const FONT = '"Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
@@ -164,7 +165,7 @@ export class Renderer {
       if (it.e === p) drawnPlayer = true;
       else if (drawnPlayer && !covered && it.s) {
         const x0 = it.x - it.s.ax, y0 = it.y - it.s.ay;
-        covered = x0 < pbx + 10 && x0 + it.s.w > pbx - 10 && y0 < pby - 6 && y0 + it.s.h > pby - 40;
+        covered = x0 < pbx + 10 && x0 + it.s.w > pbx - 10 && y0 < pby - 6 && y0 + it.s.h > pby - 58;
       }
       if (it.s) drawSprite(ctx, it.s, it.x, it.y);
       else if (it.cave) this.drawCave(it.cave, t);
@@ -288,10 +289,11 @@ export class Renderer {
     const p = game.player;
     const ch = game.char;
     const weapon = ITEMS[ch.equipment?.weapon];
-    if (!ghost) this.drawShadow(sx, sy, 12);
+    if (!ghost) this.drawShadow(sx, sy, 14);
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
       look: LOOKS[ch.classId] || LOOKS.knight,
+      sprite: game.heroKey,
       facing: screenDir(p.facing),
       walk: p.walkPhase,
       moving: p.moving,
@@ -303,28 +305,29 @@ export class Renderer {
       dead: p.dead,
       time: game.time,
     });
-    if (!ghost) nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
+    if (!ghost) nameTag(ctx, sx, sy - 74, ch.name, '#ffffff');
   }
 
   drawNpc(n, sx, sy, hovered, time) {
     const { ctx } = this;
-    this.drawShadow(sx, sy, 11);
+    this.drawShadow(sx, sy, 13);
     if (hovered) {
       ctx.strokeStyle = '#ffe680'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(sx, sy + 2, 15, 7, 0, 0, Math.PI * 2); ctx.stroke();
     }
     drawHumanoid(ctx, sx, sy, {
       look: NPC_LOOKS[n.kind] || NPC_LOOKS.guide,
-      facing: { x: 0, y: 1 }, walk: 0, moving: false, time,
+      sprite: NPC_SPRITES[n.kind],
+      facing: { x: n.x > 30 ? -1 : 1, y: 1 }, walk: 0, moving: false, time,
     });
     const bounce = Math.sin(time * 3) * 2;
     ctx.fillStyle = '#ffd84a';
     ctx.font = `bold 15px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.strokeText('!', sx, sy - 54 + bounce);
-    ctx.fillText('!', sx, sy - 54 + bounce);
-    nameTag(ctx, sx, sy - 66, n.name, '#ffe680');
+    ctx.strokeText('!', sx, sy - 76 + bounce);
+    ctx.fillText('!', sx, sy - 76 + bounce);
+    nameTag(ctx, sx, sy - 88, n.name, '#ffe680');
   }
 
   drawMonster(m, sx, sy, targeted, hovered, time) {
@@ -398,15 +401,37 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        const x = this.px(fx.x, fx.y), y = this.py(fx.x, fx.y) - 56 - k * 28;
+        const x = this.px(fx.x, fx.y), y = this.py(fx.x, fx.y) - 76 - k * 28;
         ctx.strokeText(fx.text, x, y);
         ctx.fillStyle = fx.color;
         ctx.fillText(fx.text, x, y);
-      } else if (fx.type === 'proj') {
-        const wx = fx.x0 + (fx.x1 - fx.x0) * k, wy = fx.y0 + (fx.y1 - fx.y0) * k;
-        const x = this.px(wx, wy), y = this.py(wx, wy) - 22;
+      } else if (fx.type === 'sheet') {
+        // 스킬 이펙트 시트 (96px 칸 4×4 = 16프레임)
+        if (fx.t < 0) continue;
+        const im = img(fxSheet(fx.key));
+        if (!im) continue;
+        const f = Math.min(FX.frames - 1, Math.floor(k * FX.frames));
+        const at = fx.follow || fx;
+        const x = this.px(at.x, at.y), y = this.py(at.x, at.y) - fx.z;
+        const size = FX.cell * fx.scale;
         ctx.globalAlpha = 1;
-        if (fx.kind === 'arrow') {
+        ctx.drawImage(im, (f % FX.cols) * FX.cell, Math.floor(f / FX.cols) * FX.cell, FX.cell, FX.cell, x - size / 2, y - size / 2, size, size);
+      } else if (fx.type === 'proj') {
+        if (fx.t < 0) continue;
+        const wx = fx.x0 + (fx.x1 - fx.x0) * k, wy = fx.y0 + (fx.y1 - fx.y0) * k;
+        const x = this.px(wx, wy), y = this.py(wx, wy) - 34;
+        ctx.globalAlpha = 1;
+        const pim = fx.sheet && img(fxSheet(fx.sheet));
+        if (pim) {
+          // 날아가는 화살 · 마법탄 그림 (오른쪽을 보고 있음 → 날아가는 방향으로 회전)
+          const dx = fx.x1 - fx.x0, dy = fx.y1 - fx.y0;
+          const ang = Math.atan2((dx + dy) * HH, (dx - dy) * HW);
+          const f = Math.floor(fx.t * 24) % FX.frames;
+          const size = FX.cell * 0.8;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+          ctx.drawImage(pim, (f % FX.cols) * FX.cell, Math.floor(f / FX.cols) * FX.cell, FX.cell, FX.cell, -size / 2, -size / 2, size, size);
+          ctx.restore();
+        } else if (fx.kind === 'arrow') {
           const dx = fx.x1 - fx.x0, dy = fx.y1 - fx.y0;
           const ang = Math.atan2((dx + dy) * HH, (dx - dy) * HW);
           ctx.strokeStyle = fx.color; ctx.lineWidth = 2;
