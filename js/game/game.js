@@ -357,7 +357,48 @@ export class Game {
         this.face(e, { x: e.x + p.facing.x, y: e.y + p.facing.y });
       }
     }
-    if (e.moving) e.walkPhase += dt * speed * 3.2;
+    if (e.moving) e.walkPhase += dt * speed * 2.6;
+  }
+
+  // 겹치지 않게: 파티원끼리 · 몬스터끼리 · 몬스터와 파티원 사이를 조금씩 밀어냄
+  //   리더(내가 조종)는 밀리지 않고 다른 쪽이 비켜남. 벽 · 나무 안으로는 밀지 않음
+  separate(dt) {
+    const p = this.player;
+    const list = [];
+    for (const u of this.units()) if (!u.ent.dead) list.push({ e: u.ent, r: 0.4, w: u.isLeader ? 0 : 0.35, mon: false });
+    for (const m of this.monsters) {
+      if (!m.dead && Math.abs(m.x - p.x) < 20 && Math.abs(m.y - p.y) < 20) list.push({ e: m, r: Math.max(0.32, Math.min(0.6, m.radius)), w: m.slamTarget ? 0.1 : 1, mon: true });
+    }
+    const k = Math.min(1, dt * 22);
+    // 화면 기준으로 잰다: 아이소 화면에서 위아래(x+y 방향)는 절반 길이로 보이므로
+    //   a = 화면 가로(x−y), b = 화면 세로((x+y)/2). 이 거리로 재야 그림끼리 안 겹침
+    for (let i = 0; i < list.length; i++) {
+      const A = list[i];
+      for (let j = i + 1; j < list.length; j++) {
+        const B = list[j];
+        const min = (A.r + B.r) * 1.414;
+        const dx = B.e.x - A.e.x, dy = B.e.y - A.e.y;
+        let a = dx - dy, b = (dx + dy) / 2;
+        if (Math.abs(a) >= min || Math.abs(b) >= min) continue;
+        let d = Math.hypot(a, b);
+        if (d >= min) continue;
+        const wsum = A.w + B.w;
+        if (wsum <= 0) continue;
+        if (d < 1e-4) { const ang = (i * 7 + j * 13) % 6.283; a = Math.cos(ang); b = Math.sin(ang); d = 0; } else { a /= d; b /= d; }
+        const push = (min - d) * k;
+        // 화면 방향 (a, b) → 월드 이동: x = (a + 2b)/2, y = (2b − a)/2
+        const mx = (a + 2 * b) / 2 * push, my = (2 * b - a) / 2 * push;
+        this.nudge(A, -mx * (A.w / wsum), -my * (A.w / wsum));
+        this.nudge(B, mx * (B.w / wsum), my * (B.w / wsum));
+      }
+    }
+  }
+
+  nudge(o, mx, my) {
+    if (!mx && !my) return;
+    const e = o.e;
+    if (!this.world.blocked(e.x + mx, e.y, e.radius || 0.3, o.mon)) e.x += mx;
+    if (!this.world.blocked(e.x, e.y + my, e.radius || 0.3, o.mon)) e.y += my;
   }
 
   // ------------------------------------------------------------ loop
@@ -422,6 +463,7 @@ export class Game {
     }
     this.tickStatus();
     this.updateMonsters(dt);
+    this.separate(dt);
     this.updateEffects(dt);
 
     this.timers.zone += dt;
@@ -527,7 +569,7 @@ export class Game {
       p.moving = r === 'moving';
       if (r !== 'moving' && !this.mouse.left) { p.moveTarget = null; this.clearPath(p); }
     }
-    if (p.moving) p.walkPhase += dt * speed * 3.2;
+    if (p.moving) p.walkPhase += dt * speed * 2.6;
   }
 
   performAction(action, target) {

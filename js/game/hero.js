@@ -175,10 +175,14 @@ function heroFrame(key, s) {
   return img(`heroes/${key}/${kind}-${i + 1}.webp`) || img(`heroes/${key}/attack-1.webp`);
 }
 
-// 걷기: 원본 그림에는 걷기 프레임이 없어서, 서 있는 그림을 허리에서 나눠
-//   다리 앞쪽 반 / 뒤쪽 반을 서로 반대로 기울여(가위 모양) 발을 번갈아 내딛게 하고,
-//   윗몸은 걸음마다 살짝만 오르내림
-const HIP = 0.43; // 발에서 허리까지 = 키의 43%
+// 걷기: 원본 그림에는 걷기 프레임이 없어서 서 있는 그림(다리를 앞뒤로 벌린 자세)으로 걷기 동작을 만듭니다.
+//   옆에서 본 걸음 = [벌림(디딤) → 모음(한 발 듦, 몸이 살짝 올라감) → 벌림 → 모음(반대 발 듦)] 의 반복
+//   - 허리 아래를 앞다리 / 뒷다리 두 조각으로 나눠 엉덩이 관절을 축으로 '회전' (모양이 찌그러지지 않음)
+//   - 들어 올리는 발은 반 걸음마다 번갈아 바뀜
+//   - 땅을 딛은 다리 각도에 맞춰 몸 높이를 정해서 발이 땅에 붙어 있음
+const HIP = 0.43;          // 발에서 엉덩이까지 = 키의 43%
+const STANCE = 0.43;       // 원본 그림에서 다리가 벌어진 각도(라디안)
+const CLOSE = 0.36;        // 두 다리가 모일 때 각 다리가 안쪽으로 도는 각도
 
 function drawSprite(ctx, x, y, s) {
   const im = heroFrame(s.sprite, s);
@@ -203,27 +207,33 @@ function drawSprite(ctx, x, y, s) {
     return true;
   }
   ctx.translate(-fx, -fy); // 이후 좌표는 원본 그림(256px) 기준
-  const hipY = fy - HERO.height * HIP;
-  const swing = Math.sin(walk);                 // -1 ~ 1: 앞다리가 앞으로(+) / 뒤로(-)
-  const bob = -Math.abs(Math.cos(walk)) * 2.2;  // 두 발이 벌어질 때 몸이 살짝 내려감 (그림 px)
+  const legLen = HIP * HERO.height;
+  const hipY = fy - legLen;
+  const sw = Math.sin(walk), cw = Math.cos(walk);
+  const together = 1 - Math.abs(cw);               // 0 = 벌림(디딤), 1 = 모음(지나감)
+  const turnIn = CLOSE * together;                 // 다리가 안쪽으로 도는 정도
+  const lift = together * 7;                       // 지나가는 발을 드는 높이 (그림 px)
+  const liftFront = sw > 0 ? lift : 0, liftBack = sw > 0 ? 0 : lift; // 반 걸음마다 번갈아
+  // 다리가 곧아질수록 엉덩이가 올라감 (발은 땅에)
+  const rise = legLen * (Math.cos(STANCE - turnIn) - Math.cos(STANCE));
+  ctx.translate(0, -rise);
   const legs = [
-    { x0: 0, x1: fx, k: -swing },               // 뒤쪽 다리 (등 쪽)
-    { x0: fx, x1: HERO.size, k: swing },        // 앞쪽 다리 (바라보는 쪽)
+    { x0: 0, x1: fx, rot: -turnIn, lift: liftBack },        // 뒷다리: 앞쪽으로 돌림 (먼저 그림)
+    { x0: fx, x1: HERO.size, rot: turnIn, lift: liftFront }, // 앞다리: 뒤쪽으로 돌림
   ];
   for (const L of legs) {
-    const lift = Math.max(0, L.k) * 5;          // 앞으로 내딛는 다리는 살짝 들림
     ctx.save();
-    ctx.beginPath(); ctx.rect(L.x0, hipY - 2, L.x1 - L.x0, HERO.size - hipY + 2); ctx.clip();
-    ctx.translate(fx, hipY);
-    ctx.transform(1, 0, -L.k * 0.3, 1, 0, 0); // 허리를 축으로 다리를 앞뒤로 기울임
-    ctx.translate(-fx, -hipY - lift);
+    ctx.translate(fx, hipY - L.lift);
+    ctx.rotate(L.rot); // 캔버스 회전은 시계방향 (+ = 발이 뒤로)
+    ctx.translate(-fx, -hipY);
+    ctx.beginPath(); ctx.rect(L.x0, hipY - 3, L.x1 - L.x0, HERO.size - hipY + 3); ctx.clip();
     ctx.drawImage(im, 0, 0);
     ctx.restore();
   }
-  // 윗몸 (허리 이음새를 덮도록 조금 겹쳐서)
+  // 윗몸 (엉덩이 이음새를 덮도록 조금 겹쳐서) + 걸음에 맞춘 아주 작은 흔들림
   ctx.save();
-  ctx.beginPath(); ctx.rect(0, 0, HERO.size, hipY + 3); ctx.clip();
-  ctx.translate(0, bob);
+  ctx.beginPath(); ctx.rect(0, 0, HERO.size, hipY + 4); ctx.clip();
+  ctx.translate(fx, hipY); ctx.rotate(0.015 * sw); ctx.translate(-fx, -hipY);
   ctx.drawImage(im, 0, 0);
   ctx.restore();
   ctx.restore();
