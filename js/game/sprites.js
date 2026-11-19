@@ -110,7 +110,28 @@ const ARMOR_TINT = {
  * s: { look, facing, walk(위상), moving, attack(0~1, 공격 동작 진행), cast(0~1), weaponColor, armorId,
  *      dead, scale, time }
  */
+// 피격 시 붉은 번쩍임: 작은 보조 캔버스에 그려서 색을 입힌 뒤 붙임 (filter 를 쓰지 않음)
+let tintCanvas = null;
 export function drawHumanoid(ctx, x, y, s) {
+  if (!(s.hurt > 0) || typeof document === 'undefined') { drawHumanoidBody(ctx, x, y, s); return; }
+  const sc = ctx.getTransform().a || 1;
+  const W = 120, H = 120, AX = 60, AY = 96;
+  if (!tintCanvas) tintCanvas = document.createElement('canvas');
+  const cw = Math.ceil(W * sc), chh = Math.ceil(H * sc);
+  if (tintCanvas.width !== cw || tintCanvas.height !== chh) { tintCanvas.width = cw; tintCanvas.height = chh; }
+  const t = tintCanvas.getContext('2d');
+  t.setTransform(1, 0, 0, 1, 0, 0);
+  t.clearRect(0, 0, cw, chh);
+  t.setTransform(sc, 0, 0, sc, 0, 0);
+  drawHumanoidBody(t, AX, AY, { ...s, hurt: 0 });
+  t.globalCompositeOperation = 'source-atop';
+  t.fillStyle = `rgba(255,50,30,${0.55 * Math.min(1, s.hurt)})`;
+  t.fillRect(0, 0, W, H);
+  t.globalCompositeOperation = 'source-over';
+  ctx.drawImage(tintCanvas, x - AX, y - AY, W, H);
+}
+
+function drawHumanoidBody(ctx, x, y, s) {
   const look = { ...s.look, ...(ARMOR_TINT[s.armorId] || {}) };
   if (look.robe && ARMOR_TINT[s.armorId]) look.robe = shade(look.torso, -0.1);
   const { view, turn, flip } = viewOf(s.facing);
@@ -119,7 +140,6 @@ export function drawHumanoid(ctx, x, y, s) {
 
   ctx.save();
   ctx.translate(x, y);
-  if (s.hurt > 0) ctx.filter = `sepia(1) saturate(6) hue-rotate(-45deg) brightness(${1 + s.hurt})`;
   if (s.dead) { ctx.translate(-4, -4); ctx.rotate(-Math.PI / 2 * flip); ctx.globalAlpha *= 0.65; }
   ctx.scale(flip * sc, sc);
 
@@ -434,10 +454,13 @@ function drawWeapon(ctx, look, s, hand, attack, turn, back) {
     ctx.beginPath(); ctx.arc(top.x, top.y - 3, 4, Math.PI * 0.15, Math.PI * 0.85, true); ctx.stroke();
     const pulse = 0.6 + 0.4 * Math.sin((s.time || 0) * 3) + (s.cast || 0);
     ctx.save();
-    ctx.shadowColor = color; ctx.shadowBlur = 8 + pulse * 6;
+    ctx.fillStyle = color;
+    ctx.globalAlpha *= 0.18;
+    ctx.beginPath(); ctx.arc(top.x, top.y - 3, 7 + pulse * 3, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.arc(top.x, top.y - 3, 4.5 + pulse * 1.5, 0, TAU); ctx.fill();
+    ctx.restore();
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(top.x, top.y - 3, 3, 0, TAU); ctx.fill();
-    ctx.restore();
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.fillRect(top.x - 1.2, top.y - 4.5, 1.4, 1.4);
   } else if (look.weapon === 'bow') {
@@ -507,14 +530,18 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
     ctx.scale(1, 1 - k * 0.6);
   }
   ctx.scale(flip, 1);
-  // 피격 순간: 하얗게 번쩍 (canvas filter 미지원 브라우저에서는 그냥 무시됨)
-  if (m.hurtFlash > 0) ctx.filter = `brightness(${1 + m.hurtFlash / 0.12 * 1.6})`;
-  let h;
-  if (sheet) {
-    h = drawSheetFrame(ctx, sheet, def, m, prog, walk, time);
-  } else {
+  const paint = () => {
+    if (sheet) return drawSheetFrame(ctx, sheet, def, m, prog, walk, time);
     const draw = SHAPES[def.shape || FAMILY_SHAPE[def.family]] || SHAPES.goblin;
-    h = draw({ ctx, r, color: def.color, pal: def.palette || FALLBACK_PAL, walk, atk, time, m, def }) ?? r * 2.4;
+    return draw({ ctx, r, color: def.color, pal: def.palette || FALLBACK_PAL, walk, atk, time, m, def }) ?? r * 2.4;
+  };
+  const h = paint();
+  // 피격 순간: 같은 그림을 '더하기'로 한 번 더 그려 하얗게 번쩍
+  // (canvas filter 는 그래픽 가속이 끊겨 공격할 때마다 렉이 걸려서 쓰지 않음)
+  if (m.hurtFlash > 0) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha *= Math.min(1, m.hurtFlash / 0.12) * 0.85;
+    paint();
   }
   ctx.restore();
   return h;
@@ -776,7 +803,6 @@ const SHAPES = {
     const top = -r * 2.6 + fl;
     ctx.save();
     ctx.globalAlpha *= 0.85;
-    ctx.shadowColor = pal.glow; ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.moveTo(-r * 0.9, top + r * 0.9);
     ctx.quadraticCurveTo(-r * 0.9, top, 0, top);

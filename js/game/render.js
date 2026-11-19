@@ -412,10 +412,16 @@ export class Renderer {
           ctx.strokeStyle = fx.color; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - Math.cos(ang) * 12, y - Math.sin(ang) * 12); ctx.stroke();
         } else {
+          // 빛나는 구체: 반투명 원을 겹쳐서 (shadowBlur 는 무거워서 쓰지 않음)
           ctx.fillStyle = fx.color;
-          ctx.shadowColor = fx.color; ctx.shadowBlur = 12;
-          ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
-          ctx.shadowBlur = 0;
+          ctx.globalAlpha = 0.2;
+          ctx.beginPath(); ctx.arc(x, y, 11, 0, TAU); ctx.fill();
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath(); ctx.arc(x, y, 7.5, 0, TAU); ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.beginPath(); ctx.arc(x, y, 5, 0, TAU); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.8)';
+          ctx.beginPath(); ctx.arc(x - 1.5, y - 1.5, 1.8, 0, TAU); ctx.fill();
         }
       } else if (fx.type === 'ring') {
         ctx.globalAlpha = 1 - k;
