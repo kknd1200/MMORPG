@@ -1,16 +1,9 @@
-// Authored 4-direction / 3-pose walk cycles; no limb warping or body scaling.
-export const HERO_SHEETS = Object.freeze({
-  knight: new URL('../../assets/heroes/knight-walk.webp', import.meta.url).href,
-  elf: new URL('../../assets/heroes/elf-walk.webp', import.meta.url).href,
-  mage: new URL('../../assets/heroes/mage-walk.webp', import.meta.url).href,
-  priest: new URL('../../assets/heroes/priest-walk.webp', import.meta.url).href,
-});
-export const HERO_CELL = 128;
-export const HERO_FOOT_Y = 114;
-export const HERO_BODY_HEIGHT = 96;
+// Cache poses from the project's ORIGINAL character painter, never a redesigned hero.
+export const HERO_CELL = 96;
+export const HERO_FOOT_Y = 76;
 const WALK_SEQUENCE = [1, 0, 1, 2];
-const images = new Map();
-let loading;
+const POSE_PHASES = [Math.PI / 2, 0, Math.PI * 1.5];
+const atlases = new Map();
 
 export function directionRow(facing) {
   if (Math.abs(facing.x) > Math.abs(facing.y)) return facing.x >= 0 ? 0 : 2;
@@ -22,39 +15,42 @@ export function heroFrame(state) {
   const phase = (((state.walk || 0) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
   const column = state.moving && !state.dead && !(state.attack > 0 || state.cast > 0)
     ? WALK_SEQUENCE[Math.floor(phase / (Math.PI / 2)) % 4] : 1;
-  return { row, column, sx: column * HERO_CELL, sy: row * HERO_CELL };
+  return { row, column, sx: column * HERO_CELL, sy: 0 };
 }
 
-export function preloadHeroSheets() {
-  if (loading) return loading;
-  if (typeof Image === 'undefined') return Promise.resolve();
-  loading = Promise.all(Object.entries(HERO_SHEETS).map(([id, url]) => new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => { images.set(id, img); resolve(true); };
-    img.onerror = () => resolve(false);
-    img.src = url;
-  })));
-  return loading;
-}
-
-export function drawHeroSheet(ctx, x, y, state) {
-  const img = images.get(state.classId);
-  if (!img) { preloadHeroSheets(); return false; }
-  const frame = heroFrame(state), scale = 46 * (state.scale || 1) / HERO_BODY_HEIGHT;
+export function drawHeroSheet(ctx, x, y, state, paintOriginal) {
+  // Combat keeps its original animation and equipment rendering.
+  if (!paintOriginal || !state.look || state.attack > 0 || state.cast > 0 || state.dead) return false;
+  if (typeof document === 'undefined') return false;
+  const f = state.facing || { x: 0, y: 1 };
+  const direction = ((Math.round(Math.atan2(f.y, f.x) / (Math.PI / 4)) % 8) + 8) % 8;
+  const key = JSON.stringify([state.classId, state.look, state.armorId, state.weaponColor, direction]);
+  let atlas = atlases.get(key);
+  if (!atlas) {
+    atlas = document.createElement('canvas');
+    const resolution = 2;
+    atlas.width = HERO_CELL * 3 * resolution;
+    atlas.height = HERO_CELL * resolution;
+    const painter = atlas.getContext('2d');
+    if (!painter) return false;
+    painter.setTransform(resolution, 0, 0, resolution, 0, 0);
+    const angle = direction * Math.PI / 4;
+    for (let column = 0; column < 3; column++) {
+      paintOriginal(painter, HERO_CELL * (column + 0.5), HERO_FOOT_Y, {
+        ...state, scale: 1, facing: { x: Math.cos(angle), y: Math.sin(angle) },
+        walk: POSE_PHASES[column], moving: column !== 1, motion: column === 1 ? 0 : 1,
+        lockBody: true, hurt: 0, dead: false, attack: 0, cast: 0, time: 0,
+      });
+    }
+    if (atlases.size >= 64) atlases.delete(atlases.keys().next().value);
+    atlases.set(key, atlas);
+  }
+  const frame = heroFrame(state), scale = state.scale || 1;
   ctx.save();
   ctx.translate(x, y);
-  // Attack/cast retain this identity; existing game FX remain separate from the body.
-  const attack = Math.max(0, Math.min(1, state.attack || 0));
-  if (attack) {
-    const facing = state.facing || { x: 0, y: 1 };
-    const length = Math.hypot(facing.x, facing.y) || 1;
-    const reach = Math.sin(attack * Math.PI) * 2 * (state.scale || 1);
-    ctx.translate(facing.x / length * reach, facing.y / length * reach);
-  }
-  if (state.hurt > 0) ctx.filter = 'brightness(1.65) sepia(.3)';
-  if (state.dead) { ctx.globalAlpha *= 0.6; ctx.rotate(-Math.PI / 2); }
+  if (state.hurt > 0) ctx.filter = 'sepia(1) saturate(6) hue-rotate(-45deg) brightness(' + (1 + state.hurt) + ')';
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(img, frame.sx, frame.sy, HERO_CELL, HERO_CELL,
+  ctx.drawImage(atlas, frame.column * HERO_CELL * 2, 0, HERO_CELL * 2, HERO_CELL * 2,
     -HERO_CELL / 2 * scale, -HERO_FOOT_Y * scale, HERO_CELL * scale, HERO_CELL * scale);
   ctx.restore();
   return true;

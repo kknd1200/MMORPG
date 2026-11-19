@@ -113,7 +113,11 @@ const ARMOR_TINT = {
  *      dead, scale, time }
  */
 export function drawHumanoid(ctx, x, y, s) {
-  if (s.classId && drawHeroSheet(ctx, x, y, s)) return;
+  if (s.classId && drawHeroSheet(ctx, x, y, s, drawOriginalHumanoid)) return;
+  drawOriginalHumanoid(ctx, x, y, s);
+}
+
+function drawOriginalHumanoid(ctx, x, y, s) {
   const look = { ...s.look, ...(ARMOR_TINT[s.armorId] || {}) };
   if (look.robe && ARMOR_TINT[s.armorId]) look.robe = shade(look.torso, -0.1);
   const { view, turn, flip } = viewOf(s.facing);
@@ -128,7 +132,7 @@ export function drawHumanoid(ctx, x, y, s) {
 
   const weight = s.motion ?? (s.moving ? 1 : 0);
   const sw = Math.sin(s.walk || 0) * weight;
-  const bob = (1 - Math.cos((s.walk || 0) * 2)) * 0.28 * weight;
+  const bob = s.lockBody ? 0 : (1 - Math.cos((s.walk || 0) * 2)) * 0.28 * weight;
   const bodyW = lerp(17, 11, turn);
   const half = bodyW / 2;
   const by = -bob; // 몸 전체 위아래 흔들림

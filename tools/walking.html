@@ -1,10 +1,9 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>4방향 걷기 미리보기</title><style>body{background:#17231a;color:#ebe0c5;font:14px sans-serif;margin:24px}canvas{max-width:100%;height:auto;border:1px solid #685936;image-rendering:pixelated}button,input{margin:10px;color:inherit;background:#28332a;padding:8px;border:1px solid #7a7153}p{color:#aab8a1}</style></head><body><h2>직업별 4방향 걷기</h2><p>오른쪽 · 정면 · 왼쪽 · 뒷면 / 발 내딛기 → 모으기 → 반대 발 내딛기</p><button id="pause">일시정지</button><label>보행 속도 <input id="speed" type="range" min="0.3" max="1.8" value="1" step="0.1"></label><canvas id="preview" width="640" height="560"></canvas><script type="module">
-import { preloadHeroSheets, drawHeroSheet } from '../js/game/hero-sheets.js';
+import { LOOKS, drawHumanoid } from '../js/game/sprites.js';
 import { CLASS_ORDER, CLASSES } from '../js/data/classes.js';
-await preloadHeroSheets();
 const canvas=document.querySelector('#preview'),ctx=canvas.getContext('2d'),speed=document.querySelector('#speed');
 let paused=false,phase=0,last=0;
 document.querySelector('#pause').onclick=e=>{paused=!paused;e.target.textContent=paused?'다시 재생':'일시정지'};
 const directions=[{x:1,y:0},{x:0,y:1},{x:-1,y:0},{x:0,y:-1}];
-function frame(time){const dt=last?Math.min(.05,(time-last)/1000):0;last=time;if(!paused)phase+=dt*8*Number(speed.value);ctx.fillStyle='#273c2c';ctx.fillRect(0,0,640,560);CLASS_ORDER.forEach((id,row)=>directions.forEach((facing,col)=>{const x=80+col*160,y=118+row*135;ctx.strokeStyle='#667258';ctx.beginPath();ctx.moveTo(x-50,y);ctx.lineTo(x+50,y);ctx.stroke();drawHeroSheet(ctx,x,y,{classId:id,facing,walk:phase,moving:true,scale:2});ctx.fillStyle='#e0d1a6';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(CLASSES[id].name,x,y+18)}));requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(time){const dt=last?Math.min(.05,(time-last)/1000):0;last=time;if(!paused)phase+=dt*8*Number(speed.value);ctx.fillStyle='#273c2c';ctx.fillRect(0,0,640,560);CLASS_ORDER.forEach((id,row)=>directions.forEach((facing,col)=>{const x=80+col*160,y=118+row*135;ctx.strokeStyle='#667258';ctx.beginPath();ctx.moveTo(x-50,y);ctx.lineTo(x+50,y);ctx.stroke();drawHumanoid(ctx,x,y,{classId:id,look:LOOKS[id],facing,walk:phase,moving:true,scale:2});ctx.fillStyle='#e0d1a6';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(CLASSES[id].name,x,y+18)}));requestAnimationFrame(frame)}requestAnimationFrame(frame);
 </script></body></html>
