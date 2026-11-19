@@ -2,7 +2,7 @@
 import { TILE_SIZE as TS, T, VILLAGE } from './world.js';
 import { MONSTERS } from '../data/monsters.js';
 import { ITEMS } from '../data/items.js';
-import { LOOKS, drawHumanoid, drawMonsterSprite } from './sprites.js';
+import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
 
 // NPC 외형 (사람형 스프라이트 재사용)
 const NPC_LOOKS = {
@@ -70,7 +70,7 @@ export class Renderer {
     ctx.font = `bold 14px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,240,200,0.9)';
-    ctx.fillText(`${VILLAGE.name} (초보자의 마을)`, ox + 60.5 * TS, oy + (VILLAGE.y0 - 0.4) * TS);
+    ctx.fillText(`${VILLAGE.name} (초보자의 마을)`, ox + ((VILLAGE.x0 + VILLAGE.x1) / 2 + 0.5) * TS, oy + (VILLAGE.y0 - 0.4) * TS);
 
     // 이동 목표 표시
     const p = game.player;
@@ -155,7 +155,10 @@ export class Renderer {
   drawMonster(m, sx, sy, targeted, hovered, time) {
     const { ctx } = this;
     const def = MONSTERS[m.type];
-    const r = def.size * TS;
+    // 그림 반폭(px): 시트 몬스터는 실제 몸 폭 기준, 도형 몬스터는 size 기준
+    const r = def.art
+      ? Math.max(8, (def.art.bodyWidth / def.art.bodyHeight) * MONSTER_UNIT_PX * def.size * 0.45)
+      : def.size * TS;
     const fade = m.dead ? Math.max(0, 1 - (time - m.deathTime) / 0.7) : 1;
     ctx.globalAlpha = fade;
     if (m.isBoss && !m.dead) {
@@ -189,7 +192,8 @@ export class Renderer {
     }
     if (targeted || hovered || m.isBoss) {
       const color = m.isBoss ? '#ffd24a' : def.aggressive ? '#ff9a9a' : '#e0e0e0';
-      nameTag(ctx, sx, top - 5, `${m.isBoss ? '[보스] ' : ''}Lv.${def.level} ${def.name}`, color);
+      const tag = def.rank === 'guard' ? '[네임드] ' : m.isBoss ? '[보스] ' : '';
+      nameTag(ctx, sx, top - 5, `${tag}Lv.${def.level} ${def.name}`, color);
     }
   }
 
@@ -309,6 +313,47 @@ function drawTile(ctx, t, v, x, y, time) {
       ctx.beginPath(); ctx.arc(x + TS / 2, y + TS / 2 - 3, 14, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#3f7d37';
       ctx.beginPath(); ctx.arc(x + TS / 2 - 4, y + TS / 2 - 7, 7, 0, Math.PI * 2); ctx.fill();
+      break;
+    case T.SWAMP: {
+      ctx.fillStyle = (v & 1) ? '#4a6040' : '#4e653f'; ctx.fillRect(x, y, TS, TS);
+      if (v % 4 === 0) { ctx.fillStyle = 'rgba(40,70,60,0.7)'; ctx.beginPath(); ctx.ellipse(x + 8 + (v % 14), y + 10 + (v % 12), 6, 3, 0, 0, Math.PI * 2); ctx.fill(); }
+      if (v % 9 === 0) { ctx.fillStyle = '#7a8a4a'; ctx.fillRect(x + (v % 22) + 3, y + 6, 2, 10); ctx.fillRect(x + (v % 22) + 7, y + 9, 2, 8); }
+      break;
+    }
+    case T.ASH:
+      ctx.fillStyle = ['#46403e', '#4a4442', '#433d3b', '#4d4644'][v & 3]; ctx.fillRect(x, y, TS, TS);
+      if (v % 6 === 0) { ctx.fillStyle = '#5a5250'; ctx.fillRect(x + (v % 24), y + ((v >> 2) % 24), 4, 3); }
+      if (v % 23 === 0) { ctx.fillStyle = `rgba(255,120,40,${0.3 + 0.3 * Math.sin(time * 3 + v)})`; ctx.fillRect(x + (v % 20) + 4, y + 14, 2, 2); }
+      break;
+    case T.DARKGRASS:
+      ctx.fillStyle = ['#2c4a2e', '#2f4e30', '#2a472c', '#325232'][v & 3]; ctx.fillRect(x, y, TS, TS);
+      if (v % 7 === 0) { ctx.fillStyle = '#243d26'; ctx.fillRect(x + (v % 20), y + ((v >> 3) % 20), 3, 5); }
+      break;
+    case T.LAVA: {
+      ctx.fillStyle = '#b8401a'; ctx.fillRect(x, y, TS, TS);
+      const a = 0.35 + 0.25 * Math.sin(time * 2.5 + v * 0.7);
+      ctx.fillStyle = `rgba(255,200,60,${a})`;
+      ctx.beginPath(); ctx.ellipse(x + 8 + (v % 16), y + 8 + ((v >> 2) % 16), 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(60,20,10,0.35)'; ctx.fillRect(x + (v % 26), y + ((v >> 3) % 26), 5, 3);
+      break;
+    }
+    case T.GRAVE:
+      ctx.fillStyle = (v & 1) ? '#2c4a2e' : '#2f4e30'; ctx.fillRect(x, y, TS, TS);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x + 7, y + TS - 7, 18, 4);
+      ctx.fillStyle = '#8a8a92'; roundRect(ctx, x + 9, y + 6, 14, 20, 6); ctx.fill();
+      ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#5a5a62'; ctx.fillRect(x + 15, y + 10, 2, 9); ctx.fillRect(x + 12, y + 13, 8, 2);
+      break;
+    case T.DEADTREE:
+      ctx.fillStyle = (v & 1) ? '#2c4a2e' : '#2a472c'; ctx.fillRect(x, y, TS, TS);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x + TS / 2, y + TS - 4, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#3a2e28'; ctx.lineCap = 'round';
+      ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 16, y + TS - 3); ctx.lineTo(x + 15, y + 9); ctx.stroke();
+      ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x + 15, y + 15); ctx.lineTo(x + 7, y + 6 + (v % 4));
+      ctx.moveTo(x + 15, y + 12); ctx.lineTo(x + 24, y + 4 + (v % 3));
+      ctx.moveTo(x + 15, y + 9); ctx.lineTo(x + 13, y + 2);
+      ctx.stroke();
       break;
     default:
       ctx.fillStyle = '#f0f'; ctx.fillRect(x, y, TS, TS);

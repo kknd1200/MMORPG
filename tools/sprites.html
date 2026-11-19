@@ -14,11 +14,11 @@
      ?static 을 붙이면 애니메이션 없이 고정 프레임 (스크린샷용) -->
 <h2>직업 × 8방향 (걷기 / 공격 / 시전)</h2>
 <canvas id="chars"></canvas>
-<h2>몬스터 (대기 / 이동 / 공격)</h2>
+<h2>사냥터별 몬스터 (?static: 대기 / 애니메이션: 대기 → 공격 → 스킬 반복)</h2>
 <canvas id="mons"></canvas>
 <script type="module">
 import { LOOKS, drawHumanoid, drawMonsterSprite } from '../js/game/sprites.js';
-import { MONSTERS } from '../js/data/monsters.js';
+import { MONSTERS, SPAWN_ZONES } from '../js/data/monsters.js';
 import { ITEMS } from '../js/data/items.js';
 import { CLASS_ORDER, CLASSES } from '../js/data/classes.js';
 
@@ -39,8 +39,8 @@ const shadow = (ctx, x, y, r) => { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginP
 const label = (ctx, x, y, t) => { ctx.font = 'bold 11px "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(t, x, y); ctx.fillStyle = '#fff'; ctx.fillText(t, x, y); };
 
 const cc = setup(document.getElementById('chars'), 11 * 64 + 20, CLASS_ORDER.length * 80 + 10);
-const monIds = Object.keys(MONSTERS);
-const mc = setup(document.getElementById('mons'), monIds.length * 90 + 20, 3 * 110 + 10);
+const ROW_H = 96, COL_W = 120, LABEL_W = 170;
+const mc = setup(document.getElementById('mons'), LABEL_W + 6 * COL_W, SPAWN_ZONES.length * ROW_H + 10);
 
 function frame(time) {
   const t = STATIC ? 0.5 : time / 1000;
@@ -65,21 +65,25 @@ function frame(time) {
   });
 
   ground(mc, mc.canvas.width / dpr, mc.canvas.height / dpr);
-  monIds.forEach((id, i) => {
-    const def = MONSTERS[id];
-    const r = def.size * TS;
-    for (let row = 0; row < 3; row++) {
-      const x = 50 + i * 90, y = row * 110 + 95;
-      const m = {
-        id: i, facing: { x: row === 1 ? -1 : 1, y: 0 }, moving: row === 1, walkPhase: STATIC ? 1.2 : t * 8,
-        attackAnim: row === 2 ? (STATIC ? 0.15 : 0.3 * ((t * 1.5) % 1)) : 0, hurtFlash: 0, dead: false,
-      };
-      shadow(mc, x, y, r);
-      const h = drawMonsterSprite(mc, x, y, m, def, r, t);
-      if (row === 0) label(mc, x, y - h - 6, def.name);
-    }
+  const cycle = STATIC ? 0 : (t % 3);
+  SPAWN_ZONES.forEach((z, zi) => {
+    const y = zi * ROW_H + 82;
+    mc.textAlign = 'left'; mc.font = 'bold 12px "Malgun Gothic"'; mc.fillStyle = '#fff';
+    mc.fillText(z.name, 8, y - 30);
+    const ids = [...z.monsters.map(([id]) => id), z.boss.type];
+    ids.forEach((id, i) => {
+      const def = MONSTERS[id];
+      const x = LABEL_W + i * COL_W + COL_W / 2;
+      const kind = cycle < 1 ? null : cycle < 2 ? 'attack' : 'skill';
+      const dur = kind === 'skill' ? 0.6 : 0.4;
+      const m = { id: zi * 6 + i, facing: { x: -1, y: 0 }, moving: false, walkPhase: 0, hurtFlash: 0, dead: false,
+        animKind: kind || 'attack', animDur: dur, attackAnim: kind ? dur * (1 - ((cycle % 1) * 1.6) % 1) : 0 };
+      shadow(mc, x, y, 12);
+      drawMonsterSprite(mc, x, y, m, def, 14, t);
+      label(mc, x, y + 13, `Lv.${def.level} ${def.name}`);
+    });
   });
-  if (!STATIC) requestAnimationFrame(frame);
+  requestAnimationFrame(frame); // 고정 모드도 계속 그림 (시트 이미지가 늦게 로딩되므로)
 }
 requestAnimationFrame(frame);
 </script>

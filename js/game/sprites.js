@@ -491,13 +491,16 @@ function drawShield(ctx, color, x, y, back, turn) {
  * 반환값: 머리 꼭대기 높이(px, 양수) — 이름표·체력바 위치용
  */
 export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
-  const flip = m.facing.x < -0.01 ? -1 : 1;
-  const atk = m.attackAnim > 0 ? Math.sin((m.attackAnim / 0.3) * Math.PI) : 0; // 0→1→0
+  const dur = m.animDur || 0.3;
+  const prog = m.attackAnim > 0 ? 1 - m.attackAnim / dur : 0; // 공격 동작 진행 0→1
+  const atk = m.attackAnim > 0 ? Math.sin(prog * Math.PI) : 0; // 0→1→0
   const walk = m.moving ? Math.sin(m.walkPhase) : 0;
-  const pal = def.palette || {};
-  const color = def.color;
+  const sheet = def.art && sheetImage(def.art.sheet);
+  // 시트 그림은 왼쪽을 보고 그려져 있음 → 오른쪽을 볼 때 뒤집기
+  const flip = sheet ? (m.facing.x > 0.01 ? -1 : 1) : (m.facing.x < -0.01 ? -1 : 1);
+  const lungeDir = sheet ? -flip : flip;
   ctx.save();
-  ctx.translate(x + flip * atk * r * 0.35, y);
+  ctx.translate(x + lungeDir * atk * r * (sheet ? 0.2 : 0.35), y);
   if (m.dead) {
     const k = Math.min(1, (time - m.deathTime) / 0.7);
     ctx.globalAlpha *= 1 - k;
@@ -506,11 +509,69 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
   ctx.scale(flip, 1);
   // 피격 순간: 하얗게 번쩍 (canvas filter 미지원 브라우저에서는 그냥 무시됨)
   if (m.hurtFlash > 0) ctx.filter = `brightness(${1 + m.hurtFlash / 0.12 * 1.6})`;
-  const draw = SHAPES[def.shape] || SHAPES.goblin;
-  const h = draw({ ctx, r, color, pal, walk, atk, time, m, def }) ?? r * 2.4;
+  let h;
+  if (sheet) {
+    h = drawSheetFrame(ctx, sheet, def, m, prog, walk, time);
+  } else {
+    const draw = SHAPES[def.shape || FAMILY_SHAPE[def.family]] || SHAPES.goblin;
+    h = draw({ ctx, r, color: def.color, pal: def.palette || FALLBACK_PAL, walk, atk, time, m, def }) ?? r * 2.4;
+  }
   ctx.restore();
   return h;
 }
+
+// ---------------------------------------------------------------- 스프라이트 시트 몬스터
+// 시트: 384px 칸, 가로 8포즈(1~4 공격, 5~8 스킬, 대기 = 4번째) × 세로 6마리
+const SHEET_CELL = 384;
+const SHEET_BASE = new URL('../../assets/monsters/', import.meta.url);
+const sheets = new Map();
+// 플레이어 키(약 46px)를 몬스터 원본의 "영웅 키 100" 에 맞춤 → 몸 높이(px) = 46 × size
+export const MONSTER_UNIT_PX = 46;
+
+function sheetImage(name) {
+  let s = sheets.get(name);
+  if (!s) {
+    const img = new Image();
+    s = { img, ready: false, failed: false };
+    img.onload = () => { s.ready = true; };
+    img.onerror = () => { s.failed = true; };
+    img.src = new URL(`${name}.webp`, SHEET_BASE).href;
+    sheets.set(name, s);
+  }
+  return s.ready ? s.img : null; // 로딩 전에는 도형 그림으로 대신 그림
+}
+
+export function preloadSheets(names) { for (const n of names) sheetImage(n); }
+
+function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
+  const a = def.art;
+  let col = 3; // 대기
+  if (m.attackAnim > 0) col = (m.animKind === 'skill' ? 4 : 0) + Math.min(3, Math.floor(prog * 4));
+  const bodyPx = MONSTER_UNIT_PX * def.size;
+  const s = bodyPx / a.bodyHeight;
+  // 이동 중: 통통 튀는 걸음 / 대기 중: 숨쉬기
+  const hop = m.moving ? Math.abs(walk) * Math.max(1.5, bodyPx * 0.07) : 0;
+  const breathe = m.moving ? 1 : 1 + Math.sin(time * 2.2 + m.id) * 0.02;
+  ctx.save();
+  ctx.translate(0, -hop);
+  ctx.scale(1, breathe);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, col * SHEET_CELL, a.row * SHEET_CELL, SHEET_CELL, SHEET_CELL,
+    -a.centerX * s, -a.footY * s, SHEET_CELL * s, SHEET_CELL * s);
+  ctx.restore();
+  return bodyPx + hop;
+}
+
+// 시트를 불러오기 전 잠깐 보이는 도형 그림
+const FAMILY_SHAPE = {
+  slime: 'slime', quadruped: 'wolf', spider: 'spider', winged: 'wraith', biped: 'goblin', spirit: 'wraith',
+  construct: 'orc', dragon: 'orc', plant: 'mushroom', shell: 'boar', aquatic: 'slime', serpent: 'rat',
+};
+const FALLBACK_PAL = {
+  cap: '#a05050', spots: '#eee', stem: '#ddd', tusk: '#eee', mane: '#333', cloth: '#5a4a3a', weapon: '#aaa',
+  eyes: '#f44', mark: '#a33', glow: '#9cf', armor: '#5a5048',
+};
 
 const eye = (ctx, x, y, c = '#ff3a2a', s = 2.2) => {
   ctx.fillStyle = c; ctx.fillRect(x - s / 2, y - s / 2, s, s);

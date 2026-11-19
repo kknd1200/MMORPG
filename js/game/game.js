@@ -4,9 +4,22 @@ import { SKILLS } from '../data/skills.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS, SPAWN_ZONES } from '../data/monsters.js';
 import * as S from '../systems/stats.js';
-import { World, VILLAGE } from './world.js';
+import { World, VILLAGE, WORLD_VERSION } from './world.js';
+import { preloadSheets } from './sprites.js';
 import { Renderer } from './render.js';
 import { Hud } from './hud.js';
+
+// 몬스터 스킬 상태이상 (플레이어에게 걸림). buffs 목록에 함께 들어가 HUD 에 표시됨
+const STATUS = {
+  slow: { id: 'st_slow', name: '둔화', speed: -0.3, duration: 3 },
+  expose: { id: 'st_expose', name: '방어 약화', expose: 0.12, duration: 4 },
+  bleed: { id: 'st_bleed', name: '출혈', dot: true, duration: 3 },
+  burn: { id: 'st_burn', name: '화상', dot: true, duration: 3 },
+  poison: { id: 'st_poison', name: '중독', dot: true, duration: 4 },
+};
+const EFFECT_COLOR = { slow: '#8ad0ff', expose: '#ffb38c', bleed: '#ff5a5a', burn: '#ff9a3a', poison: '#8ae05a' };
+// 몬스터 패시브 값 (없으면 0)
+const passive = (def, kind) => def.passive?.find((p) => p.kind === kind)?.value || 0;
 
 export const HOTBAR_KEYS = ['F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'];
 const PICK_RADIUS = 0.75;
@@ -22,7 +35,9 @@ export class Game {
     this.world = new World();
     this.renderer = new Renderer(canvas);
 
-    let start = character.pos;
+    // 맵이 바뀐 뒤 처음 접속하면 예전 위치 대신 마을에서 시작
+    let start = character.worldVersion === WORLD_VERSION ? character.pos : null;
+    character.worldVersion = WORLD_VERSION;
     if (!start || this.world.blocked(start.x, start.y)) start = { ...this.world.spawn };
     this.player = {
       id: 'player', x: start.x, y: start.y, radius: 0.3, facing: { x: 0, y: 1 },
@@ -54,6 +69,7 @@ export class Game {
       for (let i = 0; i < zone.max; i++) this.spawnMonster(zone, true);
       if (zone.boss) this.bossTick(zone);
     }
+    preloadSheets([...new Set(Object.values(MONSTERS).map((d) => d.art?.sheet).filter(Boolean))]);
 
     this.hud = new Hud(hudRoot, this);
     this.bindInput();
@@ -106,6 +122,7 @@ export class Game {
     this.hover = this.pick(w.x, w.y);
 
     this.updatePlayer(dt);
+    this.tickStatus();
     this.updateMonsters(dt);
     this.updateEffects(dt);
 
@@ -380,8 +397,9 @@ export class Game {
       level: def.level, armor: def.armor, mr: def.mr, eva: def.eva,
       state: 'idle', attackTimer: 0, wanderTimer: Math.random() * 3, wanderTarget: null,
       facing: { x: 1, y: 0 }, hurtFlash: 0, dead: false, stuckTime: 0,
-      isBoss: !!def.boss, walkPhase: Math.random() * 6, moving: false, attackAnim: 0,
-      slamAt: 0, slamTarget: null,
+      isBoss: def.rank === 'boss' || def.rank === 'guard' || !!def.boss, walkPhase: Math.random() * 6, moving: false, attackAnim: 0,
+      slamAt: 0, slamTarget: null, animKind: 'attack', animDur: 0.3,
+      nextSkill: 0,
     };
     this.monsters.push(m);
     return m;
@@ -405,7 +423,8 @@ export class Game {
     if (this.time < this.bossRespawnAt[zone.id]) return;
     if (this.spawnMonster(zone, true, b.type, b.rect)) {
       this.bossRespawnAt[zone.id] = Infinity;
-      this.log(`${MONSTERS[b.type].name}이(가) ${zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
+      // 네임드는 조용히, 보스는 전체 알림
+      if (MONSTERS[b.type].rank !== 'guard') this.log(`보스 ${MONSTERS[b.type].name}이(가) ${zone.theme || zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
     }
   }
 
@@ -431,6 +450,10 @@ export class Game {
       m.hurtFlash = Math.max(0, m.hurtFlash - dt);
       m.attackAnim = Math.max(0, m.attackAnim - dt);
       const pd = dist(m, p);
+      // 화면에서 멀리 떨어진 대기 중 몬스터는 계산 생략 (몬스터 수백 마리)
+      if (pd > 36 && m.state === 'idle') { m.moving = false; continue; }
+      const mend = passive(def, 'mend');
+      if (mend && m.hp < m.maxHp * 0.5) m.hp = Math.min(m.maxHp, m.hp + m.maxHp * mend * dt);
       const ox = m.x, oy = m.y;
       this.monsterBrain(m, def, p, pd, playerSafe, dt);
       m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
@@ -466,7 +489,12 @@ export class Game {
         }
         if (pd <= def.attackRange + p.radius) {
           this.face(m, p);
-          if (m.attackTimer <= 0) { m.attackTimer = def.attackInterval; this.monsterAttack(m, def); }
+          if (m.attackTimer <= 0) {
+            m.attackTimer = def.attackInterval * (1 - passive(def, 'haste'));
+            if (def.active?.length && m.nextSkill > 0 && this.time >= m.nextSkill) this.monsterSkill(m, def);
+            else this.monsterAttack(m, def);
+            if (!m.nextSkill) m.nextSkill = this.time + 2 + Math.random() * 3;
+          }
         } else {
           const r = this.moveEntity(m, p.x, p.y, def.speed, dt, true);
           m.stuckTime = r === 'stuck' ? m.stuckTime + dt : 0;
@@ -494,7 +522,7 @@ export class Game {
     const slam = def.boss.slam;
     const at = m.slamTarget;
     m.slamTarget = null;
-    m.attackAnim = 0.35;
+    m.animKind = 'skill'; m.animDur = 0.5; m.attackAnim = 0.5;
     this.effects.push({ type: 'ring', x: at.x, y: at.y, r: slam.radius, t: 0, life: 0.45, color: '#ff8a3a' });
     this.effects.push({ type: 'shake', t: 0, life: 0.3, power: 6 });
     const p = this.player;
@@ -504,33 +532,86 @@ export class Game {
   }
 
   monsterAttack(m, def) {
-    const ch = this.char;
-    const d = this.derived();
-    m.attackAnim = 0.3;
+    m.animKind = 'attack'; m.animDur = 0.4; m.attackAnim = 0.4;
     if (def.projectile) {
-      this.addProjectile(m, this.player, def.projectile, def.projectile === 'bolt' ? (def.palette?.glow || '#9ad0ff') : '#d8c8a0');
+      this.addProjectile(m, this.player, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
     } else {
       this.effects.push({ type: 'slash', x: this.player.x, y: this.player.y, t: 0, life: 0.2, color: '#ff6060' });
     }
-    // 마법 공격은 방어력을 절반만 적용
-    const def2 = def.magic ? d.defense / 2 : d.defense;
-    if (Math.random() >= S.monsterHitChance(def.level, ch.level, def2)) {
-      this.floatText(this.player, 'MISS', '#bbbbbb');
-      return;
-    }
-    this.hurtPlayer(S.monsterDamage(def.atk, def2), def);
+    this.monsterHit(m, def, 1);
   }
 
-  hurtPlayer(dmg, def) {
+  // 몬스터 한 번의 타격: 명중 판정 → 피해. 맞으면 true
+  monsterHit(m, def, mult, delay = 0) {
+    const ch = this.char;
+    const d = this.derived();
+    // 마법 공격은 방어력을 절반만 적용
+    const pdef = def.magic ? d.defense / 2 : d.defense;
+    const hit = S.monsterHitChance(def.level, ch.level, pdef) + passive(def, 'focus');
+    if (Math.random() >= hit) { this.floatText(this.player, 'MISS', '#bbbbbb', 15, delay); return false; }
+    let atk = def.atk * mult;
+    const fury = passive(def, 'fury');
+    if (fury && m.hp < m.maxHp * 0.5) atk *= 1 + fury;
+    let dmg = S.monsterDamage(atk, pdef);
+    const expose = this.buffs.reduce((a, b) => a + (b.expose || 0), 0);
+    if (expose) dmg = Math.round(dmg * (1 + expose));
+    this.hurtPlayer(dmg, def, delay);
+    return true;
+  }
+
+  // 몬스터 스킬 (원본 「환생 루프」 액티브): 배율 피해 × 타수 + 상태이상
+  monsterSkill(m, def) {
+    const sk = def.active[Math.floor(Math.random() * def.active.length)];
+    m.nextSkill = this.time + def.skillCooldown * (0.8 + Math.random() * 0.4);
+    m.animKind = 'skill'; m.animDur = 0.6; m.attackAnim = 0.6;
+    const p = this.player;
+    const color = EFFECT_COLOR[sk.effect] || def.color;
+    this.floatText(m, sk.name, color, 13);
+    if (def.projectile) this.addProjectile(m, p, def.projectile, color);
+    this.effects.push({ type: 'ring', x: p.x, y: p.y, r: 0.8, t: -0.15, life: 0.4, color });
+    let landed = false;
+    for (let i = 0; i < (sk.pulses || 1); i++) {
+      if (this.player.dead) break;
+      if (this.monsterHit(m, def, sk.mult, i * 0.15)) landed = true;
+    }
+    if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def);
+  }
+
+  applyStatus(effect, def) {
+    const st = STATUS[effect];
+    if (!st || this.player.dead) return;
+    const tick = Math.max(1, Math.round(def.atk * 0.12));
+    this.buffs = this.buffs.filter((b) => b.id !== st.id);
+    this.buffs.push({ ...st, color: EFFECT_COLOR[effect], until: this.time + st.duration, debuff: true,
+      dot: st.dot ? tick : 0, nextTick: this.time + 1, src: def.name });
+    this.floatText(this.player, st.name, EFFECT_COLOR[effect], 13, 0.2);
+    this.hud.markDirty('char');
+  }
+
+  // 지속 피해(출혈·화상·중독) 처리
+  tickStatus() {
+    for (const b of this.buffs) {
+      if (!b.dot || this.time < b.nextTick || this.player.dead) continue;
+      b.nextTick += 1;
+      this.char.hp -= b.dot;
+      this.player.lastHurt = this.time;
+      this.floatText(this.player, `-${b.dot}`, b.color, 13);
+      if (this.char.hp <= 0) this.playerDie({ name: `${b.name}(${b.src})` });
+    }
+  }
+
+  hurtPlayer(dmg, def, delay = 0) {
     const ch = this.char;
     if (this.player.dead) return;
     ch.hp -= dmg;
     this.player.lastHurt = this.time;
-    this.floatText(this.player, `-${dmg}`, '#ff5050');
+    this.floatText(this.player, `-${dmg}`, '#ff5050', 15, delay);
     if (ch.hp <= 0) this.playerDie(def);
   }
 
   damageMonster(m, dmg, color, delay = 0) {
+    const hide = passive(MONSTERS[m.type], 'hide');
+    if (hide) dmg = Math.max(1, Math.round(dmg * (1 - hide)));
     m.hp -= dmg;
     m.hurtFlash = 0.12;
     this.floatText(m, `${dmg}`, color, 16, delay);
@@ -548,7 +629,7 @@ export class Game {
       const zone = SPAWN_ZONES.find((z) => z.id === m.zone);
       this.bossRespawnAt ??= {};
       this.bossRespawnAt[m.zone] = this.time + (zone?.boss?.respawn ?? 120);
-      this.log(`보스 ${def.name}을(를) 쓰러뜨렸습니다!`, 'level');
+      this.log(`${def.rank === 'guard' ? '네임드' : '보스'} ${def.name}을(를) 쓰러뜨렸습니다!`, 'level');
       this.effects.push({ type: 'ring', x: m.x, y: m.y, r: 2.5, t: 0, life: 1, color: '#ffd24a' });
     }
     const gold = S.randInt(def.gold[0], def.gold[1]);
