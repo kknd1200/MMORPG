@@ -14,10 +14,13 @@ function activeAt(zones, p, active = new Set()) {
   return active;
 }
 
-test('필드에서는 근처 사냥 구역 몇 곳만 켜진다', () => {
-  const active = activeAt(field.zones, field.spawn);
+test('넓은 곳에서는 근처 사냥 구역 몇 곳만 켜진다', () => {
+  const zones = [];
+  for (let gx = 0; gx < 12; gx++) zones.push({ id: `w${gx}`, rect: { x0: gx * 20, y0: 0, x1: gx * 20 + 16, y1: 16 } });
+  const active = activeAt(zones, { x: 10, y: 8 });
   assert.ok(active.size > 0);
-  assert.ok(active.size < field.zones.length, `켜진 구역이 너무 많음: ${active.size}`);
+  assert.ok(active.size < zones.length, `켜진 구역이 너무 많음: ${active.size}`);
+  assert.ok(activeAt(field.zones, field.spawn).size > 0, '필드 시작 지점 근처에 사냥 구역이 없음');
 });
 
 test('구역 안에 서 있으면 그 구역은 켜진다', () => {

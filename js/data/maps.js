@@ -65,7 +65,7 @@ export const START_MAP = 'v1';
 export const MAPS = {};
 
 // ---------------------------------------------------------------- 맵 정의 만들기
-const SIZE = { village: [60, 52], field: [128, 96], dungeon: [72, 72] };
+const SIZE = { village: [50, 46], field: [64, 48], dungeon: [44, 44] };
 let seed = 7001;
 
 function base(id, type, name, extra) {

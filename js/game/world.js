@@ -8,7 +8,7 @@
 import { MAPS } from '../data/maps.js';
 
 export const TILE_SIZE = 32;
-export const WORLD_VERSION = 5; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 시작 마을로 초기화
+export const WORLD_VERSION = 6; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 시작 마을로 초기화
 
 export const T = {
   GRASS: 0, DIRT: 1, TREE: 2, WATER: 3, WALL: 4, FLOOR: 5,
@@ -204,7 +204,7 @@ export class World {
     const d = this.def;
     this.fillBiome(d.biome);
     const cy = Math.floor(this.h / 2), cx = Math.floor(this.w / 2);
-    const town = { x0: 12, y0: 8, x1: this.w - 13, y1: this.h - 9 };
+    const town = { x0: 6, y0: 5, x1: this.w - 7, y1: this.h - 6 };
     this.town = town;
     // 마을 밖 둘레는 풀밭 위주로 (지형은 테마 색만)
     this.rect(town.x0 - 4, town.y0 - 4, town.x1 + 4, town.y1 + 4, (x, y) => (this.rng() < 0.08 ? T.FLOWER : T.GRASS));
@@ -256,22 +256,23 @@ export class World {
     this.fillBiome(d.biome);
     const cy = Math.floor(this.h / 2);
     // 동서를 잇는 구불구불한 큰길
-    const xs = [0, 32, 64, 96, this.w - 1];
-    const ys = xs.map((x, i) => (i === 0 || i === xs.length - 1 ? cy : 28 + Math.floor(rng() * (this.h - 56))));
+    const W = this.w, H = this.h, q = Math.round(W / 4);
+    const xs = [0, q, q * 2, q * 3, W - 1];
+    const ys = xs.map((x, i) => (i === 0 || i === xs.length - 1 ? cy : 14 + Math.floor(rng() * (H - 28))));
     const lastX = d.exits.east ? this.w - 1 : this.w - 8;
     for (let i = 0; i < xs.length - 1; i++) {
       this.roadLine(xs[i], ys[i], Math.min(xs[i + 1], lastX), ys[i + 1]);
     }
-    const roadY = (x) => ys[Math.min(ys.length - 1, Math.round(x / 32))];
+    const roadY = (x) => ys[Math.min(ys.length - 1, Math.round(x / q))];
     this.border(this.fillTile, (x, y) => Math.abs(y - cy) <= 1 && ((x < 2 && d.exits.west) || (x >= this.w - 2 && d.exits.east)));
     this.edgeExits(cy);
-    this.spots.center = { x: 64.5, y: roadY(64) + 0.5 };
+    this.spots.center = { x: q * 2 + 0.5, y: roadY(q * 2) + 0.5 };
 
     // 던전 입구: 큰길에서 갈라지는 샛길 끝의 동굴
     d.entrances.forEach((did, j) => {
-      const ex = 80 + j * 14;
+      const ex = Math.round(W * 0.66) + j * 10;
       const ry = roadY(ex);
-      const ey = ry > cy ? 14 : this.h - 16;
+      const ey = ry > cy ? 8 : H - 10;
       this.roadLine(ex, ry, ex, ey + 4);
       this.clearing(ex, ey + 3, 5);
       this.rect(ex - 4, ey - 3, ex + 4, ey - 1, T.ROCK);
@@ -282,15 +283,16 @@ export class World {
     });
 
     // 필드 보스 터: 입구 반대쪽 공터
-    const bx = 34, by = roadY(bx) > cy ? 18 : this.h - 20;
+    const bx = Math.round(W * 0.27), by = roadY(bx) > cy ? 10 : H - 11;
     this.roadLine(bx, roadY(bx), bx, by);
-    this.clearing(bx, by, 6);
+    this.clearing(bx, by, 5);
     this.spots.boss = { x: bx + 0.5, y: by + 0.5 };
 
-    // 사냥 구역: 32칸 격자 (출구 근처 10칸은 비워 둠)
-    for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 4; gx++) {
-      const r = { x0: Math.max(10, gx * 32 + 2), y0: gy * 32 + 3, x1: Math.min(this.w - 10, gx * 32 + 30), y1: gy * 32 + 29 };
-      this.zones.push({ id: `z${gy}${gx}`, rect: r, monsters: d.monsters, max: 9 });
+    // 사냥 구역: 16칸 격자 (출구 근처 8칸은 비워 둠)
+    const G = 16;
+    for (let gy = 0; gy < Math.floor(H / G); gy++) for (let gx = 0; gx < Math.floor(W / G); gx++) {
+      const r = { x0: Math.max(8, gx * G + 1), y0: gy * G + 2, x1: Math.min(W - 8, gx * G + G - 1), y1: gy * G + G - 2 };
+      this.zones.push({ id: `z${gy}${gx}`, rect: r, monsters: d.monsters, max: 4 });
     }
   }
 
@@ -303,10 +305,10 @@ export class World {
     this.tiles.fill(pal.wall);
     const final = d.floorBoss?.final;
     const rooms = [{ x0: 4, y0: 4, x1: 16, y1: 14 }];
-    if (final) rooms.push({ x0: this.w - 30, y0: this.h - 26, x1: this.w - 5, y1: this.h - 5, boss: true });
+    if (final) rooms.push({ x0: this.w - 21, y0: this.h - 18, x1: this.w - 4, y1: this.h - 4, boss: true });
     const overlaps = (a) => rooms.some((b) => a.x0 - 3 <= b.x1 && b.x0 - 3 <= a.x1 && a.y0 - 3 <= b.y1 && b.y0 - 3 <= a.y1);
-    for (let t = 0; t < 300 && rooms.length < 11; t++) {
-      const rw = 9 + Math.floor(rng() * 7), rh = 8 + Math.floor(rng() * 6);
+    for (let t = 0; t < 400 && rooms.length < 7; t++) {
+      const rw = 8 + Math.floor(rng() * 6), rh = 7 + Math.floor(rng() * 5);
       const x0 = 3 + Math.floor(rng() * (this.w - rw - 6)), y0 = 3 + Math.floor(rng() * (this.h - rh - 6));
       const r = { x0, y0, x1: x0 + rw, y1: y0 + rh };
       if (!overlaps(r)) rooms.push(r);
