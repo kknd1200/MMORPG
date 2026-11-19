@@ -1,3 +1,4 @@
+import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
 import { SKILLS } from '../data/skills.js';
@@ -121,7 +122,9 @@ export class Game {
     this.mouse.wx = w.x; this.mouse.wy = w.y;
     this.hover = this.pick(w.x, w.y);
 
+    const playerBefore = { x: this.player.x, y: this.player.y };
     this.updatePlayer(dt);
+    advanceGait(this.player, Math.hypot(this.player.x - playerBefore.x, this.player.y - playerBefore.y), dt);
     this.tickStatus();
     this.updateMonsters(dt);
     this.updateEffects(dt);
@@ -147,13 +150,15 @@ export class Game {
   moveEntity(e, tx, ty, speed, dt, forMonster) {
     const dx = tx - e.x, dy = ty - e.y;
     const d = Math.hypot(dx, dy);
-    if (d < 0.08) return 'arrived';
+    if (d < 0.02) return 'arrived';
     const step = Math.min(d, speed * dt);
     const nx = e.x + (dx / d) * step, ny = e.y + (dy / d) * step;
-    let moved = false;
-    if (!this.world.blocked(nx, e.y, e.radius, forMonster)) { e.x = nx; moved = true; }
-    if (!this.world.blocked(e.x, ny, e.radius, forMonster)) { e.y = ny; moved = true; }
-    e.facing = { x: dx / d, y: dy / d };
+    const oldX = e.x, oldY = e.y;
+    if (!this.world.blocked(nx, e.y, e.radius, forMonster)) e.x = nx;
+    if (!this.world.blocked(e.x, ny, e.radius, forMonster)) e.y = ny;
+    const mx = e.x - oldX, my = e.y - oldY, actual = Math.hypot(mx, my);
+    const moved = actual > 0.00001;
+    if (moved) e.facing = { x: mx / actual, y: my / actual };
     return moved ? 'moving' : 'stuck';
   }
 
@@ -227,7 +232,7 @@ export class Game {
       p.moving = r === 'moving';
       if (r !== 'moving' && !this.mouse.left) { p.moveTarget = null; this.clearPath(p); }
     }
-    if (p.moving) p.walkPhase += dt * 14;
+
   }
 
   performAction(action, target) {
@@ -451,13 +456,13 @@ export class Game {
       m.attackAnim = Math.max(0, m.attackAnim - dt);
       const pd = dist(m, p);
       // 화면에서 멀리 떨어진 대기 중 몬스터는 계산 생략 (몬스터 수백 마리)
-      if (pd > 36 && m.state === 'idle') { m.moving = false; continue; }
+      if (pd > 36 && m.state === 'idle') { m.moving = false; advanceGait(m, 0, dt); continue; }
       const mend = passive(def, 'mend');
       if (mend && m.hp < m.maxHp * 0.5) m.hp = Math.min(m.maxHp, m.hp + m.maxHp * mend * dt);
       const ox = m.x, oy = m.y;
       this.monsterBrain(m, def, p, pd, playerSafe, dt);
       m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
-      if (m.moving) m.walkPhase += dt * def.speed * 4;
+      advanceGait(m, Math.hypot(m.x - ox, m.y - oy), dt, monsterStride(def.family, def.size));
     }
   }
 

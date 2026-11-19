@@ -1,3 +1,4 @@
+import { footPose } from './locomotion.js';
 // 캐릭터 · NPC · 몬스터 그림 (캔버스 도형으로 그리는 클래식 다크 판타지 풍 스프라이트)
 //
 // 좌표계: (0,0) = 발밑. 위쪽이 -y. 그리기 전에 바라보는 방향에 따라 좌우 반전하므로
@@ -123,19 +124,20 @@ export function drawHumanoid(ctx, x, y, s) {
   if (s.dead) { ctx.translate(-4, -4); ctx.rotate(-Math.PI / 2 * flip); ctx.globalAlpha *= 0.65; }
   ctx.scale(flip * sc, sc);
 
-  const sw = s.moving ? Math.sin(s.walk) : 0;
-  const bob = s.moving ? Math.abs(sw) * 1.6 : 0;
+  const weight = s.motion ?? (s.moving ? 1 : 0);
+  const sw = Math.sin(s.walk || 0) * weight;
+  const bob = (1 - Math.cos((s.walk || 0) * 2)) * 0.28 * weight;
   const bodyW = lerp(17, 11, turn);
   const half = bodyW / 2;
   const by = -bob; // 몸 전체 위아래 흔들림
 
   const hand = {
     // 무기 손(오른손) / 방패 손(왼손) 위치. 옆모습일수록 몸 앞뒤로 겹침
-    wx: lerp(half + 2.5, 4, turn), wy: -19 + by - sw * 1.5 * (1 - turn),
-    sx: lerp(-half - 2.5, -3, turn), sy: -19 + by + sw * 1.5 * (1 - turn),
+    wx: lerp(half + 2.5, 4, turn), wy: -19 + by - sw * 0.8 * (1 - turn),
+    sx: lerp(-half - 2.5, -3, turn), sy: -19 + by + sw * 0.8 * (1 - turn),
   };
   // 옆모습에서 팔 앞뒤 흔들기
-  hand.wx += sw * 3 * turn; hand.sx -= sw * 3 * turn;
+  hand.wx += sw * 1.4 * turn; hand.sx -= sw * 1.4 * turn;
 
   const attack = s.attack || 0;
 
@@ -149,7 +151,7 @@ export function drawHumanoid(ctx, x, y, s) {
   // 옆모습: 방패 팔은 몸 뒤
   if (!back && turn === 1 && look.shield) drawShield(ctx, look.shield, hand.sx, hand.sy, false, turn);
 
-  drawLegs(ctx, look, sw, turn, by);
+  drawLegs(ctx, look, sw, turn, by, s.walk || 0, weight);
   drawTorso(ctx, look, half, by, back, turn);
 
   // 팔
@@ -204,7 +206,7 @@ function drawCape(ctx, color, half, by, turn, sw, over) {
   }
 }
 
-function drawLegs(ctx, look, sw, turn, by) {
+function drawLegs(ctx, look, sw, turn, by, phase, weight) {
   if (look.robe) {
     // 긴 로브: 다리 대신 치맛자락
     const w = lerp(10, 7, turn);
@@ -222,15 +224,19 @@ function drawLegs(ctx, look, sw, turn, by) {
     ctx.fillRect(-4 + sw * 2 * turn, -2, 3, 2); ctx.fillRect(1 - sw * 2 * turn, -2, 3, 2);
     return;
   }
-  for (const side of [-1, 1]) {
-    const lift = Math.max(0, side * sw) * 2.5 * (1 - turn);
-    const stride = side * sw * 4 * turn;
-    const lx = lerp(side * 3.6, side * 1, turn) + stride;
-    const top = -14 + by;
-    ctx.beginPath(); rr(ctx, lx - 2.6, top, 5.2, 11 - lift, 1.5);
-    outlined(ctx, vgrad(ctx, look.legs, top, -2), 1);
-    // 장화
-    ctx.beginPath(); rr(ctx, lx - 3 + turn * 0.8, -5 - lift, 6 + turn, 5, 1.5);
+  // Keep hips connected; bend the knee only as the foot clears the ground.
+  const sides = Math.sin(phase) > 0 ? [-1, 1] : [1, -1];
+  for (const side of sides) {
+    const foot = footPose(phase, side, turn, weight);
+    const hipX = lerp(side * 3.6, side * 1, turn), hipY = -14 + by;
+    const footX = foot.lateral + foot.stride, footY = -2 - foot.lift;
+    const kneeX = lerp(hipX, footX, 0.52) + foot.lift * 0.32 * turn;
+    const kneeY = lerp(hipY, footY, 0.52) - foot.lift * 0.18;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(hipX, hipY); ctx.quadraticCurveTo(kneeX, kneeY, footX, footY);
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 6.4; ctx.stroke();
+    ctx.strokeStyle = vgrad(ctx, look.legs, hipY, footY); ctx.lineWidth = 4.3; ctx.stroke();
+    ctx.beginPath(); rr(ctx, footX - 3 + turn * 0.6, -4 - foot.lift, 6 + turn, 4, 1.3);
     outlined(ctx, look.boots, 1);
   }
 }
@@ -494,10 +500,14 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
   const dur = m.animDur || 0.3;
   const prog = m.attackAnim > 0 ? 1 - m.attackAnim / dur : 0; // 공격 동작 진행 0→1
   const atk = m.attackAnim > 0 ? Math.sin(prog * Math.PI) : 0; // 0→1→0
-  const walk = m.moving ? Math.sin(m.walkPhase) : 0;
+  const weight = m.walkWeight ?? (m.moving ? 1 : 0);
+  const walk = Math.sin(m.walkPhase || 0) * weight;
   const sheet = def.art && sheetImage(def.art.sheet);
   // 시트 그림은 왼쪽을 보고 그려져 있음 → 오른쪽을 볼 때 뒤집기
-  const flip = sheet ? (m.facing.x > 0.01 ? -1 : 1) : (m.facing.x < -0.01 ? -1 : 1);
+  const facingX = (m.visualFacing || m.facing).x;
+  if (Math.abs(facingX) > 0.18) m.spriteFacing = facingX > 0 ? 1 : -1;
+  const direction = m.spriteFacing || (m.facing.x >= 0 ? 1 : -1);
+  const flip = sheet ? -direction : direction;
   const lungeDir = sheet ? -flip : flip;
   ctx.save();
   ctx.translate(x + lungeDir * atk * r * (sheet ? 0.2 : 0.35), y);
@@ -550,17 +560,32 @@ function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
   const bodyPx = MONSTER_UNIT_PX * def.size;
   const s = bodyPx / a.bodyHeight;
   // 이동 중: 통통 튀는 걸음 / 대기 중: 숨쉬기
-  const hop = m.moving ? Math.abs(walk) * Math.max(1.5, bodyPx * 0.07) : 0;
-  const breathe = m.moving ? 1 : 1 + Math.sin(time * 2.2 + m.id) * 0.02;
+  const weight = m.walkWeight ?? (m.moving ? 1 : 0);
+  const family = def.family || 'biped';
+  const floating = ['winged', 'spirit', 'aquatic'].includes(family);
+  const float = floating ? Math.sin(time * 2 + m.id) * Math.min(1.4, bodyPx * 0.025) : 0;
+  const settle = floating ? 0 : (1 - Math.cos((m.walkPhase || 0) * 2)) * Math.min(0.35, bodyPx * 0.008) * weight;
   ctx.save();
-  ctx.translate(0, -hop);
-  ctx.scale(1, breathe);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, col * SHEET_CELL, a.row * SHEET_CELL, SHEET_CELL, SHEET_CELL,
-    -a.centerX * s, -a.footY * s, SHEET_CELL * s, SHEET_CELL * s);
+  ctx.translate(0, -float - settle);
+  ctx.imageSmoothingEnabled = false;
+  const sx = col * SHEET_CELL, sy = a.row * SHEET_CELL;
+  const dx = -a.centerX * s, dy = -a.footY * s;
+  if (m.attackAnim > 0 || m.dead || weight < 0.01 || floating) {
+    ctx.drawImage(img, sx, sy, SHEET_CELL, SHEET_CELL, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
+  } else {
+    // A connected lower-body mesh: upper body stays still, lower contours flex smoothly.
+    const soft = ['slime', 'serpent', 'plant'].includes(family);
+    const cut = Math.max(0, Math.floor(a.footY - a.bodyHeight * (soft ? 0.38 : family === 'quadruped' ? 0.25 : 0.3)));
+    ctx.drawImage(img, sx, sy, SHEET_CELL, cut, dx, dy, SHEET_CELL * s, cut * s);
+    const stride = Math.min(soft ? 1.3 : 2, bodyPx * (soft ? 0.025 : 0.035)) * weight;
+    for (let row = cut; row < SHEET_CELL; row += 3) {
+      const h = Math.min(3, SHEET_CELL - row), t = Math.max(0, Math.min(1, (row - cut) / Math.max(1, a.footY - cut)));
+      const offset = Math.sin((m.walkPhase || 0) + (soft ? t * 2 : 0)) * Math.sin(t * Math.PI * (soft ? 1 : 0.85)) * stride;
+      ctx.drawImage(img, sx, sy + row, SHEET_CELL, h, dx + offset, dy + row * s, SHEET_CELL * s, h * s + 0.1);
+    }
+  }
   ctx.restore();
-  return bodyPx + hop;
+  return bodyPx + Math.max(0, float + settle);
 }
 
 // 시트를 불러오기 전 잠깐 보이는 도형 그림

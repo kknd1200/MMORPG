@@ -50,8 +50,8 @@ export class Renderer {
       const p = fx.power * (1 - fx.t / fx.life);
       shx += (Math.random() - 0.5) * 2 * p; shy += (Math.random() - 0.5) * 2 * p;
     }
-    const ox = Math.round(this.w / 2 - cam.x * TS + shx);
-    const oy = Math.round(this.h / 2 - cam.y * TS + shy);
+    const ox = (this.w / 2 - cam.x * TS + shx);
+    const oy = (this.h / 2 - cam.y * TS + shy);
     const tx0 = Math.floor(cam.x - this.w / 2 / TS) - 1;
     const ty0 = Math.floor(cam.y - this.h / 2 / TS) - 1;
     const tx1 = Math.ceil(cam.x + this.w / 2 / TS) + 1;
@@ -117,9 +117,9 @@ export class Renderer {
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
       look: LOOKS[ch.classId] || LOOKS.knight,
-      facing: p.facing,
+      facing: p.visualFacing || p.facing,
       walk: p.walkPhase,
-      moving: p.moving,
+      moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / 0.3,
       cast: (p.castAnim || 0) / 0.4,
       weaponColor: weapon?.icon?.color,
