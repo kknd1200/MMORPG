@@ -523,27 +523,94 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
 // ---------------------------------------------------------------- 스프라이트 시트 몬스터
 // 시트: 384px 칸, 가로 8포즈(1~4 공격, 5~8 스킬, 대기 = 4번째) × 세로 6마리
 const SHEET_CELL = 384;
+const SHEET_W = SHEET_CELL * 8, SHEET_H = SHEET_CELL * 6; // 8포즈 × 6마리
 const SHEET_BASE = new URL('../../assets/monsters/', import.meta.url);
 const sheets = new Map();
 // 플레이어 키(약 46px)를 몬스터 원본의 "영웅 키 100" 에 맞춤 → 몸 높이(px) = 46 × size
 export const MONSTER_UNIT_PX = 46;
 
-function sheetImage(name) {
+// 시트 캐시: name → { src, cell, ready, failed, cellPx }
+// 원본 시트(3072×2304, 디코딩 시 약 28MB)를 실제로 그려지는 크기로 한 번만 줄여서 보관 → 메모리·그리기 비용 절감
+function sheetEntry(name, cellPx = SHEET_CELL) {
   let s = sheets.get(name);
-  if (!s) {
+  if (s) return s;
+  s = { src: null, cell: SHEET_CELL, ready: false, failed: false, cellPx: Math.min(SHEET_CELL, Math.max(48, Math.ceil(cellPx))) };
+  sheets.set(name, s);
+  const url = new URL(`${name}.webp`, SHEET_BASE).href;
+  const k = s.cellPx / SHEET_CELL;
+  const done = (src, w) => {
+    if (sheets.get(name) !== s) { src.close?.(); return; } // 불러오는 사이 해제됨
+    s.src = src;
+    s.cell = SHEET_CELL * (w / SHEET_W);
+    s.ready = true;
+  };
+  const viaImage = () => {
     const img = new Image();
-    s = { img, ready: false, failed: false };
-    img.onload = () => { s.ready = true; };
+    img.onload = () => {
+      if (k >= 0.95) { done(img, img.width); return; }
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      const cx = c.getContext('2d');
+      cx.imageSmoothingQuality = 'high';
+      cx.drawImage(img, 0, 0, c.width, c.height);
+      img.src = '';
+      done(c, c.width);
+    };
     img.onerror = () => { s.failed = true; };
-    img.src = new URL(`${name}.webp`, SHEET_BASE).href;
-    sheets.set(name, s);
+    img.src = url;
+  };
+  // 가능하면 디코딩·축소를 메인 스레드 밖에서 (사냥터에 들어설 때 끊김 방지)
+  if (typeof createImageBitmap === 'function' && typeof fetch === 'function' && k < 0.95) {
+    fetch(url)
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then((b) => createImageBitmap(b, {
+        resizeWidth: Math.round(SHEET_W * k), resizeHeight: Math.round(SHEET_H * k), resizeQuality: 'high',
+      }))
+      .then((bmp) => done(bmp, bmp.width))
+      .catch(() => { if (sheets.get(name) === s && !s.ready) viaImage(); });
+  } else {
+    viaImage();
   }
-  return s.ready ? s.img : null; // 로딩 전에는 도형 그림으로 대신 그림
+  return s;
 }
 
-export function preloadSheets(names) { for (const n of names) sheetImage(n); }
+function sheetImage(name) {
+  const s = sheetEntry(name);
+  return s.ready ? s : null; // 로딩 전에는 도형 그림으로 대신 그림
+}
 
-function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
+/** 시트를 미리 불러옴. cellPx = 화면에 그려질 한 칸의 최대 크기(px) */
+export function loadSheet(name, cellPx) { sheetEntry(name, cellPx); }
+
+/** 시트 메모리 해제 (다시 필요하면 자동으로 다시 불러옴) */
+export function releaseSheet(name) {
+  const s = sheets.get(name);
+  if (!s) return;
+  sheets.delete(name);
+  s.src?.close?.();
+  if (s.src && 'src' in s.src) s.src.src = '';
+  s.src = null;
+}
+
+export function sheetStats() {
+  let loaded = 0, bytes = 0;
+  for (const s of sheets.values()) {
+    if (!s.ready) continue;
+    loaded++;
+    bytes += (s.src.width || 0) * (s.src.height || 0) * 4;
+  }
+  return { loaded, total: sheets.size, mb: bytes / 1048576 };
+}
+
+/** def 몬스터가 화면에 그려질 때 시트 한 칸의 크기(px) */
+export function sheetCellPx(def) {
+  return SHEET_CELL * (MONSTER_UNIT_PX * def.size) / def.art.bodyHeight;
+}
+
+export function preloadSheets(names) { for (const n of names) sheetEntry(n); }
+
+function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   const a = def.art;
   let col = 3; // 대기
   if (m.attackAnim > 0) col = (m.animKind === 'skill' ? 4 : 0) + Math.min(3, Math.floor(prog * 4));
@@ -557,7 +624,8 @@ function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
   ctx.scale(1, breathe);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, col * SHEET_CELL, a.row * SHEET_CELL, SHEET_CELL, SHEET_CELL,
+  const c = sheet.cell;
+  ctx.drawImage(sheet.src, col * c, a.row * c, c, c,
     -a.centerX * s, -a.footY * s, SHEET_CELL * s, SHEET_CELL * s);
   ctx.restore();
   return bodyPx + hop;

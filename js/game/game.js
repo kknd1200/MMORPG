@@ -4,8 +4,9 @@ import { SKILLS } from '../data/skills.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS, SPAWN_ZONES } from '../data/monsters.js';
 import * as S from '../systems/stats.js';
-import { World, VILLAGE, WORLD_VERSION } from './world.js';
-import { preloadSheets } from './sprites.js';
+import { World, VILLAGE, WORLD_VERSION, TILE_SIZE } from './world.js';
+import { loadSheet, releaseSheet, sheetCellPx } from './sprites.js';
+import { STREAM, planZones, planArt, viewRect, pointInRect } from './zones.js';
 import { Renderer } from './render.js';
 import { Hud } from './hud.js';
 
@@ -63,15 +64,15 @@ export class Game {
     this.hover = null;
     this.camera = { x: start.x, y: start.y };
     this.openNpc = null;
-    this.timers = { spawn: 0, regen: 0, save: 0, hud: 0 };
-
-    for (const zone of SPAWN_ZONES) {
-      for (let i = 0; i < zone.max; i++) this.spawnMonster(zone, true);
-      if (zone.boss) this.bossTick(zone);
-    }
-    preloadSheets([...new Set(Object.values(MONSTERS).map((d) => d.art?.sheet).filter(Boolean))]);
+    this.timers = { spawn: 0, regen: 0, save: 0, hud: 0, zone: 0 };
+    this.bossRespawnAt = {};
+    // 심리스 구역 스트리밍: 화면 근처 사냥터만 몬스터 배치 (zones.js)
+    this.activeZones = new Set();
+    this.artZones = new Set();
+    this.zoneById = new Map(SPAWN_ZONES.map((z) => [z.id, z]));
 
     this.hud = new Hud(hudRoot, this);
+    this.streamZones();
     this.bindInput();
     this.log(`${this.char.name}님, ${VILLAGE.name}에 오신 것을 환영합니다!`, 'system');
     this.log('좌클릭(누른 채 유지)으로 이동, 몬스터 좌클릭으로 공격합니다. 안내원에게 말을 걸어보세요.', 'system');
@@ -126,6 +127,8 @@ export class Game {
     this.updateMonsters(dt);
     this.updateEffects(dt);
 
+    this.timers.zone += dt;
+    if (this.timers.zone >= STREAM.interval) { this.timers.zone = 0; this.streamZones(); }
     this.timers.spawn += dt;
     if (this.timers.spawn >= 1) { this.timers.spawn = 0; this.respawnTick(); }
     this.timers.regen += dt;
@@ -387,7 +390,8 @@ export class Game {
     let pos = null;
     for (let i = 0; i < 10 && !pos; i++) {
       const c = this.world.findOpenTileIn(rect);
-      if (c && (initial || dist(c, this.player) > 10)) pos = c;
+      // 리젠은 화면 밖에서 (눈앞에서 갑자기 생기지 않도록)
+      if (c && (initial || (!this.onScreen(c, 2) && dist(c, this.player) > 10))) pos = c;
     }
     if (!pos) return null;
     const def = MONSTERS[type];
@@ -405,11 +409,85 @@ export class Game {
     return m;
   }
 
+  // ------------------------------------------------------------ 구역 스트리밍
+  viewHalf() {
+    return { hw: this.renderer.w / 2 / TILE_SIZE, hh: this.renderer.h / 2 / TILE_SIZE };
+  }
+
+  onScreen(pt, margin = 0) {
+    const { hw, hh } = this.viewHalf();
+    return pointInRect(pt, viewRect(this.camera.x, this.camera.y, hw, hh, margin));
+  }
+
+  streamZones() {
+    const { hw, hh } = this.viewHalf();
+    const view = this.player;
+    const z = planZones(SPAWN_ZONES, this.activeZones, view, hw, hh);
+    for (const zone of z.deactivate) this.deactivateZone(zone);
+    const a = planArt(SPAWN_ZONES, this.artZones, view, hw, hh);
+    for (const zone of a.unload) {
+      this.artZones.delete(zone.id);
+      for (const name of this.zoneSheets(zone).keys()) releaseSheet(name);
+    }
+    for (const zone of a.load) this.loadZoneArt(zone);
+    for (const zone of z.activate) this.activateZone(zone);
+  }
+
+  // 사냥터 몬스터 그림 이름 → 화면에 그려질 최대 칸 크기(px)
+  zoneSheets(zone) {
+    const out = new Map();
+    const types = zone.monsters.map(([t]) => t);
+    if (zone.boss) types.push(zone.boss.type);
+    const dpr = this.renderer.dpr || 1;
+    for (const t of types) {
+      const def = MONSTERS[t];
+      if (!def?.art?.sheet) continue;
+      const px = sheetCellPx(def) * dpr * 1.1;
+      out.set(def.art.sheet, Math.max(out.get(def.art.sheet) || 0, px));
+    }
+    return out;
+  }
+
+  loadZoneArt(zone) {
+    if (this.artZones.has(zone.id)) return;
+    this.artZones.add(zone.id);
+    for (const [name, px] of this.zoneSheets(zone)) loadSheet(name, px);
+  }
+
+  activateZone(zone) {
+    this.activeZones.add(zone.id);
+    this.loadZoneArt(zone);
+    const alive = this.monsters.filter((m) => m.zone === zone.id && !m.dead && !m.isBoss).length;
+    for (let i = alive; i < zone.max; i++) this.spawnMonster(zone, true);
+    if (zone.boss) this.bossTick(zone);
+  }
+
+  deactivateZone(zone) {
+    this.activeZones.delete(zone.id);
+    this.monsters = this.monsters.filter((m) => m.zone !== zone.id || !this.despawnable(m));
+  }
+
+  // 꺼진 사냥터의 몬스터 중 정리해도 되는 것 (쫓아오는 중이거나 화면에 보이면 유지)
+  despawnable(m) {
+    if (m.dead) return true;
+    if (m.state === 'chase' || this.onScreen(m, 2)) return false;
+    // 살아 있던 보스/네임드는 다시 들어오면 바로 등장
+    if (m.isBoss) this.bossRespawnAt[m.zone] = 0;
+    return true;
+  }
+
   respawnTick() {
-    this.monsters = this.monsters.filter((m) => !m.dead || this.time - m.deathTime < 0.8);
-    for (const zone of SPAWN_ZONES) {
-      const alive = this.monsters.filter((m) => m.zone === zone.id && !m.dead && !m.isBoss).length;
-      if (alive < zone.max && Math.random() < 0.5) this.spawnMonster(zone);
+    this.monsters = this.monsters.filter((m) => {
+      if (m.dead) return this.time - m.deathTime < 0.8;
+      return this.activeZones.has(m.zone) || !this.despawnable(m);
+    });
+    const alive = new Map();
+    for (const m of this.monsters) {
+      if (!m.dead && !m.isBoss) alive.set(m.zone, (alive.get(m.zone) || 0) + 1);
+    }
+    for (const id of this.activeZones) {
+      const zone = this.zoneById.get(id);
+      if ((alive.get(id) || 0) < zone.max && Math.random() < 0.5) this.spawnMonster(zone);
       if (zone.boss) this.bossTick(zone);
     }
   }
@@ -418,13 +496,12 @@ export class Game {
     const b = zone.boss;
     const alive = this.monsters.some((m) => m.type === b.type && m.zone === zone.id && !m.dead);
     if (alive) return;
-    this.bossRespawnAt ??= {};
-    if (this.bossRespawnAt[zone.id] === undefined) this.bossRespawnAt[zone.id] = 0; // 첫 등장은 즉시
-    if (this.time < this.bossRespawnAt[zone.id]) return;
+    const at = this.bossRespawnAt[zone.id] ?? 0; // 첫 등장은 즉시
+    if (this.time < at) return;
     if (this.spawnMonster(zone, true, b.type, b.rect)) {
       this.bossRespawnAt[zone.id] = Infinity;
-      // 네임드는 조용히, 보스는 전체 알림
-      if (MONSTERS[b.type].rank !== 'guard') this.log(`보스 ${MONSTERS[b.type].name}이(가) ${zone.theme || zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
+      // 네임드는 조용히, 보스는 처치 후 다시 나타날 때만 알림 (구역에 들어갈 때마다 알리지 않음)
+      if (at > 0 && MONSTERS[b.type].rank !== 'guard') this.log(`보스 ${MONSTERS[b.type].name}이(가) ${zone.theme || zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
     }
   }
 
