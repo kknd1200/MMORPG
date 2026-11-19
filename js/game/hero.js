@@ -175,23 +175,57 @@ function heroFrame(key, s) {
   return img(`heroes/${key}/${kind}-${i + 1}.webp`) || img(`heroes/${key}/attack-1.webp`);
 }
 
+// 걷기: 원본 그림에는 걷기 프레임이 없어서, 서 있는 그림을 허리에서 나눠
+//   다리 앞쪽 반 / 뒤쪽 반을 서로 반대로 기울여(가위 모양) 발을 번갈아 내딛게 하고,
+//   윗몸은 걸음마다 살짝만 오르내림
+const HIP = 0.43; // 발에서 허리까지 = 키의 43%
+
 function drawSprite(ctx, x, y, s) {
   const im = heroFrame(s.sprite, s);
   if (!im) return false;
   const sc = (HERO_PX / HERO.height) * (s.scale || 1);
   const flip = s.facing && s.facing.x < -0.01 ? -1 : 1;
-  const moving = !!s.moving && !s.dead;
+  const moving = !!s.moving && !s.dead && !(s.attack > 0) && !(s.cast > 0);
   const t = s.time || 0, walk = s.walk || 0;
-  const hop = moving ? Math.abs(Math.sin(walk)) * 2.6 : 0;
-  const breathe = moving ? 1 : 1 + Math.sin(t * 2.2) * 0.012;
   ctx.save();
-  ctx.translate(x, y - hop);
+  ctx.translate(x, y);
   if (s.dead) { ctx.rotate(-Math.PI / 2 * flip * 0.95); ctx.globalAlpha *= 0.75; ctx.translate(0, 8); }
-  else if (moving) ctx.rotate(Math.sin(walk) * 0.035 * flip);
-  ctx.scale(flip * sc, sc * breathe);
+  ctx.scale(flip * sc, sc);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(im, -HERO.footX, -HERO.footY);
+  const fx = HERO.footX, fy = HERO.footY;
+  if (!moving) {
+    // 숨쉬기: 발은 고정, 몸만 아주 살짝
+    ctx.scale(1, 1 + Math.sin(t * 2.2) * 0.012);
+    ctx.translate(-fx, -fy);
+    ctx.drawImage(im, 0, 0);
+    ctx.restore();
+    return true;
+  }
+  ctx.translate(-fx, -fy); // 이후 좌표는 원본 그림(256px) 기준
+  const hipY = fy - HERO.height * HIP;
+  const swing = Math.sin(walk);                 // -1 ~ 1: 앞다리가 앞으로(+) / 뒤로(-)
+  const bob = -Math.abs(Math.cos(walk)) * 2.2;  // 두 발이 벌어질 때 몸이 살짝 내려감 (그림 px)
+  const legs = [
+    { x0: 0, x1: fx, k: -swing },               // 뒤쪽 다리 (등 쪽)
+    { x0: fx, x1: HERO.size, k: swing },        // 앞쪽 다리 (바라보는 쪽)
+  ];
+  for (const L of legs) {
+    const lift = Math.max(0, L.k) * 5;          // 앞으로 내딛는 다리는 살짝 들림
+    ctx.save();
+    ctx.beginPath(); ctx.rect(L.x0, hipY - 2, L.x1 - L.x0, HERO.size - hipY + 2); ctx.clip();
+    ctx.translate(fx, hipY);
+    ctx.transform(1, 0, -L.k * 0.3, 1, 0, 0); // 허리를 축으로 다리를 앞뒤로 기울임
+    ctx.translate(-fx, -hipY - lift);
+    ctx.drawImage(im, 0, 0);
+    ctx.restore();
+  }
+  // 윗몸 (허리 이음새를 덮도록 조금 겹쳐서)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, HERO.size, hipY + 3); ctx.clip();
+  ctx.translate(0, bob);
+  ctx.drawImage(im, 0, 0);
+  ctx.restore();
   ctx.restore();
   return true;
 }

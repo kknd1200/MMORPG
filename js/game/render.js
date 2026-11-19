@@ -415,7 +415,11 @@ export class Renderer {
         const x = this.px(at.x, at.y), y = this.py(at.x, at.y) - fx.z;
         const size = FX.cell * fx.scale;
         ctx.globalAlpha = 1;
-        ctx.drawImage(im, (f % FX.cols) * FX.cell, Math.floor(f / FX.cols) * FX.cell, FX.cell, FX.cell, x - size / 2, y - size / 2, size, size);
+        ctx.save();
+        ctx.translate(x, y);
+        if (fx.flip) ctx.scale(-1, 1);
+        ctx.drawImage(im, (f % FX.cols) * FX.cell, Math.floor(f / FX.cols) * FX.cell, FX.cell, FX.cell, -size / 2, -size / 2, size, size);
+        ctx.restore();
       } else if (fx.type === 'proj') {
         if (fx.t < 0) continue;
         const wx = fx.x0 + (fx.x1 - fx.x0) * k, wy = fx.y0 + (fx.y1 - fx.y0) * k;

@@ -263,7 +263,7 @@ export class Game {
       p.moving = r === 'moving';
       if (r !== 'moving' && !this.mouse.left) { p.moveTarget = null; this.clearPath(p); }
     }
-    if (p.moving) p.walkPhase += dt * 14;
+    if (p.moving) p.walkPhase += dt * speed * 3.2;
   }
 
   performAction(action, target) {
@@ -292,7 +292,7 @@ export class Game {
     const bfx = BASIC_FX[this.char.classId] || BASIC_FX.knight;
     const delay = bfx.proj ? this.addProjectile(this.player, m, 'sheet', '#f5e6c8', bfx.proj) : 0.08;
     if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m); return; }
-    this.fx(bfx, m, delay);
+    this.fx(bfx, m, delay, this.leftOf(this.player, m));
     this.damageMonster(m, S.normalDamage(this.derived().attack, m.armor), '#ffffff', delay);
   }
 
@@ -329,10 +329,11 @@ export class Game {
     }
   }
 
+  // 스킬 대상: 지금 공격 중인 적 → 마우스 아래 적 → 가장 가까운 적
   skillTarget(sk) {
-    if (this.hover && !this.hover.isNpc && !this.hover.dead) return this.hover;
     const cur = this.player.action?.targetId && this.findEntity(this.player.action.targetId);
-    if (cur && !cur.isNpc) return cur;
+    if (cur && !cur.isNpc && !cur.dead) return cur;
+    if (this.hover && !this.hover.isNpc && !this.hover.dead) return this.hover;
     let best = null, bd = this.skillRange(sk) + 3;
     for (const m of this.monsters) {
       if (m.dead) continue;
@@ -361,7 +362,7 @@ export class Game {
       const d = dist(p, m) || 1;
       const tx = m.x - ((m.x - p.x) / d) * 1, ty = m.y - ((m.y - p.y) / d) * 1;
       if (!this.world.blocked(tx, ty, p.radius)) {
-        this.fx({ sheet: 'knight_a7', scale: 1, z: 20 }, p);
+        this.fx({ sheet: 'knight_a7', scale: 1, z: 20 }, p, 0, this.leftOf(p, m));
         p.x = tx; p.y = ty; this.clearPath(p);
       }
     }
@@ -384,14 +385,15 @@ export class Game {
         cur = next;
       }
     }
-    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay);
+    const flip = this.leftOf(p, m);
+    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay, flip);
     targets.forEach((t, k) => {
       let dl = delay;
       if (sk.kind === 'chain' && k > 0) {
         dl = delay + k * 0.12;
         this.addProjectile(targets[k - 1], t, 'sheet', sk.color, sk.proj, dl - 0.12);
       }
-      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl);
+      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
         if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
         this.skillHit(sk, t, stat, atk, i, dl);
@@ -400,10 +402,15 @@ export class Game {
   }
 
   // 이펙트 시트 재생 (at = 몬스터/플레이어/좌표)
-  fx(spec, at, delay = 0) {
+  // flip: 이펙트 그림은 오른쪽을 향해 그려져 있음 → 화면 왼쪽을 향하면 좌우 반전
+  fx(spec, at, delay = 0, flip = false) {
     if (!spec?.sheet) return;
-    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at });
+    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip });
   }
+
+  // a 에서 b 가 화면 왼쪽인지 (아이소메트릭: 화면 x = 월드 x − y)
+  leftOf(a, b) { return (b.x - b.y) - (a.x - a.y) < -0.05; }
+  facingLeft(e) { return e.facing.x - e.facing.y < -0.05; }
 
   mSpeed(m, def) { return def.speed * (m.slowUntil > this.time ? 0.6 : 1); }
 
@@ -426,7 +433,7 @@ export class Game {
     this.floatText(p, sk.name, sk.color, 13);
     if (sk.kind === 'aoe') {
       this.spend(sk);
-      this.fx(sk.fx, p);
+      this.fx(sk.fx, p, 0, this.facingLeft(p));
       const atk = this.derived().attack;
       const stat = ch.stats[sk.stat];
       for (const m of this.monsters) {
@@ -434,7 +441,7 @@ export class Game {
       }
     } else if (sk.kind === 'buff') {
       this.spend(sk);
-      this.fx(sk.fx, p);
+      this.fx(sk.fx, p, 0, this.facingLeft(p));
       this.addBuff(sk.buff, sk.color, true);
     } else if (sk.kind === 'heal') {
       if (ch.hp >= ch.maxHp) { this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
