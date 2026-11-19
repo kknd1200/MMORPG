@@ -6,6 +6,8 @@ import {
 import { SKILLS } from './data/skills.js';
 import * as S from './systems/stats.js';
 import { Game } from './game/game.js';
+import { ITEMS } from './data/items.js';
+import { LOOKS, drawHumanoid } from './game/sprites.js';
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16,6 +18,25 @@ const state = {
   game: null,
   create: { classId: 'knight', stats: null },
 };
+
+// 캐릭터 선택/생성 화면의 초상: 게임 안과 같은 스프라이트를 작게 그림
+function paintAvatars(root) {
+  for (const cv of root.querySelectorAll('canvas.avatar')) {
+    const look = LOOKS[cv.dataset.class];
+    if (!look) continue;
+    const dpr = window.devicePixelRatio || 1;
+    const w = 44, h = 64;
+    cv.width = w * dpr; cv.height = h * dpr;
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.beginPath(); ctx.ellipse(w / 2, h - 5, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+    drawHumanoid(ctx, w / 2, h - 5, {
+      look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
+      weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color, armorId: cv.dataset.armor || null,
+    });
+  }
+}
 
 function show(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
@@ -61,7 +82,7 @@ function renderSlots() {
     const cls = CLASSES[c.classId];
     const grade = S.luckGrade(c);
     html.push(`<button class="slot-card ${c.id === state.selectedId ? 'selected' : ''}" data-id="${c.id}">
-      <div class="avatar" style="--c:${cls.color}"></div>
+      <canvas class="avatar" data-class="${c.classId}" data-weapon="${c.equipment?.weapon || ''}" data-armor="${c.equipment?.armor || ''}"></canvas>
       <div class="slot-name">${esc(c.name)}</div>
       <div class="slot-class" style="color:${cls.color}">${cls.name}</div>
       <div>Lv.${c.level}</div>
@@ -70,6 +91,7 @@ function renderSlots() {
     </button>`);
   }
   $('#char-slots').innerHTML = html.join('');
+  paintAvatars($('#char-slots'));
   $('#btn-start').disabled = !state.selectedId;
   $('#btn-delete').disabled = !state.selectedId;
 }
@@ -118,8 +140,9 @@ function renderCreate() {
   $('#class-cards').innerHTML = CLASS_ORDER.map((id) => {
     const c = CLASSES[id];
     return `<button class="class-card ${id === classId ? 'selected' : ''}" data-class="${id}" style="--c:${c.color}">
-      <div class="avatar" style="--c:${c.color}"></div><b>${c.name}</b><small>${c.role}</small></button>`;
+      <canvas class="avatar" data-class="${id}" data-weapon="${c.startEquipment.weapon}"></canvas><b>${c.name}</b><small>${c.role}</small></button>`;
   }).join('') + '<div class="class-card disabled"><div class="avatar"></div><b>???</b><small>추후 출시</small></div>';
+  paintAvatars($('#class-cards'));
 
   const firstSkill = SKILLS[cls.skills[0]];
   $('#class-info').innerHTML = `

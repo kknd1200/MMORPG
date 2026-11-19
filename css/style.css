@@ -51,7 +51,8 @@ h4 { margin-top: 14px; font-size: 14px; }
 .slot-card.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
 .slot-card.empty { justify-content: center; color: var(--muted); font-size: 16px; border-style: dashed; }
 .slot-name { font-size: 17px; font-weight: bold; }
-.avatar { width: 44px; height: 56px; border-radius: 12px 12px 6px 6px; background: linear-gradient(#f1d2b0 0 34%, var(--c, #555) 34%); border: 2px solid rgba(0,0,0,0.5); margin-bottom: 4px; }
+.avatar { width: 44px; height: 64px; margin-bottom: 4px; }
+div.avatar { border-radius: 12px 12px 6px 6px; background: linear-gradient(#3a342a 0 34%, #2a261e 34%); border: 2px dashed rgba(255,255,255,0.15); height: 56px; }
 
 .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .class-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }

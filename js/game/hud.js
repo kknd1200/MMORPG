@@ -288,7 +288,13 @@ export class Hud {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.minimapBase, 0, 0, cv.width, cv.height);
     ctx.fillStyle = '#ff5050';
-    for (const m of g.monsters) if (!m.dead) ctx.fillRect(m.x * s - 1, m.y * s - 1, 2, 2);
+    for (const m of g.monsters) if (!m.dead && !m.isBoss) ctx.fillRect(m.x * s - 1, m.y * s - 1, 2, 2);
+    // 보스는 크게 깜빡이는 점으로 표시
+    for (const m of g.monsters) {
+      if (m.dead || !m.isBoss) continue;
+      ctx.fillStyle = Math.sin(g.time * 6) > 0 ? '#ffd24a' : '#ff3030';
+      ctx.fillRect(m.x * s - 2.5, m.y * s - 2.5, 5, 5);
+    }
     ctx.fillStyle = '#ffe680';
     for (const n of g.world.npcs) ctx.fillRect(n.x * s - 1.5, n.y * s - 1.5, 3, 3);
     ctx.fillStyle = '#ffffff';

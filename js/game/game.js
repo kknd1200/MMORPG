@@ -52,6 +52,7 @@ export class Game {
 
     for (const zone of SPAWN_ZONES) {
       for (let i = 0; i < zone.max; i++) this.spawnMonster(zone, true);
+      if (zone.boss) this.bossTick(zone);
     }
 
     this.hud = new Hud(hudRoot, this);
@@ -177,6 +178,8 @@ export class Game {
   updatePlayer(dt) {
     const p = this.player;
     p.attackTimer -= dt;
+    p.attackAnim = Math.max(0, (p.attackAnim || 0) - dt);
+    p.castAnim = Math.max(0, (p.castAnim || 0) - dt);
     p.moving = false;
 
     if (p.dead) {
@@ -232,6 +235,7 @@ export class Game {
     const ch = this.char;
     const stat = ch.stats[this.cls.primaryStat];
     const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
+    this.player.attackAnim = 0.3;
     if (this.cls.projectile) this.addProjectile(this.player, m, this.cls.projectile, '#f5e6c8');
     else this.effects.push({ type: 'slash', x: m.x, y: m.y, t: 0, life: 0.2, color: '#ffffff' });
     if (!hit) { this.floatText(m, 'MISS', '#bbbbbb'); this.aggro(m); return; }
@@ -294,6 +298,8 @@ export class Game {
     this.spend(sk);
     const stat = ch.stats[sk.stat];
     const atk = this.derived().attack;
+    this.player.attackAnim = 0.35;
+    this.player.castAnim = 0.4;
     if (sk.projectile) this.addProjectile(this.player, m, sk.projectile, sk.color);
     else this.effects.push({ type: 'slash', x: m.x, y: m.y, t: 0, life: 0.3, color: sk.color });
     this.floatText(this.player, sk.name, sk.color, 13);
@@ -315,6 +321,7 @@ export class Game {
   castSelfSkill(sk) {
     const ch = this.char;
     const p = this.player;
+    p.castAnim = 0.4;
     if (sk.kind === 'aoe') {
       this.spend(sk);
       this.effects.push({ type: 'ring', x: p.x, y: p.y, r: sk.radius, t: 0, life: 0.5, color: sk.color });
@@ -353,34 +360,66 @@ export class Game {
   }
 
   // ------------------------------------------------------------ monsters
-  spawnMonster(zone, initial = false) {
-    let roll = Math.random(), type = zone.monsters[0][0];
-    for (const [t, wgt] of zone.monsters) { if ((roll -= wgt) <= 0) { type = t; break; } }
+  spawnMonster(zone, initial = false, forcedType = null, rect = zone.rect) {
+    let type = forcedType;
+    if (!type) {
+      let roll = Math.random();
+      type = zone.monsters[0][0];
+      for (const [t, wgt] of zone.monsters) { if ((roll -= wgt) <= 0) { type = t; break; } }
+    }
     let pos = null;
     for (let i = 0; i < 10 && !pos; i++) {
-      const c = this.world.findOpenTileIn(zone.rect);
+      const c = this.world.findOpenTileIn(rect);
       if (c && (initial || dist(c, this.player) > 10)) pos = c;
     }
-    if (!pos) return;
+    if (!pos) return null;
     const def = MONSTERS[type];
-    this.monsters.push({
+    const m = {
       id: this.nextId++, type, zone: zone.id, x: pos.x, y: pos.y, home: { ...pos },
       radius: Math.min(0.42, def.size), hp: def.hp, maxHp: def.hp,
       level: def.level, armor: def.armor, mr: def.mr, eva: def.eva,
       state: 'idle', attackTimer: 0, wanderTimer: Math.random() * 3, wanderTarget: null,
       facing: { x: 1, y: 0 }, hurtFlash: 0, dead: false, stuckTime: 0,
-    });
+      isBoss: !!def.boss, walkPhase: Math.random() * 6, moving: false, attackAnim: 0,
+      slamAt: 0, slamTarget: null,
+    };
+    this.monsters.push(m);
+    return m;
   }
 
   respawnTick() {
-    this.monsters = this.monsters.filter((m) => !m.dead || this.time - m.deathTime < 0.6);
+    this.monsters = this.monsters.filter((m) => !m.dead || this.time - m.deathTime < 0.8);
     for (const zone of SPAWN_ZONES) {
-      const alive = this.monsters.filter((m) => m.zone === zone.id && !m.dead).length;
+      const alive = this.monsters.filter((m) => m.zone === zone.id && !m.dead && !m.isBoss).length;
       if (alive < zone.max && Math.random() < 0.5) this.spawnMonster(zone);
+      if (zone.boss) this.bossTick(zone);
     }
   }
 
-  aggro(m) { if (!m.dead && m.state !== 'return') m.state = 'chase'; }
+  bossTick(zone) {
+    const b = zone.boss;
+    const alive = this.monsters.some((m) => m.type === b.type && m.zone === zone.id && !m.dead);
+    if (alive) return;
+    this.bossRespawnAt ??= {};
+    if (this.bossRespawnAt[zone.id] === undefined) this.bossRespawnAt[zone.id] = 0; // 첫 등장은 즉시
+    if (this.time < this.bossRespawnAt[zone.id]) return;
+    if (this.spawnMonster(zone, true, b.type, b.rect)) {
+      this.bossRespawnAt[zone.id] = Infinity;
+      this.log(`${MONSTERS[b.type].name}이(가) ${zone.name.split(' (')[0]}에 나타났습니다!`, 'rare');
+    }
+  }
+
+  aggro(m) {
+    if (m.dead || m.state === 'return') return;
+    const was = m.state;
+    m.state = 'chase';
+    // 무리 생활: 처음 싸움에 휘말리면 주변의 같은 종류가 함께 덤빔
+    if (was !== 'chase' && MONSTERS[m.type].social) {
+      for (const o of this.monsters) {
+        if (o !== m && !o.dead && o.type === m.type && o.state === 'idle' && dist(o, m) < 6) o.state = 'chase';
+      }
+    }
+  }
 
   updateMonsters(dt) {
     const p = this.player;
@@ -390,10 +429,23 @@ export class Game {
       const def = MONSTERS[m.type];
       m.attackTimer -= dt;
       m.hurtFlash = Math.max(0, m.hurtFlash - dt);
+      m.attackAnim = Math.max(0, m.attackAnim - dt);
       const pd = dist(m, p);
+      const ox = m.x, oy = m.y;
+      this.monsterBrain(m, def, p, pd, playerSafe, dt);
+      m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
+      if (m.moving) m.walkPhase += dt * def.speed * 4;
+    }
+  }
+
+  monsterBrain(m, def, p, pd, playerSafe, dt) {
+    {
+      // 보스 내려찍기: 예고가 끝나면 그 자리에 범위 피해
+      if (m.slamTarget && this.time >= m.slamAt) this.resolveSlam(m, def);
+      if (m.slamTarget) return; // 기를 모으는 동안은 멈춰 있음
 
       if (m.state === 'idle') {
-        if (def.aggressive && !playerSafe && pd < 5) { m.state = 'chase'; continue; }
+        if (def.aggressive && !playerSafe && pd < (m.isBoss ? 7 : 5)) { this.aggro(m); return; }
         m.wanderTimer -= dt;
         if (m.wanderTimer <= 0) {
           m.wanderTimer = 2 + Math.random() * 4;
@@ -406,7 +458,12 @@ export class Game {
           if (r !== 'moving') m.wanderTarget = null;
         }
       } else if (m.state === 'chase') {
-        if (playerSafe || dist(m, m.home) > 14) { m.state = 'return'; continue; }
+        if (playerSafe || dist(m, m.home) > (m.isBoss ? 18 : 14)) { m.state = 'return'; return; }
+        const slam = def.boss?.slam;
+        if (slam && this.time >= (m.nextSlam ?? (m.nextSlam = this.time + 3)) && pd < slam.radius + 2) {
+          this.startSlam(m, slam);
+          return;
+        }
         if (pd <= def.attackRange + p.radius) {
           this.face(m, p);
           if (m.attackTimer <= 0) { m.attackTimer = def.attackInterval; this.monsterAttack(m, def); }
@@ -418,20 +475,55 @@ export class Game {
       } else if (m.state === 'return') {
         m.hp = Math.min(m.maxHp, m.hp + m.maxHp * 0.3 * dt);
         const r = this.moveEntity(m, m.home.x, m.home.y, def.speed * 1.2, dt, true);
-        if (r !== 'moving') { m.state = 'idle'; m.hp = m.maxHp; }
+        if (r !== 'moving') { m.state = 'idle'; m.hp = m.maxHp; m.nextSlam = undefined; }
       }
     }
+  }
+
+  startSlam(m, slam) {
+    const p = this.player;
+    m.slamTarget = { x: p.x, y: p.y };
+    m.slamAt = this.time + slam.windup;
+    m.nextSlam = this.time + slam.interval;
+    this.face(m, p);
+    this.effects.push({ type: 'telegraph', x: p.x, y: p.y, r: slam.radius, t: 0, life: slam.windup });
+    this.floatText(m, '내려찍기!', '#ff9a4a', 15);
+  }
+
+  resolveSlam(m, def) {
+    const slam = def.boss.slam;
+    const at = m.slamTarget;
+    m.slamTarget = null;
+    m.attackAnim = 0.35;
+    this.effects.push({ type: 'ring', x: at.x, y: at.y, r: slam.radius, t: 0, life: 0.45, color: '#ff8a3a' });
+    this.effects.push({ type: 'shake', t: 0, life: 0.3, power: 6 });
+    const p = this.player;
+    if (p.dead || m.dead || dist(p, at) > slam.radius + p.radius) return;
+    const dmg = S.monsterDamage(def.atk * slam.mult, this.derived().defense);
+    this.hurtPlayer(dmg, def);
   }
 
   monsterAttack(m, def) {
     const ch = this.char;
     const d = this.derived();
-    this.effects.push({ type: 'slash', x: this.player.x, y: this.player.y, t: 0, life: 0.2, color: '#ff6060' });
-    if (Math.random() >= S.monsterHitChance(def.level, ch.level, d.defense)) {
+    m.attackAnim = 0.3;
+    if (def.projectile) {
+      this.addProjectile(m, this.player, def.projectile, def.projectile === 'bolt' ? (def.palette?.glow || '#9ad0ff') : '#d8c8a0');
+    } else {
+      this.effects.push({ type: 'slash', x: this.player.x, y: this.player.y, t: 0, life: 0.2, color: '#ff6060' });
+    }
+    // 마법 공격은 방어력을 절반만 적용
+    const def2 = def.magic ? d.defense / 2 : d.defense;
+    if (Math.random() >= S.monsterHitChance(def.level, ch.level, def2)) {
       this.floatText(this.player, 'MISS', '#bbbbbb');
       return;
     }
-    const dmg = S.monsterDamage(def.atk, d.defense);
+    this.hurtPlayer(S.monsterDamage(def.atk, def2), def);
+  }
+
+  hurtPlayer(dmg, def) {
+    const ch = this.char;
+    if (this.player.dead) return;
     ch.hp -= dmg;
     this.player.lastHurt = this.time;
     this.floatText(this.player, `-${dmg}`, '#ff5050');
@@ -451,6 +543,14 @@ export class Game {
     const def = MONSTERS[m.type];
     m.dead = true;
     m.deathTime = this.time;
+    m.slamTarget = null;
+    if (m.isBoss) {
+      const zone = SPAWN_ZONES.find((z) => z.id === m.zone);
+      this.bossRespawnAt ??= {};
+      this.bossRespawnAt[m.zone] = this.time + (zone?.boss?.respawn ?? 120);
+      this.log(`보스 ${def.name}을(를) 쓰러뜨렸습니다!`, 'level');
+      this.effects.push({ type: 'ring', x: m.x, y: m.y, r: 2.5, t: 0, life: 1, color: '#ffd24a' });
+    }
     const gold = S.randInt(def.gold[0], def.gold[1]);
     ch.gold += gold;
     const ups = S.gainExp(ch, def.exp);

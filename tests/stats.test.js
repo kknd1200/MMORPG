@@ -107,3 +107,28 @@ test('경험치 획득 시 연속 레벨업', () => {
   assert.equal(c.level, 3);
   assert.equal(c.exp, 1);
 });
+
+// ---------------------------------------------------------------- 몬스터 데이터
+import { MONSTERS, SPAWN_ZONES } from '../js/data/monsters.js';
+
+test('몬스터 데이터: 드롭 아이템 존재, 필수 수치 양수', () => {
+  for (const [id, m] of Object.entries(MONSTERS)) {
+    for (const k of ['level', 'hp', 'atk', 'exp', 'speed', 'attackRange', 'attackInterval', 'size']) {
+      assert.ok(m[k] > 0, `${id}.${k}`);
+    }
+    for (const d of m.drops || []) assert.ok(ITEMS[d.item], `${id} 드롭 ${d.item} 없음`);
+    if (m.projectile) assert.ok(m.attackRange > 2, `${id}: 원거리인데 사거리가 짧음`);
+  }
+});
+
+test('사냥터: 가중치 합 1, 등장 몬스터/보스 정의 존재, 보스는 일반 목록에 없음', () => {
+  for (const z of SPAWN_ZONES) {
+    const sum = z.monsters.reduce((a, [, w]) => a + w, 0);
+    assert.ok(Math.abs(sum - 1) < 1e-9, `${z.id} 가중치 합 ${sum}`);
+    for (const [t] of z.monsters) {
+      assert.ok(MONSTERS[t], `${z.id}: ${t} 없음`);
+      assert.ok(!MONSTERS[t].boss, `${z.id}: 보스 ${t} 가 일반 목록에 있음`);
+    }
+    if (z.boss) assert.ok(MONSTERS[z.boss.type]?.boss, `${z.id}: 보스 정의 없음`);
+  }
+});

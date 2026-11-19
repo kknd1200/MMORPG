@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>스프라이트 미리보기</title>
+<style>
+  body { margin: 0; background: #1b1f16; color: #e8e0cc; font: 13px "Malgun Gothic", sans-serif; }
+  h2 { margin: 10px 12px 2px; font-size: 14px; color: #ffd24a; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<!-- 개발용: npm start 후 http://localhost:8080/tools/sprites.html
+     ?static 을 붙이면 애니메이션 없이 고정 프레임 (스크린샷용) -->
+<h2>직업 × 8방향 (걷기 / 공격 / 시전)</h2>
+<canvas id="chars"></canvas>
+<h2>몬스터 (대기 / 이동 / 공격)</h2>
+<canvas id="mons"></canvas>
+<script type="module">
+import { LOOKS, drawHumanoid, drawMonsterSprite } from '../js/game/sprites.js';
+import { MONSTERS } from '../js/data/monsters.js';
+import { ITEMS } from '../js/data/items.js';
+import { CLASS_ORDER, CLASSES } from '../js/data/classes.js';
+
+const TS = 32;
+const STATIC = location.search.includes('static');
+const DIRS = [[0, 1], [0.7, 0.7], [1, 0], [0.7, -0.7], [0, -1], [-0.7, -0.7], [-1, 0], [-0.7, 0.7]];
+const dpr = window.devicePixelRatio || 1;
+
+function setup(cv, w, h) {
+  cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return ctx;
+}
+const ground = (ctx, w, h) => {
+  ctx.fillStyle = '#4c8a3a'; ctx.fillRect(0, 0, w, h);
+  for (let y = 0; y < h; y += 32) for (let x = 0; x < w; x += 32) if ((x + y) / 32 % 2) { ctx.fillStyle = '#4f8f3d'; ctx.fillRect(x, y, 32, 32); }
+};
+const shadow = (ctx, x, y, r) => { ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x, y + 2, r, r * 0.45, 0, 0, 6.3); ctx.fill(); };
+const label = (ctx, x, y, t) => { ctx.font = 'bold 11px "Malgun Gothic"'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(t, x, y); ctx.fillStyle = '#fff'; ctx.fillText(t, x, y); };
+
+const cc = setup(document.getElementById('chars'), 11 * 64 + 20, CLASS_ORDER.length * 80 + 10);
+const monIds = Object.keys(MONSTERS);
+const mc = setup(document.getElementById('mons'), monIds.length * 90 + 20, 3 * 110 + 10);
+
+function frame(time) {
+  const t = STATIC ? 0.5 : time / 1000;
+  ground(cc, cc.canvas.width / dpr, cc.canvas.height / dpr);
+  CLASS_ORDER.forEach((id, row) => {
+    const look = LOOKS[id];
+    const weaponColor = ITEMS[CLASSES[id].startEquipment.weapon]?.icon?.color;
+    const y = row * 80 + 70;
+    for (let i = 0; i < 11; i++) {
+      const x = 40 + i * 64;
+      const d = DIRS[i % 8];
+      const attackCol = i === 8, castCol = i === 9, walkFrontCol = i === 10;
+      shadow(cc, x, y, 12);
+      drawHumanoid(cc, x, y, {
+        look, facing: { x: attackCol || castCol ? 1 : d[0], y: attackCol || castCol ? 0.3 : d[1] },
+        walk: STATIC ? 1.2 : t * 10, moving: i < 8 ? !STATIC || i % 2 === 0 : walkFrontCol,
+        attack: attackCol ? (STATIC ? 0.45 : (t * 2) % 1) : 0,
+        cast: castCol ? 0.6 : 0, weaponColor, armorId: walkFrontCol ? 'chain_mail' : null, time: t,
+      });
+      if (i === 0) label(cc, x, y + 12, CLASSES[id].name);
+    }
+  });
+
+  ground(mc, mc.canvas.width / dpr, mc.canvas.height / dpr);
+  monIds.forEach((id, i) => {
+    const def = MONSTERS[id];
+    const r = def.size * TS;
+    for (let row = 0; row < 3; row++) {
+      const x = 50 + i * 90, y = row * 110 + 95;
+      const m = {
+        id: i, facing: { x: row === 1 ? -1 : 1, y: 0 }, moving: row === 1, walkPhase: STATIC ? 1.2 : t * 8,
+        attackAnim: row === 2 ? (STATIC ? 0.15 : 0.3 * ((t * 1.5) % 1)) : 0, hurtFlash: 0, dead: false,
+      };
+      shadow(mc, x, y, r);
+      const h = drawMonsterSprite(mc, x, y, m, def, r, t);
+      if (row === 0) label(mc, x, y - h - 6, def.name);
+    }
+  });
+  if (!STATIC) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

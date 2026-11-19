@@ -1,7 +1,16 @@
 // 캔버스 렌더링 (모든 그래픽은 도형으로 그린 플레이스홀더 — 추후 스프라이트로 교체)
 import { TILE_SIZE as TS, T, VILLAGE } from './world.js';
-import { CLASSES } from '../data/classes.js';
 import { MONSTERS } from '../data/monsters.js';
+import { ITEMS } from '../data/items.js';
+import { LOOKS, drawHumanoid, drawMonsterSprite } from './sprites.js';
+
+// NPC 외형 (사람형 스프라이트 재사용)
+const NPC_LOOKS = {
+  merchant: { skin: '#e8c39c', hair: '#5a3a22', hairStyle: 'short', helm: 'none', cape: null, torso: '#b07a3a', robe: '#8a5a2a', trim: '#e0c070', legs: '#5a4030', boots: '#3a2a1a', arms: '#b07a3a', weapon: 'none' },
+  smith: { skin: '#d8a880', hair: '#2a1a12', hairStyle: 'short', helm: 'none', cape: null, torso: '#5a4a40', tabard: '#3a2a22', trim: '#a08060', legs: '#4a3a30', boots: '#2a1e16', arms: '#d8a880', weapon: 'mace' },
+  healer: { skin: '#f0d0b0', hair: '#c8a060', hairStyle: 'long', helm: 'circlet', helmColor: '#e8c860', cape: '#a8b8d8', torso: '#e8e8f8', robe: '#dcdcf0', trim: '#8aa8e0', legs: '#c8c8e0', boots: '#6a6a8a', arms: '#e8e8f8', weapon: 'none' },
+  guide: { skin: '#ecc8a4', hair: '#3a2a1a', hairStyle: 'short', helm: 'hood', helmColor: '#3a6a8a', cape: '#2a4a6a', torso: '#5aa0c8', trim: '#e0d090', legs: '#3a4a5a', boots: '#2a2a2a', arms: '#5aa0c8', weapon: 'staff' },
+};
 
 const GRASS = ['#4c8a3a', '#4f8f3d', '#4a8538', '#53923f'];
 const FONT = '"Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
@@ -34,8 +43,15 @@ export class Renderer {
     ctx.fillStyle = '#10140e';
     ctx.fillRect(0, 0, this.w, this.h);
 
-    const ox = Math.round(this.w / 2 - cam.x * TS);
-    const oy = Math.round(this.h / 2 - cam.y * TS);
+    // 화면 흔들림 (보스 내려찍기 등)
+    let shx = 0, shy = 0;
+    for (const fx of game.effects) {
+      if (fx.type !== 'shake' || fx.t < 0) continue;
+      const p = fx.power * (1 - fx.t / fx.life);
+      shx += (Math.random() - 0.5) * 2 * p; shy += (Math.random() - 0.5) * 2 * p;
+    }
+    const ox = Math.round(this.w / 2 - cam.x * TS + shx);
+    const oy = Math.round(this.h / 2 - cam.y * TS + shy);
     const tx0 = Math.floor(cam.x - this.w / 2 / TS) - 1;
     const ty0 = Math.floor(cam.y - this.h / 2 / TS) - 1;
     const tx1 = Math.ceil(cam.x + this.w / 2 / TS) + 1;
@@ -67,6 +83,9 @@ export class Renderer {
       ctx.stroke();
     }
 
+    // 바닥에 깔리는 효과 (보스 공격 예고)는 캐릭터보다 먼저
+    this.drawGroundEffects(game, ox, oy);
+
     const targetId = p.action?.targetId;
     const hoverId = game.hover?.id;
     const ents = [...world.npcs, ...game.monsters, p].sort((a, b) => a.y - b.y);
@@ -92,77 +111,61 @@ export class Renderer {
   drawPlayer(game, sx, sy) {
     const { ctx } = this;
     const p = game.player;
-    const cls = CLASSES[game.char.classId];
-    if (p.dead) ctx.globalAlpha = 0.4;
-    const bob = p.moving ? Math.sin(p.walkPhase) * 2 : 0;
+    const ch = game.char;
+    const weapon = ITEMS[ch.equipment?.weapon];
     this.drawShadow(sx, sy, 12);
-
-    const fx = p.facing.x, fy = p.facing.y;
-    // 무기 (몸 뒤쪽이면 먼저 그림)
-    const drawWeapon = () => {
-      ctx.lineCap = 'round';
-      const hx = sx + fx * 8, hy = sy - 12 + bob + fy * 4;
-      if (cls.id === 'knight') {
-        ctx.strokeStyle = '#dfe6ee'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + fx * 14, hy + fy * 14 - 6); ctx.stroke();
-      } else if (cls.id === 'elf') {
-        ctx.strokeStyle = '#a0763e'; ctx.lineWidth = 2.5;
-        const ang = Math.atan2(fy, fx);
-        ctx.beginPath(); ctx.arc(hx, hy, 9, ang - 1.2, ang + 1.2); ctx.stroke();
-      } else if (cls.id === 'mage') {
-        ctx.strokeStyle = '#7a5a36'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.moveTo(hx, hy + 8); ctx.lineTo(hx, hy - 14); ctx.stroke();
-        ctx.fillStyle = '#7ad0ff'; ctx.beginPath(); ctx.arc(hx, hy - 15, 3.5, 0, Math.PI * 2); ctx.fill();
-      } else {
-        ctx.strokeStyle = '#8a7a5a'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.moveTo(hx, hy + 4); ctx.lineTo(hx + fx * 8, hy - 10); ctx.stroke();
-        ctx.fillStyle = '#d8d0b8'; ctx.beginPath(); ctx.arc(hx + fx * 8, hy - 11, 4, 0, Math.PI * 2); ctx.fill();
-      }
-    };
-    if (fy < 0) drawWeapon();
-    // 몸
-    ctx.fillStyle = cls.color;
-    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, sx - 9, sy - 20 + bob, 18, 18, 6);
-    ctx.fill(); ctx.stroke();
-    // 머리
-    ctx.fillStyle = '#f1d2b0';
-    ctx.beginPath(); ctx.arc(sx, sy - 26 + bob, 7.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    if (fy >= 0) {
-      ctx.fillStyle = '#222';
-      ctx.fillRect(sx - 3.5 + fx * 2, sy - 27 + bob, 2, 2);
-      ctx.fillRect(sx + 1.5 + fx * 2, sy - 27 + bob, 2, 2);
-    }
-    if (fy >= 0) drawWeapon();
-    ctx.globalAlpha = 1;
-
-    nameTag(ctx, sx, sy - 40, game.char.name, '#ffffff');
+    const hurtT = game.time - p.lastHurt;
+    drawHumanoid(ctx, sx, sy, {
+      look: LOOKS[ch.classId] || LOOKS.knight,
+      facing: p.facing,
+      walk: p.walkPhase,
+      moving: p.moving,
+      attack: (p.attackAnim || 0) / 0.3,
+      cast: (p.castAnim || 0) / 0.4,
+      weaponColor: weapon?.icon?.color,
+      armorId: ch.equipment?.armor,
+      hurt: !p.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0,
+      dead: p.dead,
+      time: game.time,
+    });
+    nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
   }
 
   drawNpc(n, sx, sy, hovered, time) {
     const { ctx } = this;
     this.drawShadow(sx, sy, 11);
-    ctx.fillStyle = n.color;
-    ctx.strokeStyle = hovered ? '#ffe680' : 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = hovered ? 2.5 : 1.5;
-    roundRect(ctx, sx - 9, sy - 20, 18, 19, 5);
-    ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#ecc9a4';
-    ctx.beginPath(); ctx.arc(sx, sy - 26, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    if (hovered) {
+      ctx.strokeStyle = '#ffe680'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(sx, sy + 2, 15, 7, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    drawHumanoid(ctx, sx, sy, {
+      look: NPC_LOOKS[n.kind] || NPC_LOOKS.guide,
+      facing: { x: 0, y: 1 }, walk: 0, moving: false, time,
+    });
     const bounce = Math.sin(time * 3) * 2;
     ctx.fillStyle = '#ffd84a';
-    ctx.font = `bold 14px ${FONT}`;
+    ctx.font = `bold 15px ${FONT}`;
     ctx.textAlign = 'center';
-    ctx.fillText('!', sx, sy - 40 + bounce);
-    nameTag(ctx, sx, sy - 52, n.name, '#ffe680');
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.strokeText('!', sx, sy - 54 + bounce);
+    ctx.fillText('!', sx, sy - 54 + bounce);
+    nameTag(ctx, sx, sy - 66, n.name, '#ffe680');
   }
 
   drawMonster(m, sx, sy, targeted, hovered, time) {
     const { ctx } = this;
     const def = MONSTERS[m.type];
     const r = def.size * TS;
-    if (m.dead) ctx.globalAlpha = Math.max(0, 1 - (time - m.deathTime) / 0.6);
+    const fade = m.dead ? Math.max(0, 1 - (time - m.deathTime) / 0.7) : 1;
+    ctx.globalAlpha = fade;
+    if (m.isBoss && !m.dead) {
+      // 보스 발밑의 붉은 기운
+      const pulse = 0.35 + 0.15 * Math.sin(time * 4);
+      const g = ctx.createRadialGradient(sx, sy, 2, sx, sy, r * 2);
+      g.addColorStop(0, `rgba(255,60,30,${pulse})`); g.addColorStop(1, 'rgba(255,60,30,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(sx, sy, r * 2, r, 0, 0, Math.PI * 2); ctx.fill();
+    }
     this.drawShadow(sx, sy, r);
     if (targeted || hovered) {
       ctx.strokeStyle = targeted ? '#ff4a4a' : '#ffe680';
@@ -171,61 +174,38 @@ export class Renderer {
       ctx.beginPath(); ctx.ellipse(sx, sy + 2, r + 5, (r + 5) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
-    const color = m.hurtFlash > 0 ? '#ffffff' : def.color;
-    ctx.fillStyle = color;
-    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = 1.5;
-    const fx = m.facing.x;
-    switch (def.shape) {
-      case 'slime': {
-        const squish = Math.sin(time * 4 + m.id) * 0.1;
-        ctx.beginPath();
-        ctx.ellipse(sx, sy - r * 0.6, r * (1 + squish), r * (0.75 - squish), 0, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#123';
-        ctx.fillRect(sx - r * 0.35, sy - r * 0.8, 3, 3);
-        ctx.fillRect(sx + r * 0.2, sy - r * 0.8, 3, 3);
-        break;
-      }
-      case 'rat': {
-        ctx.beginPath(); ctx.ellipse(sx, sy - r * 0.6, r * 1.2, r * 0.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx + fx * r * 1.1, sy - r * 0.8, r * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.strokeStyle = '#d9a3a3'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(sx - fx * r * 1.1, sy - r * 0.5); ctx.quadraticCurveTo(sx - fx * r * 2, sy - r * 1.4, sx - fx * r * 2.2, sy - r * 0.3); ctx.stroke();
-        break;
-      }
-      case 'wolf': {
-        ctx.beginPath(); ctx.ellipse(sx, sy - r * 0.7, r * 1.3, r * 0.65, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx + fx * r * 1.2, sy - r * 1.1, r * 0.55, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#ffdd55';
-        ctx.fillRect(sx + fx * r * 1.4 - 1, sy - r * 1.25, 3, 3);
-        break;
-      }
-      case 'skeleton':
-      case 'humanoid':
-      default: {
-        roundRect(ctx, sx - r * 0.75, sy - r * 1.6, r * 1.5, r * 1.5, 4); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(sx, sy - r * 2.1, r * 0.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = def.shape === 'skeleton' ? '#200' : '#ff3';
-        ctx.fillRect(sx - r * 0.3, sy - r * 2.2, 3, 3);
-        ctx.fillRect(sx + r * 0.1, sy - r * 2.2, 3, 3);
-        ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(sx + fx * r, sy - r); ctx.lineTo(sx + fx * r * 1.6, sy - r * 2); ctx.stroke();
-      }
-    }
+    const height = drawMonsterSprite(ctx, sx, sy, m, def, r, time);
     ctx.globalAlpha = 1;
     if (m.dead) return;
 
-    const top = sy - r * 2.8 - 6;
-    if (targeted || hovered || m.hp < m.maxHp) {
-      const bw = 34;
+    const top = sy - height - 8;
+    const showBar = targeted || hovered || m.hp < m.maxHp || m.isBoss;
+    if (showBar) {
+      const bw = m.isBoss ? 64 : 34;
       ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(sx - bw / 2, top, bw, 5);
-      ctx.fillStyle = '#e04040';
-      ctx.fillRect(sx - bw / 2 + 1, top + 1, (bw - 2) * Math.max(0, m.hp / m.maxHp), 3);
+      ctx.fillRect(sx - bw / 2, top, bw, m.isBoss ? 6 : 5);
+      ctx.fillStyle = m.isBoss ? '#ff7a2a' : '#e04040';
+      ctx.fillRect(sx - bw / 2 + 1, top + 1, (bw - 2) * Math.max(0, m.hp / m.maxHp), m.isBoss ? 4 : 3);
     }
-    if (targeted || hovered) {
-      nameTag(ctx, sx, top - 5, `Lv.${def.level} ${def.name}`, def.aggressive ? '#ff9a9a' : '#e0e0e0');
+    if (targeted || hovered || m.isBoss) {
+      const color = m.isBoss ? '#ffd24a' : def.aggressive ? '#ff9a9a' : '#e0e0e0';
+      nameTag(ctx, sx, top - 5, `${m.isBoss ? '[보스] ' : ''}Lv.${def.level} ${def.name}`, color);
+    }
+  }
+
+  drawGroundEffects(game, ox, oy) {
+    const { ctx } = this;
+    for (const fx of game.effects) {
+      if (fx.type !== 'telegraph') continue;
+      const k = Math.min(1, fx.t / fx.life);
+      const x = ox + fx.x * TS, y = oy + fx.y * TS;
+      const R = fx.r * TS;
+      ctx.fillStyle = 'rgba(255,40,20,0.18)';
+      ctx.beginPath(); ctx.ellipse(x, y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(255,80,30,${0.25 + k * 0.25})`;
+      ctx.beginPath(); ctx.ellipse(x, y, R * k, R * k * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,120,60,0.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x, y, R, R * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
     }
   }
 
@@ -239,7 +219,7 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.lineWidth = 3;
         ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-        const x = ox + fx.x * TS, y = oy + fx.y * TS - 40 - k * 28;
+        const x = ox + fx.x * TS, y = oy + fx.y * TS - 50 - k * 28;
         ctx.strokeText(fx.text, x, y);
         ctx.fillStyle = fx.color;
         ctx.fillText(fx.text, x, y);
