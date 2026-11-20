@@ -2,9 +2,8 @@ import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
-import { preload, heroFrames, fxSheet, fxIcon, statusIcon, NPC_SPRITES } from './art.js';
-import { heroKey } from '../data/classes.js';
-import { MAX_MERCS, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp, MERC_LOOKS } from '../systems/party.js';
+import { preload, fxSheet, fxIcon, statusIcon } from './art.js';
+import { MAX_MERCS, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp } from '../systems/party.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS } from '../data/monsters.js';
 import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
@@ -91,9 +90,7 @@ export class Game {
     this.portalReadyAt = 0;
     this.clockOffset = 0; // 필드 보스 시간 확인용 (테스트에서 시계를 앞당길 때)
 
-    // 그림 미리 불러오기: 내 캐릭터 · NPC · 직업 스킬 이펙트 · 아이콘
-    this.heroKey = heroKey(character.classId, character.gender);
-    preload([...Object.values(NPC_SPRITES).map((k) => `heroes/${k}/attack-1.webp`), 'heroes/paladin/attack-1.webp']);
+    // 그림 미리 불러오기: 직업 스킬 이펙트 · 아이콘 (캐릭터는 코드로 그림)
     for (const u of this.units()) this.preloadUnit(u);
     preload([
       ...Object.values(STATUS_FX).map((f) => fxSheet(f.sheet)), fxSheet(LEVELUP_FX.sheet),
@@ -119,7 +116,6 @@ export class Game {
   unitById(id) { return this.units().find((u) => u.ent.id === id || u.id === id) || null; }
   selUnit() { return this.unitById(this.selectedId) || this.leader; }
   clsOf(u) { return CLASSES[u.char.classId]; }
-  spriteOf(u) { return u.isLeader ? this.heroKey : (u.char.look || heroKey(u.char.classId, u.char.gender)); }
 
   makeMercUnit(char, near, i = 0) {
     fillSlots(char);
@@ -137,7 +133,7 @@ export class Game {
   preloadUnit(u) {
     const cls = this.clsOf(u);
     const fx = [...cls.skills.map((id) => SKILLS[id]), BASIC_FX[u.char.classId]].flatMap((x) => [x?.fx?.sheet || x?.sheet, x?.proj]).filter(Boolean);
-    preload([...heroFrames(this.spriteOf(u)), ...fx.map(fxSheet), ...cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet))]);
+    preload([...fx.map(fxSheet), ...cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet))]);
   }
 
   // 용병단장: 이 마을의 용병 목록 (1시간마다 바뀜)

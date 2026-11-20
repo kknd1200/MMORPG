@@ -6,8 +6,8 @@ import * as S from '../systems/stats.js';
 import { T } from './world.js';
 import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
 import { MONSTERS } from '../data/monsters.js';
-import { url as artUrl, fxIcon, statusIcon, portrait } from './art.js';
-import { heroKey } from '../data/classes.js';
+import { url as artUrl, fxIcon, statusIcon } from './art.js';
+import { avatarMarkup, paintAvatars } from '../ui/portraits.js';
 import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, learnedSkills } from '../systems/party.js';
 import { HOTBAR_KEYS } from './game.js';
 
@@ -47,7 +47,7 @@ export class Hud {
     const r = this.root;
     r.innerHTML = `
       <div class="hud-status">
-        <img class="hud-portrait" alt="" draggable="false">
+        <div class="hud-portrait"></div>
         <div class="hud-name"></div>
         <div class="bar hp"><div class="fill"></div><span></span></div>
         <div class="bar mp"><div class="fill"></div><span></span></div>
@@ -160,7 +160,13 @@ export class Hud {
     const need = S.expToNext(ch.level);
     this.setBar(this.el.exp, ch.exp, need, `EXP ${(ch.exp / need * 100).toFixed(2)}%`);
 
-    if (!this.el.portrait.src) this.el.portrait.src = artUrl(portrait(heroKey(ch.classId, ch.gender)));
+    // 초상화: 직업 · 장착 무기 · 갑옷이 바뀔 때만 다시 그림
+    const pkey = `${ch.classId}|${ch.equipment?.weapon || ''}|${ch.equipment?.armor || ''}`;
+    if (this.portraitKey !== pkey) {
+      this.portraitKey = pkey;
+      this.el.portrait.innerHTML = avatarMarkup(ch, 'hud');
+      paintAvatars(this.el.portrait);
+    }
     this.el.buffs.innerHTML = g.buffs.map((b) => {
       const left = Math.ceil(b.until - g.time);
       const ic = b.icon ? `<img src="${artUrl(statusIcon(b.icon))}" alt="">` : '';
@@ -435,6 +441,7 @@ export class Hud {
     else if (name === 'skills') body.innerHTML = this.skillsHtml();
     else if (name === 'npc') body.innerHTML = this.npcHtml();
     else if (name === 'party') body.innerHTML = this.partyHtml();
+    paintAvatars(body);
   }
 
   // ------------------------------------------------------------ 파티
@@ -443,19 +450,19 @@ export class Hud {
     const html = g.party.map((u) => {
       const ch = u.char, cls = CLASSES[ch.classId];
       return `<div class="pframe ${g.selectedId === u.id ? 'selected' : ''} ${u.ent.dead ? 'dead' : ''}" data-sel="${u.id}" title="클릭: 선택 · 파티 창">
-        <img src="${artUrl(portrait(g.spriteOf(u)))}" alt="">
+        ${avatarMarkup(ch, 'frame')}
         <div class="pinfo"><div class="pname"><b>Lv.${ch.level}</b> ${esc(ch.name)} <span style="color:${cls.color}">${cls.name}</span></div>
           <div class="pbar hp"><i style="width:${Math.max(0, ch.hp / ch.maxHp) * 100}%"></i></div>
           <div class="pbar mp"><i style="width:${Math.max(0, ch.mp / ch.maxMp) * 100}%"></i></div></div>
       </div>`;
     }).join('');
-    if (html !== this.lastPartyHtml) { this.el.party.innerHTML = html; this.lastPartyHtml = html; }
+    if (html !== this.lastPartyHtml) { this.el.party.innerHTML = html; this.lastPartyHtml = html; paintAvatars(this.el.party); }
   }
 
   partyHtml() {
     const g = this.game, u = g.selUnit(), ch = u.char, cls = CLASSES[ch.classId];
     const tabs = g.units().map((x) => `<button class="ptab ${x === u ? 'selected' : ''}" data-sel="${x.id}">
-      <img src="${artUrl(portrait(g.spriteOf(x)))}" alt="">${esc(x.char.name)}${x.isLeader ? ' ★' : ''}</button>`).join('');
+      ${avatarMarkup(x.char, 'tab')}${esc(x.char.name)}${x.isLeader ? ' ★' : ''}</button>`).join('');
     const learned = new Set(learnedSkills(ch));
     const slots = [];
     for (let i = 0; i < SKILL_SLOTS; i++) {
@@ -475,7 +482,7 @@ export class Hud {
     const d = g.derived(u);
     return `<div class="ptabs">${tabs}</div>
       <div class="pdetail">
-        <img class="portrait" src="${artUrl(portrait(g.spriteOf(u)))}" alt="">
+        ${avatarMarkup(ch, 'hud', 'portrait')}
         <div><b>${esc(ch.name)}</b> <span style="color:${cls.color}">${cls.name}</span> · Lv.${ch.level} ${u.isLeader ? '<small>(대표 캐릭터)</small>' : '<small>(용병)</small>'}<br>
           HP ${Math.ceil(ch.hp)} / ${ch.maxHp} · MP ${Math.floor(ch.mp)} / ${ch.maxMp} · 공격 ${d.attack} · 방어 ${d.defense}<br>
           <button data-open="char">캐릭터 정보</button> <button data-open="inv">장비 바꾸기</button>
@@ -495,7 +502,7 @@ export class Hud {
     const rows = offers.map((o) => {
       const cls = CLASSES[o.classId];
       return `<div class="merc-row">
-        <img class="portrait" src="${artUrl(portrait(o.look))}" alt="">
+        ${avatarMarkup({ classId: o.classId }, 'hud', 'portrait')}
         <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small></div>
         <span class="price">${o.price.toLocaleString()}G</span>
         <button data-hire="${o.offerId}" ${full || g.char.gold < o.price ? 'disabled' : ''}>고용</button>

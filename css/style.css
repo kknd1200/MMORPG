@@ -36,7 +36,7 @@ h4 { margin-top: 14px; font-size: 14px; }
 .login-card { width: 460px; text-align: center; margin: auto; }
 .login-roster { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 10px 0 18px; padding-bottom: 14px; border-bottom: 1px solid var(--panel-border); }
 .login-class { min-width: 0; margin: 0; }
-.login-class img.portrait { display: block; width: 88px; height: 88px; max-width: 100%; margin: 0 auto 5px; border-radius: 6px; border: 1px solid var(--panel-border); }
+.login-class canvas.avatar { display: block; width: 96px; height: auto; max-width: 100%; margin: 0 auto 5px; aspect-ratio: 96 / 132; image-rendering: pixelated; }
 .login-class figcaption { color: var(--gold); font-size: 12px; }
 .login-card label { display: block; text-align: left; margin: 12px 0; color: var(--muted); }
 .logo { font-size: 36px; margin: 0; color: var(--gold); letter-spacing: 4px; text-shadow: 0 2px 10px rgba(232,196,106,0.4); }
@@ -55,7 +55,7 @@ h4 { margin-top: 14px; font-size: 14px; }
 .slot-card.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
 .slot-card.empty { justify-content: center; color: var(--muted); font-size: 16px; border-style: dashed; }
 .slot-name { font-size: 17px; font-weight: bold; }
-.avatar { width: 48px; height: 72px; margin-bottom: 4px; }
+.avatar { width: 44px; height: 64px; margin-bottom: 4px; }
 div.avatar { border-radius: 12px 12px 6px 6px; background: linear-gradient(#3a342a 0 34%, #2a261e 34%); border: 2px dashed rgba(255,255,255,0.15); height: 56px; }
 
 .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -217,7 +217,7 @@ img.icon.img { padding: 0; background: #0c0d0a; object-fit: cover; image-renderi
 .buff img { width: 20px; height: 20px; image-rendering: pixelated; }
 .buff em { font-style: normal; }
 .buff.debuff { border-color: #ff6a5a; }
-img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1a1714; }
+canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelated; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: #1a1714; }
 .gender-pick { display: flex; gap: 6px; margin: 10px 0 4px; }
 .gender-pick button.selected { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
 
@@ -226,7 +226,7 @@ img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-rad
 .pframe { display: flex; gap: 6px; align-items: center; padding: 4px; background: rgba(15,13,10,0.78); border: 1px solid var(--panel-border); border-radius: 5px; cursor: pointer; }
 .pframe.selected, .hud-portrait.selected { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
 .pframe.dead { opacity: 0.5; filter: grayscale(1); }
-.pframe img { width: 36px; height: 36px; image-rendering: pixelated; border-radius: 3px; background: #1a1714; }
+.pframe .avatar { margin: 0; width: 36px; height: 36px; image-rendering: pixelated; border-radius: 3px; background: #1a1714; }
 .pinfo { flex: 1; min-width: 0; }
 .pname { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pbar { height: 5px; background: #1a1714; border-radius: 2px; margin-top: 2px; overflow: hidden; }
@@ -237,7 +237,7 @@ img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-rad
 .panel[data-panel="party"] { left: 250px; top: 120px; width: 470px; }
 .ptabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .ptab { display: flex; align-items: center; gap: 4px; padding: 3px 8px 3px 3px; }
-.ptab img { width: 26px; height: 26px; image-rendering: pixelated; }
+.ptab .avatar { margin: 0; width: 26px; height: 26px; vertical-align: middle; image-rendering: pixelated; }
 .ptab.selected { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
 .pdetail { display: flex; gap: 10px; align-items: center; line-height: 1.7; }
 .pdetail button { padding: 2px 8px; font-size: 12px; }
@@ -257,3 +257,5 @@ img.portrait { width: 64px; height: 64px; image-rendering: pixelated; border-rad
 .merc-row .portrait { width: 48px; height: 48px; }
 .merc-row .price { color: var(--gold); }
 .equip-who { margin: 4px 0; font-size: 12px; }
+.hud-portrait { overflow: hidden; }
+.hud-portrait .avatar { display: block; width: 62px; height: 62px; margin: 0; image-rendering: pixelated; }

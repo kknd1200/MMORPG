@@ -11,15 +11,6 @@ export const MAX_MERCS = 3;
 export const SKILL_SLOTS = 4;
 export const MERC_CLASSES = ['knight', 'elf', 'mage', 'priest', 'warrior'];
 
-// 용병 겉모습 (assets/heroes). 같은 직업이라도 여러 그림 중 하나
-export const MERC_LOOKS = {
-  knight: ['knight', 'knight_female', 'paladin', 'paladin_female'],
-  elf: ['archer', 'archer_male'],
-  mage: ['mage', 'mage_male', 'spellsword', 'spellsword_female'],
-  priest: ['priest', 'priest_female'],
-  warrior: ['warrior', 'warrior_female', 'monk', 'monk_female'],
-};
-
 const NAMES = [
   '카일', '리안', '세린', '도윤', '하람', '로웬', '미르', '테오', '아린', '바렌', '엘라', '가론', '시엘', '루카', '네아',
   '다린', '페이', '오른', '유나', '케인', '라헬', '보른', '이솔', '한결', '제나', '마르', '솔린', '타냐', '휴고', '벨라',
@@ -63,12 +54,10 @@ export function mercOffers(villageId, level, hourKey, count = 4, takenNames = []
   const used = new Set(takenNames);
   for (let i = 0; i < count; i++) {
     const classId = MERC_CLASSES[Math.floor(r() * MERC_CLASSES.length)];
-    const looks = MERC_LOOKS[classId];
     const lv = Math.max(1, level + Math.floor(r() * 3) - 1);
     out.push({
       offerId: `${villageId}:${hourKey}:${i}`,
       classId,
-      look: looks[Math.floor(r() * looks.length)],
       name: pickName(r, used),
       level: lv,
       price: mercPrice(lv),
@@ -128,8 +117,7 @@ export function fillSlots(char) {
 /** 용병 고용: 캐릭터와 같은 방식으로 만들고, 고용 레벨까지 성장 주사위를 굴림 (용병도 축·저주가 갈림) */
 export function createMerc(offer, id, rng = Math.random) {
   const cls = CLASSES[offer.classId];
-  const char = S.createCharacter({ id, name: offer.name, classId: offer.classId, stats: autoAllocate(offer.classId), gender: cls.defaultGender });
-  char.look = offer.look;
+  const char = S.createCharacter({ id, name: offer.name, classId: offer.classId, stats: autoAllocate(offer.classId) });
   char.isMerc = true;
   char.inventory = [];
   char.gold = 0;

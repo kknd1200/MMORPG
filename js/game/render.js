@@ -6,7 +6,7 @@ import { MONSTERS } from '../data/monsters.js';
 import { ITEMS } from '../data/items.js';
 import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
 import { TW, TH, HW, HH, ISO_RX, ISO_RY, Ground, objectSprite, propSprite, drawSprite } from './terrain.js';
-import { img, fxSheet, FX, NPC_SPRITES } from './art.js';
+import { img, fxSheet, FX } from './art.js';
 
 // NPC 외형 (사람형 스프라이트 재사용)
 const NPC_LOOKS = {
@@ -14,6 +14,7 @@ const NPC_LOOKS = {
   smith: { armor: 'leather', gloves: '#4a3a2e', skin: '#d8a880', hair: '#2a1a12', hairStyle: 'short', helm: 'none', cape: null, torso: '#5a4a40', tabard: '#3a2a22', trim: '#a08060', legs: '#4a3a30', boots: '#2a1e16', arms: '#d8a880', weapon: 'mace' },
   healer: { armor: 'cloth', gloves: '#f0d0b0', skin: '#f0d0b0', hair: '#c8a060', hairStyle: 'long', helm: 'circlet', helmColor: '#e8c860', cape: '#a8b8d8', torso: '#e8e8f8', robe: '#dcdcf0', trim: '#8aa8e0', legs: '#c8c8e0', boots: '#6a6a8a', arms: '#e8e8f8', weapon: 'none' },
   guide: { armor: 'leather', gloves: '#5a4030', skin: '#ecc8a4', hair: '#3a2a1a', hairStyle: 'short', helm: 'hood', helmColor: '#3a6a8a', cape: '#2a4a6a', torso: '#5aa0c8', trim: '#e0d090', legs: '#3a4a5a', boots: '#2a2a2a', arms: '#5aa0c8', weapon: 'staff' },
+  mercenary: { armor: 'leather', gloves: '#3a2a1e', skin: '#d6a882', hair: '#3a2416', hairStyle: 'short', helm: 'none', cape: '#5a2a1a', torso: '#6a5038', tabard: '#7a2a1e', trim: '#b08a4a', legs: '#4a3a2c', boots: '#2a1e14', arms: '#6a5038', weapon: 'sword' },
   teleporter: { armor: 'cloth', gloves: '#f0d4b8', skin: '#f0d4b8', hair: '#dcdcf0', hairStyle: 'long', helm: 'hood', helmColor: '#4a2a7a', cape: '#3a2068', torso: '#6a3aa8', robe: '#4a2a80', trim: '#e0c878', legs: '#3a2a5a', boots: '#2a1e36', arms: '#6a3aa8', weapon: 'staff' },
 };
 
@@ -293,9 +294,8 @@ export class Renderer {
     if (!ghost) this.drawShadow(sx, sy, 14);
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
-      look: LOOKS[ch.classId] || LOOKS.knight,
-      sprite: game.heroKey,
-      facing: screenDir(p.facing),
+      classId: ch.classId, look: LOOKS[ch.classId] || LOOKS.knight,
+      facing: screenDir(p.visualFacing || p.facing),
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / 0.3,
@@ -306,7 +306,7 @@ export class Renderer {
       dead: p.dead,
       time: game.time,
     });
-    if (!ghost) nameTag(ctx, sx, sy - 74, ch.name, '#ffffff');
+    if (!ghost) nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
   }
 
   // 용병: 도트 캐릭터 + 초록 이름표 + 작은 HP 바
@@ -316,14 +316,14 @@ export class Renderer {
     this.drawShadow(sx, sy, 13);
     const hurtT = game.time - e.lastHurt;
     drawHumanoid(ctx, sx, sy, {
-      look: LOOKS[ch.classId] || LOOKS.knight,
-      sprite: game.spriteOf(u),
-      facing: screenDir(e.facing), walk: e.walkPhase, moving: e.moving,
+      classId: ch.classId, look: LOOKS[ch.classId] || LOOKS.knight,
+      facing: screenDir(e.visualFacing || e.facing), walk: e.walkPhase, moving: e.moving, motion: e.walkWeight,
       attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / 0.4,
+      weaponColor: ITEMS[ch.equipment?.weapon]?.icon?.color, armorId: ch.equipment?.armor,
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });
     if (e.dead) return;
-    const top = sy - 74;
+    const top = sy - 52;
     nameTag(ctx, sx, top, ch.name, game.selectedId === u.id ? '#ffe680' : '#9effa0');
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(sx - 15, top + 3, 30, 4);
     ctx.fillStyle = '#4ad04a'; ctx.fillRect(sx - 14, top + 4, 28 * Math.max(0, ch.hp / ch.maxHp), 2);
@@ -338,7 +338,6 @@ export class Renderer {
     }
     drawHumanoid(ctx, sx, sy, {
       look: NPC_LOOKS[n.kind] || NPC_LOOKS.guide,
-      sprite: NPC_SPRITES[n.kind],
       facing: { x: n.x > 30 ? -1 : 1, y: 1 }, walk: 0, moving: false, time,
     });
     const bounce = Math.sin(time * 3) * 2;
@@ -346,9 +345,9 @@ export class Renderer {
     ctx.font = `bold 15px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.strokeText('!', sx, sy - 76 + bounce);
-    ctx.fillText('!', sx, sy - 76 + bounce);
-    nameTag(ctx, sx, sy - 88, n.name, '#ffe680');
+    ctx.strokeText('!', sx, sy - 54 + bounce);
+    ctx.fillText('!', sx, sy - 54 + bounce);
+    nameTag(ctx, sx, sy - 66, n.name, '#ffe680');
   }
 
   drawMonster(m, sx, sy, targeted, hovered, time) {

@@ -36,7 +36,7 @@ export function validateAllocation(classId, stats) {
   return { ok: true };
 }
 
-export function createCharacter({ id, name, classId, stats, gender }) {
+export function createCharacter({ id, name, classId, stats }) {
   const check = validateAllocation(classId, stats);
   if (!check.ok) throw new Error(check.error);
   const cls = CLASSES[classId];
@@ -45,7 +45,6 @@ export function createCharacter({ id, name, classId, stats, gender }) {
     id,
     name,
     classId,
-    gender: gender || CLASSES[classId].defaultGender || 'm',
     level: 1,
     exp: 0,
     stats: { ...stats },

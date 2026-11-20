@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CLASSES } from '../js/data/classes.js';
 import { SKILLS } from '../js/data/skills.js';
-import { mercOffers, createMerc, mercPrice, fillSlots, learnedSkills, condOk, shareExp, MERC_CLASSES, MERC_LOOKS, SKILL_SLOTS } from '../js/systems/party.js';
+import { mercOffers, createMerc, mercPrice, fillSlots, learnedSkills, condOk, shareExp, MERC_CLASSES, SKILL_SLOTS } from '../js/systems/party.js';
 import * as S from '../js/systems/stats.js';
+import { LOOKS } from '../js/game/sprites.js';
 import fs from 'node:fs';
 
 const asset = (p) => fs.existsSync(new URL(`../assets/${p}`, import.meta.url));
@@ -17,15 +18,14 @@ test('용병 목록: 같은 마을 · 같은 시간이면 같고, 이름이 겹�
   for (const o of taken) assert.ok(!a.some((x) => x.name === o.name), `${o.name} 겹침`);
   for (const o of a) {
     assert.ok(MERC_CLASSES.includes(o.classId));
-    assert.ok(MERC_LOOKS[o.classId].includes(o.look));
-    assert.ok(asset(`heroes/${o.look}/attack-1.webp`), o.look);
+    assert.ok(LOOKS[o.classId], `${o.classId} 외형`);
     assert.equal(o.price, mercPrice(o.level));
   }
 });
 
 test('용병 고용: 레벨까지 성장, 스킬 칸 채움, 보너스 포인트는 주스탯에', () => {
   for (const classId of MERC_CLASSES) {
-    const m = createMerc({ classId, look: MERC_LOOKS[classId][0], name: '시험', level: 21 }, 'x');
+    const m = createMerc({ classId, name: '시험', level: 21 }, 'x');
     assert.equal(m.level, 21);
     assert.equal(m.growth.count, 20);
     assert.equal(m.bonusPoints, 0);

@@ -1,13 +1,13 @@
 // 화면 흐름: 로그인 → 캐릭터 선택 → (캐릭터 생성) → 게임
 import * as Store from './systems/storage.js';
 import {
-  CLASSES, CLASS_ORDER, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, CREATION, MAX_CHARACTERS, heroKey, GENDER_NAMES,
+  CLASSES, CLASS_ORDER, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, CREATION, MAX_CHARACTERS,
 } from './data/classes.js';
-import { url as artUrl, portrait } from './game/art.js';
 import { SKILLS } from './data/skills.js';
 import * as S from './systems/stats.js';
 import { Game } from './game/game.js';
 import { ITEMS } from './data/items.js';
+import { paintAvatars, loginRosterMarkup } from './ui/portraits.js';
 
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16,16 +16,8 @@ const state = {
   user: null,
   selectedId: null,
   game: null,
-  create: { classId: 'knight', stats: null, gender: 'm' },
+  create: { classId: 'knight', stats: null },
 };
-
-// 로그인 화면: 시작 직업 4종 초상화 (「환생 루프」 초상화 그림)
-function loginRosterMarkup() {
-  return CLASS_ORDER.map((id) => {
-    const c = CLASSES[id];
-    return `<figure class="login-class"><img class="portrait" src="${artUrl(portrait(heroKey(id, c.defaultGender)))}" alt=""><figcaption>${esc(c.name)}</figcaption></figure>`;
-  }).join('');
-}
 
 function show(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
@@ -35,6 +27,7 @@ function show(id) {
 function initLogin() {
   const roster = $('#login-roster');
   roster.innerHTML = loginRosterMarkup();
+  paintAvatars(roster);
   const form = $('#login-form');
   const msg = $('#login-msg');
   form.addEventListener('submit', async (e) => {
@@ -73,7 +66,7 @@ function renderSlots() {
     const cls = CLASSES[c.classId];
     const grade = S.luckGrade(c);
     html.push(`<button class="slot-card ${c.id === state.selectedId ? 'selected' : ''}" data-id="${c.id}">
-      <img class="portrait" src="${artUrl(portrait(heroKey(c.classId, c.gender)))}" alt="">
+      <canvas class="avatar" data-class="${c.classId}" data-weapon="${c.equipment?.weapon || ''}" data-armor="${c.equipment?.armor || ''}"></canvas>
       <div class="slot-name">${esc(c.name)}</div>
       <div class="slot-class" style="color:${cls.color}">${cls.name}</div>
       <div>Lv.${c.level}</div>
@@ -82,6 +75,7 @@ function renderSlots() {
     </button>`);
   }
   $('#char-slots').innerHTML = html.join('');
+  paintAvatars($('#char-slots'));
   $('#btn-start').disabled = !state.selectedId;
   $('#btn-delete').disabled = !state.selectedId;
 }
@@ -119,7 +113,6 @@ function openCreate() {
 
 function selectClass(classId) {
   state.create.classId = classId;
-  state.create.gender = CLASSES[classId].defaultGender;
   state.create.stats = { ...CLASSES[classId].baseStats };
   renderCreate();
 }
@@ -130,15 +123,13 @@ function renderCreate() {
 
   $('#class-cards').innerHTML = CLASS_ORDER.map((id) => {
     const c = CLASSES[id];
-    const g = id === classId ? state.create.gender : c.defaultGender;
     return `<button class="class-card ${id === classId ? 'selected' : ''}" data-class="${id}" style="--c:${c.color}">
-      <img class="portrait" src="${artUrl(portrait(heroKey(id, g)))}" alt=""><b>${c.name}</b><small>${c.role}</small></button>`;
+      <canvas class="avatar" data-class="${id}" data-weapon="${c.startEquipment.weapon}"></canvas><b>${c.name}</b><small>${c.role}</small></button>`;
   }).join('') + '<div class="class-card disabled"><div class="avatar"></div><b>???</b><small>추후 출시</small></div>';
+  paintAvatars($('#class-cards'));
 
   const firstSkill = SKILLS[S.firstSkillId(classId)];
   $('#class-info').innerHTML = `
-    <div class="gender-pick">${['m', 'f'].map((g) => `<button data-gender="${g}" class="${state.create.gender === g ? 'selected' : ''}">
-      <img class="portrait" src="${artUrl(portrait(heroKey(classId, g)))}" alt=""><br>${GENDER_NAMES[g]}</button>`).join('')}</div>
     <p>${cls.description}</p>
     <table>
       <tr><td>주스탯</td><td>${STAT_NAMES[cls.primaryStat]}</td></tr>
@@ -175,10 +166,6 @@ function initCreate() {
   $('#class-cards').addEventListener('click', (e) => {
     const b = e.target.closest('[data-class]');
     if (b) selectClass(b.dataset.class);
-  });
-  $('#class-info').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-gender]');
-    if (b) { state.create.gender = b.dataset.gender; renderCreate(); }
   });
   $('#stat-alloc').addEventListener('click', (e) => {
     const b = e.target.closest('button');

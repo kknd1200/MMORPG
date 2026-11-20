@@ -136,7 +136,7 @@ test('배치된 몬스터 전부: 드롭 아이템 존재, 필수 수치 양수,
 
 // ---------------------------------------------------------------- 캐릭터 · 스킬 그림
 import { BASIC_FX, STATUS_FX, LEVELUP_FX } from '../js/data/skills.js';
-import { heroKey } from '../js/data/classes.js';
+import { LOOKS } from '../js/game/sprites.js';
 
 const asset = (p) => fs.existsSync(new URL(`../assets/${p}`, import.meta.url));
 
@@ -158,22 +158,17 @@ test('직업마다 스킬 8개, 레벨 1 스킬이 있고 이펙트 · 아이콘
   for (const f of [...Object.values(STATUS_FX), LEVELUP_FX]) assert.ok(asset(`skills/${f.sheet}.webp`), f.sheet);
 });
 
-test('직업 · 성별마다 캐릭터 그림(공격 6 + 스킬 6)과 초상화가 있음', () => {
-  for (const id of CLASS_ORDER) for (const g of ['m', 'f']) {
-    const key = heroKey(id, g);
-    for (let i = 1; i <= 6; i++) {
-      assert.ok(asset(`heroes/${key}/attack-${i}.webp`), `${key} attack-${i}`);
-      assert.ok(asset(`heroes/${key}/skill-${i}.webp`), `${key} skill-${i}`);
-    }
-    assert.ok(asset(`portraits/${key}.webp`), `${key} 초상화`);
+test('모든 직업(용병 전용 포함)이 원래 캐릭터 렌더러의 외형을 가짐', () => {
+  for (const id of Object.keys(CLASSES)) {
+    const look = LOOKS[id];
+    assert.ok(look, `${id} 외형`);
+    assert.ok(['sword', 'bow', 'staff', 'mace', 'axe'].includes(look.weapon), `${id} 무기 ${look.weapon}`);
   }
 });
 
-test('새 캐릭터: 성별 저장, 첫 단축칸은 Lv.1 스킬', () => {
-  const c = S.createCharacter({ id: 'g', name: '성별', classId: 'knight', stats: alloc('knight', { con: 6 }), gender: 'f' });
-  assert.equal(c.gender, 'f');
+test('새 캐릭터: 첫 단축칸은 Lv.1 스킬', () => {
+  const c = S.createCharacter({ id: 'g', name: '시험', classId: 'knight', stats: alloc('knight', { con: 6 }) });
   assert.equal(SKILLS[c.hotbar[0].id].level, 1);
-  assert.equal(S.createCharacter({ id: 'h', name: '기본', classId: 'elf', stats: alloc('elf', { con: 6 }) }).gender, 'f');
 });
 
 test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 오를수록 HP·공격·경험치 상승', async () => {
