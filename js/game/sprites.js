@@ -99,6 +99,14 @@ export const LOOKS = {
     legs: '#cfc6b0', boots: '#6a5236', arms: '#ece6d6',
     weapon: 'mace',
   },
+  // 용병 전용 전사: 가죽 갑옷 + 양손 도끼
+  warrior: {
+    skin: '#d9a880', hair: '#7a3a1e', hairStyle: 'short',
+    helm: 'none',
+    cape: '#5a2a18', torso: '#7a5434', tabard: '#8a2e1c', trim: '#b08a4a',
+    legs: '#4a3a2a', boots: '#3a2a1c', arms: '#d9a880',
+    weapon: 'axe',
+  },
 };
 
 // 갑옷 아이템별 몸통 색 (직업 기본 외형 위에 덮어씀)
@@ -434,6 +442,25 @@ function drawWeapon(ctx, look, s, hand, attack, turn, back) {
       const aa = a + i * (TAU / 4);
       ctx.fillRect(tx + Math.cos(aa) * 4.5 - 1, ty + Math.sin(aa) * 4.5 - 1, 2, 2);
     }
+  } else if (look.weapon === 'axe') {
+    const a = swingAngle(attack, -1.2);
+    const L = 17;
+    const tx = x + Math.cos(a) * L, ty = y + Math.sin(a) * L;
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth = 3.8;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.strokeStyle = '#7a5a36'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke();
+    // 도끼날: 자루 끝에서 앞쪽(+x 회전 방향)으로 반달 모양
+    const px = -Math.sin(a), py = Math.cos(a), ux = Math.cos(a), uy = Math.sin(a);
+    ctx.beginPath();
+    ctx.moveTo(tx - ux * 6, ty - uy * 6);
+    ctx.quadraticCurveTo(tx + px * 9 - ux * 3, ty + py * 9 - uy * 3, tx + px * 2 + ux * 2, ty + py * 2 + uy * 2);
+    ctx.closePath();
+    outlined(ctx, hgrad(ctx, color, tx - 5, tx + 5), 1);
+    if (attack > 0 && attack < 0.65) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(x, y, L - 2, -2.3, a); ctx.stroke();
+    }
   } else if (look.weapon === 'staff') {
     const lean = attack > 0 ? lerp(0, 0.5, Math.sin((1 - attack) * Math.PI)) : 0;
     const top = { x: x + 3 + lean * 10, y: y - 20 }, bot = { x: x - 1, y: y + 12 };
@@ -523,14 +550,18 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
     ctx.scale(1, 1 - k * 0.6);
   }
   ctx.scale(flip, 1);
-  // 피격 순간: 하얗게 번쩍 (canvas filter 미지원 브라우저에서는 그냥 무시됨)
-  if (m.hurtFlash > 0) ctx.filter = `brightness(${1 + m.hurtFlash / 0.12 * 1.6})`;
-  let h;
-  if (sheet) {
-    h = drawSheetFrame(ctx, sheet, def, m, prog, walk, time);
-  } else {
+  const paint = () => {
+    if (sheet) return drawSheetFrame(ctx, sheet, def, m, prog, walk, time);
     const draw = SHAPES[def.shape || FAMILY_SHAPE[def.family]] || SHAPES.goblin;
-    h = draw({ ctx, r, color: def.color, pal: def.palette || FALLBACK_PAL, walk, atk, time, m, def }) ?? r * 2.4;
+    return draw({ ctx, r, color: def.color, pal: def.palette || FALLBACK_PAL, walk, atk, time, m, def }) ?? r * 2.4;
+  };
+  const h = paint();
+  // 피격 순간: 같은 그림을 '더하기'로 한 번 더 그려 하얗게 번쩍
+  // (canvas filter 는 그래픽 가속이 끊겨 공격할 때마다 렉이 걸려서 쓰지 않음)
+  if (m.hurtFlash > 0) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha *= Math.min(1, m.hurtFlash / 0.12) * 0.85;
+    paint();
   }
   ctx.restore();
   return h;
@@ -539,27 +570,94 @@ export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
 // ---------------------------------------------------------------- 스프라이트 시트 몬스터
 // 시트: 384px 칸, 가로 8포즈(1~4 공격, 5~8 스킬, 대기 = 4번째) × 세로 6마리
 const SHEET_CELL = 384;
+const SHEET_W = SHEET_CELL * 8, SHEET_H = SHEET_CELL * 6; // 8포즈 × 6마리
 const SHEET_BASE = new URL('../../assets/monsters/', import.meta.url);
 const sheets = new Map();
-// 플레이어 키(약 46px)를 몬스터 원본의 "영웅 키 100" 에 맞춤 → 몸 높이(px) = 46 × size
-export const MONSTER_UNIT_PX = 46;
+// 플레이어 키(약 62px, 투구 포함)를 몬스터 원본의 "영웅 키 100" 에 맞춤 → 몸 높이(px) = 58 × size
+export const MONSTER_UNIT_PX = 58;
 
-function sheetImage(name) {
+// 시트 캐시: name → { src, cell, ready, failed, cellPx }
+// 원본 시트(3072×2304, 디코딩 시 약 28MB)를 실제로 그려지는 크기로 한 번만 줄여서 보관 → 메모리·그리기 비용 절감
+function sheetEntry(name, cellPx = SHEET_CELL) {
   let s = sheets.get(name);
-  if (!s) {
+  if (s) return s;
+  s = { src: null, cell: SHEET_CELL, ready: false, failed: false, cellPx: Math.min(SHEET_CELL, Math.max(48, Math.ceil(cellPx))) };
+  sheets.set(name, s);
+  const url = new URL(`${name}.webp`, SHEET_BASE).href;
+  const k = s.cellPx / SHEET_CELL;
+  const done = (src, w) => {
+    if (sheets.get(name) !== s) { src.close?.(); return; } // 불러오는 사이 해제됨
+    s.src = src;
+    s.cell = SHEET_CELL * (w / SHEET_W);
+    s.ready = true;
+  };
+  const viaImage = () => {
     const img = new Image();
-    s = { img, ready: false, failed: false };
-    img.onload = () => { s.ready = true; };
+    img.onload = () => {
+      if (k >= 0.95) { done(img, img.width); return; }
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      const cx = c.getContext('2d');
+      cx.imageSmoothingQuality = 'high';
+      cx.drawImage(img, 0, 0, c.width, c.height);
+      img.src = '';
+      done(c, c.width);
+    };
     img.onerror = () => { s.failed = true; };
-    img.src = new URL(`${name}.webp`, SHEET_BASE).href;
-    sheets.set(name, s);
+    img.src = url;
+  };
+  // 가능하면 디코딩·축소를 메인 스레드 밖에서 (사냥터에 들어설 때 끊김 방지)
+  if (typeof createImageBitmap === 'function' && typeof fetch === 'function' && k < 0.95) {
+    fetch(url)
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then((b) => createImageBitmap(b, {
+        resizeWidth: Math.round(SHEET_W * k), resizeHeight: Math.round(SHEET_H * k), resizeQuality: 'high',
+      }))
+      .then((bmp) => done(bmp, bmp.width))
+      .catch(() => { if (sheets.get(name) === s && !s.ready) viaImage(); });
+  } else {
+    viaImage();
   }
-  return s.ready ? s.img : null; // 로딩 전에는 도형 그림으로 대신 그림
+  return s;
 }
 
-export function preloadSheets(names) { for (const n of names) sheetImage(n); }
+function sheetImage(name) {
+  const s = sheetEntry(name);
+  return s.ready ? s : null; // 로딩 전에는 도형 그림으로 대신 그림
+}
 
-function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
+/** 시트를 미리 불러옴. cellPx = 화면에 그려질 한 칸의 최대 크기(px) */
+export function loadSheet(name, cellPx) { sheetEntry(name, cellPx); }
+
+/** 시트 메모리 해제 (다시 필요하면 자동으로 다시 불러옴) */
+export function releaseSheet(name) {
+  const s = sheets.get(name);
+  if (!s) return;
+  sheets.delete(name);
+  s.src?.close?.();
+  if (s.src && 'src' in s.src) s.src.src = '';
+  s.src = null;
+}
+
+export function sheetStats() {
+  let loaded = 0, bytes = 0;
+  for (const s of sheets.values()) {
+    if (!s.ready) continue;
+    loaded++;
+    bytes += (s.src.width || 0) * (s.src.height || 0) * 4;
+  }
+  return { loaded, total: sheets.size, mb: bytes / 1048576 };
+}
+
+/** def 몬스터가 화면에 그려질 때 시트 한 칸의 크기(px) */
+export function sheetCellPx(def) {
+  return SHEET_CELL * (MONSTER_UNIT_PX * def.size) / def.art.bodyHeight;
+}
+
+export function preloadSheets(names) { for (const n of names) sheetEntry(n); }
+
+function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   const a = def.art;
   let col = 3; // 대기
   if (m.attackAnim > 0) col = (m.animKind === 'skill' ? 4 : 0) + Math.min(3, Math.floor(prog * 4));
@@ -573,21 +671,26 @@ function drawSheetFrame(ctx, img, def, m, prog, walk, time) {
   const settle = floating ? 0 : (1 - Math.cos((m.walkPhase || 0) * 2)) * Math.min(0.35, bodyPx * 0.008) * weight;
   ctx.save();
   ctx.translate(0, -float - settle);
-  ctx.imageSmoothingEnabled = false;
-  const sx = col * SHEET_CELL, sy = a.row * SHEET_CELL;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  // 시트는 화면 크기에 맞춰 줄여 두었으므로 원본 좌표 × k 로 잘라 옴
+  const img = sheet.src, c = sheet.cell, k = c / SHEET_CELL;
+  const sx = col * c, sy = a.row * c;
   const dx = -a.centerX * s, dy = -a.footY * s;
   if (m.attackAnim > 0 || m.dead || weight < 0.01 || floating) {
-    ctx.drawImage(img, sx, sy, SHEET_CELL, SHEET_CELL, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
+    ctx.drawImage(img, sx, sy, c, c, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
   } else {
-    // A connected lower-body mesh: upper body stays still, lower contours flex smoothly.
+    // 상체는 그대로, 하체만 띠 단위로 살짝 앞뒤로 휘어 걷는 느낌 (통째로 튀지 않음)
     const soft = ['slime', 'serpent', 'plant'].includes(family);
     const cut = Math.max(0, Math.floor(a.footY - a.bodyHeight * (soft ? 0.38 : family === 'quadruped' ? 0.25 : 0.3)));
-    ctx.drawImage(img, sx, sy, SHEET_CELL, cut, dx, dy, SHEET_CELL * s, cut * s);
+    const cutK = Math.floor(cut * k);
+    ctx.drawImage(img, sx, sy, c, cutK, dx, dy, SHEET_CELL * s, cutK / k * s);
     const stride = Math.min(soft ? 1.3 : 2, bodyPx * (soft ? 0.025 : 0.035)) * weight;
-    for (let row = cut; row < SHEET_CELL; row += 3) {
-      const h = Math.min(3, SHEET_CELL - row), t = Math.max(0, Math.min(1, (row - cut) / Math.max(1, a.footY - cut)));
+    const band = Math.max(1, Math.round(3 * k));
+    for (let row = cutK; row < c; row += band) {
+      const h = Math.min(band, c - row), t = Math.max(0, Math.min(1, (row / k - cut) / Math.max(1, a.footY - cut)));
       const offset = Math.sin((m.walkPhase || 0) + (soft ? t * 2 : 0)) * Math.sin(t * Math.PI * (soft ? 1 : 0.85)) * stride;
-      ctx.drawImage(img, sx, sy + row, SHEET_CELL, h, dx + offset, dy + row * s, SHEET_CELL * s, h * s + 0.1);
+      ctx.drawImage(img, sx, sy + row, c, h, dx + offset, dy + row / k * s, SHEET_CELL * s, h / k * s + 0.3);
     }
   }
   ctx.restore();
@@ -739,7 +842,6 @@ const SHAPES = {
     const top = -r * 2.6 + fl;
     ctx.save();
     ctx.globalAlpha *= 0.85;
-    ctx.shadowColor = pal.glow; ctx.shadowBlur = 14;
     ctx.beginPath();
     ctx.moveTo(-r * 0.9, top + r * 0.9);
     ctx.quadraticCurveTo(-r * 0.9, top, 0, top);

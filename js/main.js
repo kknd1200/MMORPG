@@ -128,7 +128,7 @@ function renderCreate() {
   }).join('') + '<div class="class-card disabled"><div class="avatar"></div><b>???</b><small>추후 출시</small></div>';
   paintAvatars($('#class-cards'));
 
-  const firstSkill = SKILLS[cls.skills[0]];
+  const firstSkill = SKILLS[S.firstSkillId(classId)];
   $('#class-info').innerHTML = `
     <p>${cls.description}</p>
     <table>

@@ -1,7 +1,8 @@
 // 몬스터 · 사냥터 정의
 //
 // 몬스터 원본(이름 · 등급 · 공격방식 · 스킬 · 패시브 · 그림)은 rebirth-roster.js (「환생 루프」 300종)
-// 여기서는 그중 필드에 배치할 지역을 고르고, 실시간 사냥에 맞는 수치(레벨 · HP · 공격력 ...)를 계산합니다.
+// 여기서는 배치되는 맵(필드 · 던전 층)의 레벨에 맞춰 실시간 사냥용 수치(HP · 공격력 ...)를 계산합니다.
+// 어느 맵에 어떤 몬스터가 나오는지는 maps.js 가 정합니다.
 //
 // 몬스터 필드
 //   level, hp, atk, armor(물리 피해 감소 = 값/2), mr(마법 저항 비율), eva(회피)
@@ -13,12 +14,6 @@
 //   art: 스프라이트 시트 정보, size: 그림 크기 배율, color: 대표색
 import { ROSTER } from './rebirth-roster.js';
 import { monsterBase } from '../systems/balance.js';
-
-// ---------------------------------------------------------------- 필드 사냥터 (지역 50곳 = 몬스터 300종 전부)
-// 순서 = 난이도 순 (마을에서 가까운 칸부터 배치). 같은 단계(1~10)의 다섯 던전을 묶어서 차례로
-const DUNGEON_ORDER = ['gear', 'str', 'agi', 'int', 'vit'];
-export const FIELD_REGIONS = [];
-for (let t = 1; t <= 10; t++) for (const d of DUNGEON_ORDER) FIELD_REGIONS.push(`${d}-${String(t).padStart(2, '0')}`);
 
 // 지역 테마 → 지형 (world.js 의 BIOMES)
 export const THEME_BIOME = {
@@ -39,9 +34,6 @@ export const THEME_BIOME = {
   '푸른 재생림': 'forest', '장수의 심층': 'darkforest',
 };
 
-// 사냥터 레벨: 첫 곳 Lv.1, 마지막 곳 Lv.96 사이를 고르게 나눔. 일반 몬스터는 최저 레벨 ~ +2, 네임드/보스는 +3
-export const LEVEL_SPAN = 3;
-export const zoneMinLevel = (zi, count = FIELD_REGIONS.length) => 1 + Math.round(zi * 95 / Math.max(1, count - 1));
 
 // ---------------------------------------------------------------- 레벨 → 수치
 // 같은 레벨 "평범한 플레이어" 기준으로 역산 (js/systems/balance.js 의 TARGET 에서 조정)
@@ -99,18 +91,15 @@ function hash01(s) {
   return ((h >>> 0) % 10000) / 10000;
 }
 
-function buildMonster(src, zoneIndex) {
-  const rank = RANK[src.rank] || RANK.normal;
+function buildMonster(src, level, rankId) {
+  const rank = RANK[rankId] || RANK.normal;
   const fam = FAMILY[src.family] || FAMILY.biped;
-  const slot = src.art.row; // 0~4 일반, 5 네임드
-  const minLv = zoneMinLevel(zoneIndex);
-  const level = src.rank === 'normal' ? minLv + (slot % 3) : minLv + LEVEL_SPAN;
   const b = baseStats(level);
   const r = hash01(src.id);
   const ranged = src.style === 'ranged', magic = src.style === 'magic';
-  const named = src.rank !== 'normal';
+  const named = rankId !== 'normal';
   return {
-    id: src.id, name: src.name, rank: src.rank, style: src.style, family: src.family,
+    rosterId: src.id, name: src.name, rank: rankId, style: src.style, family: src.family,
     level,
     hp: Math.round(b.hp * rank.hp * (0.9 + r * 0.2)),
     atk: Math.max(2, Math.round(b.atk * rank.atk * (ranged || magic ? 0.85 : 1))),
@@ -119,8 +108,8 @@ function buildMonster(src, zoneIndex) {
     eva: fam.eva,
     exp: Math.round(b.exp * rank.exp),
     gold: [Math.round(b.gold[0] * rank.gold), Math.round(b.gold[1] * rank.gold)],
-    // 첫 사냥터는 비선공, 이후는 대부분 선공. 네임드는 항상 선공
-    aggressive: named || (zoneIndex > 0 && r > 0.25),
+    // Lv.5 미만 사냥터는 비선공, 이후는 대부분 선공. 네임드는 항상 선공
+    aggressive: named || (level >= 5 && r > 0.25),
     social: !named && ['quadruped', 'biped', 'winged', 'spider'].includes(src.family) && r < 0.55,
     speed: fam.speed * (named ? 1.05 : 1),
     attackRange: ranged ? 5.5 : magic ? 4.5 : named ? 1.35 : 1.1,
@@ -130,36 +119,22 @@ function buildMonster(src, zoneIndex) {
     skillCooldown: 6 + src.interval,
     active: src.active,
     passive: src.passive,
-    boss: src.rank === 'boss' ? { slam: { interval: 8, windup: 1.1, radius: 2.4, mult: 1.8 } } : null,
+    boss: rankId === 'boss' ? { slam: { interval: 8, windup: 1.1, radius: 2.4, mult: 1.8 } } : null,
     size: Math.max(0.3, src.scale) * rank.size,
     color: src.color,
     art: src.art,
-    zoneIndex,
-    drops: dropsFor(level, src.rank, src.style),
+    drops: dropsFor(level, rankId, src.style),
   };
 }
 
 export const MONSTERS = {};
-export const SPAWN_ZONES = [];
 
-FIELD_REGIONS.forEach((key, zi) => {
-  const [dungeon, n] = key.split('-');
-  const mobs = ROSTER.filter((m) => m.dungeon === dungeon && m.tier === Number(n)).sort((a, b) => a.art.row - b.art.row);
-  if (mobs.length !== 6) throw new Error(`${key}: 몬스터 6종이 아님`);
-  for (const m of mobs) MONSTERS[m.id] = buildMonster(m, zi);
-  const normals = mobs.filter((m) => m.rank === 'normal');
-  const named = mobs.find((m) => m.rank !== 'normal');
-  const minLv = zoneMinLevel(zi);
-  SPAWN_ZONES.push({
-    id: key,
-    index: zi,
-    theme: mobs[0].theme,
-    biome: THEME_BIOME[mobs[0].theme] || 'forest',
-    name: `${mobs[0].theme} (Lv.${minLv}~${minLv + LEVEL_SPAN})`,
-    minLevel: minLv,
-    rect: null, // world.js 가 맵을 만들며 채움
-    monsters: normals.map((m) => [m.id, 1 / normals.length]),
-    max: 15,
-    boss: named ? { type: named.id, respawn: (RANK[named.rank] || RANK.guard).respawn } : null,
-  });
-});
+/**
+ * 맵에 배치할 몬스터를 등록하고 id 를 돌려줌. 같은 원본 몬스터도 맵마다 레벨이 달라서 따로 등록됩니다.
+ * mapId: 맵 id, src: ROSTER 항목, level: 레벨, rank: 'normal' | 'guard' | 'boss' (생략 시 원본 등급)
+ */
+export function defineMonster(mapId, src, level, rank = src.rank) {
+  const id = `${mapId}/${src.id}`;
+  MONSTERS[id] = { id, ...buildMonster(src, level, rank) };
+  return id;
+}

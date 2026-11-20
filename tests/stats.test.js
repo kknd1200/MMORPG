@@ -110,9 +110,9 @@ test('경험치 획득 시 연속 레벨업', () => {
 
 // ---------------------------------------------------------------- 몬스터 데이터
 import fs from 'node:fs';
-import { MONSTERS, SPAWN_ZONES, FIELD_REGIONS } from '../js/data/monsters.js';
+import { MONSTERS } from '../js/data/monsters.js';
+import '../js/data/maps.js'; // 맵에 배치하면서 몬스터가 등록됨
 import { ROSTER } from '../js/data/rebirth-roster.js';
-import { World } from '../js/game/world.js';
 
 test('원본 몬스터 300종: 그림 시트 파일 존재, 시트 안 행 번호 0~5', () => {
   assert.equal(ROSTER.length, 300);
@@ -122,40 +122,53 @@ test('원본 몬스터 300종: 그림 시트 파일 존재, 시트 안 행 번�
   }
 });
 
-test('필드 몬스터 300종 전부: 드롭 아이템 존재, 필수 수치 양수', () => {
-  assert.equal(Object.keys(MONSTERS).length, FIELD_REGIONS.length * 6);
+test('배치된 몬스터 전부: 드롭 아이템 존재, 필수 수치 양수, 레벨 1~99', () => {
+  assert.ok(Object.keys(MONSTERS).length > 300);
   for (const [id, m] of Object.entries(MONSTERS)) {
     for (const k of ['level', 'hp', 'atk', 'exp', 'speed', 'attackRange', 'attackInterval', 'size']) {
       assert.ok(m[k] > 0, `${id}.${k}`);
     }
+    assert.ok(m.level <= 99, `${id} 레벨 ${m.level}`);
     for (const d of m.drops || []) assert.ok(ITEMS[d.item], `${id} 드롭 ${d.item} 없음`);
     if (m.projectile) assert.ok(m.attackRange > 2, `${id}: 원거리인데 사거리가 짧음`);
   }
 });
 
-test('사냥터 50곳: 가중치 합 1, 일반 5종 + 네임드/보스 1종, 뒤로 갈수록 레벨 상승', () => {
-  assert.equal(SPAWN_ZONES.length, 50);
-  assert.equal(Object.keys(MONSTERS).length, ROSTER.length);
-  let prev = 0;
-  for (const z of SPAWN_ZONES) {
-    const sum = z.monsters.reduce((a, [, w]) => a + w, 0);
-    assert.ok(Math.abs(sum - 1) < 1e-9, `${z.id} 가중치 합 ${sum}`);
-    assert.equal(z.monsters.length, 5, z.id);
-    for (const [t] of z.monsters) assert.equal(MONSTERS[t]?.rank, 'normal', `${z.id}: ${t}`);
-    assert.ok(['guard', 'boss'].includes(MONSTERS[z.boss.type].rank), `${z.id} 네임드`);
-    assert.ok(z.minLevel > prev, `${z.id} 레벨 순서`);
-    prev = z.minLevel;
+// ---------------------------------------------------------------- 캐릭터 · 스킬 그림
+import { BASIC_FX, STATUS_FX, LEVELUP_FX } from '../js/data/skills.js';
+import { LOOKS } from '../js/game/sprites.js';
+
+const asset = (p) => fs.existsSync(new URL(`../assets/${p}`, import.meta.url));
+
+test('직업마다 스킬 8개, 레벨 1 스킬이 있고 이펙트 · 아이콘 · 날아가는 그림 파일이 모두 있음', () => {
+  for (const id of CLASS_ORDER) {
+    const cls = CLASSES[id];
+    assert.equal(cls.skills.length, 8, id);
+    assert.ok(cls.skills.some((s) => SKILLS[s].level === 1), `${id}: Lv.1 스킬 없음`);
+    for (const sid of cls.skills) {
+      const sk = SKILLS[sid];
+      assert.ok(sk, sid);
+      assert.equal(sk.classId, id, sid);
+      assert.ok(asset(`skills/${sk.fx.sheet}.webp`), `${sid} 이펙트`);
+      assert.ok(asset(`skills/${sk.fx.sheet}-icon.webp`), `${sid} 아이콘`);
+      if (sk.proj) assert.ok(asset(`skills/${sk.proj}.webp`), `${sid} 날아가는 그림`);
+    }
+    assert.ok(asset(`skills/${BASIC_FX[id].sheet}.webp`), `${id} 기본공격 이펙트`);
+  }
+  for (const f of [...Object.values(STATUS_FX), LEVELUP_FX]) assert.ok(asset(`skills/${f.sheet}.webp`), f.sheet);
+});
+
+test('모든 직업(용병 전용 포함)이 원래 캐릭터 렌더러의 외형을 가짐', () => {
+  for (const id of Object.keys(CLASSES)) {
+    const look = LOOKS[id];
+    assert.ok(look, `${id} 외형`);
+    assert.ok(['sword', 'bow', 'staff', 'mace', 'axe'].includes(look.weapon), `${id} 무기 ${look.weapon}`);
   }
 });
 
-test('월드: 모든 사냥터에 자리가 있고 마을에서 걸어서 닿음', () => {
-  const w = new World();
-  for (const z of SPAWN_ZONES) {
-    assert.ok(z.rect, `${z.id} 위치 없음`);
-    const c = w.findOpenTileIn(z.rect);
-    assert.ok(c, `${z.id}: 빈 자리 없음`);
-    assert.ok(w.findPath(w.spawn.x, w.spawn.y, c.x, c.y, 400000), `${z.id}: 길 없음`);
-  }
+test('새 캐릭터: 첫 단축칸은 Lv.1 스킬', () => {
+  const c = S.createCharacter({ id: 'g', name: '시험', classId: 'knight', stats: alloc('knight', { con: 6 }) });
+  assert.equal(SKILLS[c.hotbar[0].id].level, 1);
 });
 
 test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 오를수록 HP·공격·경험치 상승', async () => {

@@ -6,7 +6,17 @@ import { LOOKS, drawHumanoid } from '../game/sprites.js';
 export const PORTRAIT_LAYOUT = Object.freeze({
   card: Object.freeze({ width: 44, height: 64, scale: 1, footY: 59 }),
   login: Object.freeze({ width: 96, height: 132, scale: 2, footY: 114 }),
+  // 게임 HUD: 상태창 · 파티 창 · 용병 고용 (상반신 위주로 크게)
+  hud: Object.freeze({ width: 62, height: 62, scale: 1.25, footY: 78 }),
+  frame: Object.freeze({ width: 36, height: 36, scale: 0.8, footY: 50 }),
+  tab: Object.freeze({ width: 26, height: 26, scale: 0.6, footY: 37 }),
 });
+
+/** 캐릭터 한 명의 초상화 캔버스 (그리기는 paintAvatars) */
+export function avatarMarkup(ch, layout = 'card', cls = '') {
+  const eq = ch.equipment || {};
+  return `<canvas class="avatar ${cls}" data-portrait="${layout}" data-class="${ch.classId}" data-weapon="${eq.weapon || ''}" data-armor="${eq.armor || ''}" role="img" aria-label=""></canvas>`;
+}
 
 export function loginRosterMarkup() {
   return CLASS_ORDER.map((id) => {
