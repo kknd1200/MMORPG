@@ -201,26 +201,6 @@
       "sha256": "b9ad0b3b341a35f286e83b50088cfc3fb9554e1c46eae98f40db81959185548a"
     },
     {
-      "file": "heroes/knight-walk.webp",
-      "sha256": "fd485634c88a4e460a9947c315125efc0065e52afd82db5dce7ec97bf37e72bd"
-    },
-    {
-      "file": "heroes/mage-walk.webp",
-      "sha256": "06c3747cfa91bb636f7ebae6d0e5aa8e4000d54992b1b01b96b8c16f4e47775b"
-    },
-    {
-      "file": "heroes/priest-walk.webp",
-      "sha256": "c8f42fa3382d47bc425fc39a2d981da00e8a26d587c2468984355c6c19bb5530"
-    },
-    {
-      "file": "heroes/walk-qc.json",
-      "sha256": "c03de3796b6cf9c8ef0fdde94c080b499fe58bb2bea5d7ea90a04f9b2d120657"
-    },
-    {
-      "file": "heroes/elf-walk.webp",
-      "sha256": "230d68532c607be6b78c4e84e308e1efc0ad5e0b64be8a8a9975c08e53a69fb2"
-    },
-    {
       "file": "portraits/mage_male.webp",
       "sha256": "13ce88b782de7895cb7963746530b6bc1551ed582951a8f3c282357a325f8227"
     },
@@ -1677,6 +1657,6 @@
       "sha256": "9a3c599358354d073e0bdfca17a4120ac870ab14444f208e165a2d771c5386bf"
     }
   ],
-  "count": 419,
+  "count": 414,
   "allOriginalBytesPreserved": true
 }

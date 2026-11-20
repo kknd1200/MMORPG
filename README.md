@@ -159,7 +159,6 @@ npm test         # 성장/전투 공식 단위 테스트
 - 프레임 규격(`assets/animations.json` → `js/data/hero-anim.js`): 공격 6장 0.66초 · 4번째 장에서 타격, 스킬 시전 6장 0.8초 · 4번째 장에서 발사. 피해 · 화살 · 마법탄이 그 순간에 맞춰 나갑니다.
 - 스킬 이펙트 16장 = 발동(1~4) · 방출(5~8)은 시전자에게, 명중(9~12) · 소멸(13~16)은 맞는 순간 대상에게 재생합니다. 버프 · 주변 범위 스킬은 16장 전체를 시전자에게.
 - 원본 그림 419개는 바뀌지 않았는지 `assets/original-integrity.json`(SHA-256)으로 테스트합니다. `assets/monster-index.json`은 몬스터 300종 시트 위치 목록입니다.
-- `assets/heroes/<직업>-walk.webp`(4방향 × 3장 걷기 시트)도 들어 있지만, 원본 공격 그림과 그림체가 달라 아직 게임에는 쓰지 않습니다.
 - 초상화: `assets/portraits` (캐릭터 선택 · 생성 화면, HUD 왼쪽 위)
 - 스킬 이펙트: `assets/skills/<직업>_<a1~a8|basic>.webp` (96px 칸 4×4 = 16프레임), 아이콘 `*-icon.webp`, 날아가는 화살 · 마법탄 `flight_<arrow|bolt>_<속성>.webp`
 - 상태 아이콘: `assets/ui` (버프 · 디버프 표시)
