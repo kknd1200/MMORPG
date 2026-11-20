@@ -1,3 +1,4 @@
+import { HERO_ACTION, contactTime, releaseTime, FX_PART } from '../data/hero-anim.js';
 import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
@@ -617,12 +618,14 @@ export class Game {
     const ch = u.char, e = u.ent;
     const stat = ch.stats[this.clsOf(u).primaryStat];
     const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
-    e.attackAnim = 0.3;
+    // 원본 공격 6장: 4번째 장(타격 프레임)에 맞거나, 활 · 마법이면 그때 날아감
+    e.attackAnim = HERO_ACTION.attack.dur;
     this.face(e, m);
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
-    const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj) : 0.08;
+    const contact = contactTime();
+    const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj, contact) : contact;
     if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m, u); return; }
-    this.fx(bfx, m, delay, this.leftOf(e, m));
+    this.fx(bfx, m, delay, this.leftOf(e, m), 'hit');
     this.damageMonster(m, S.normalDamage(this.derived(u).attack, m.armor), u.isLeader ? '#ffffff' : '#d8e8ff', delay, u);
   }
 
@@ -685,9 +688,12 @@ export class Game {
     this.face(p, m);
     const stat = ch.stats[sk.stat];
     const atk = this.derived(u).attack;
-    p.attackAnim = 0.35;
-    p.castAnim = 0.4;
+    // 원본 시전 6장: 4번째 장에서 발사. 이펙트는 발동 · 방출(시전자) → 명중 · 소멸(대상)
+    p.attackAnim = 0;
+    p.castAnim = HERO_ACTION.skill.dur;
     this.floatText(p, sk.name, sk.color, 13);
+    const release = releaseTime();
+    this.fx(sk.fx, p, 0, this.leftOf(p, m), 'cast');
     if (sk.dash) {
       // 돌진: 대상 바로 앞까지 순식간에 이동
       const d = dist(p, m) || 1;
@@ -697,7 +703,7 @@ export class Game {
         p.x = tx; p.y = ty; this.clearPath(p);
       }
     }
-    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj) : 0.06;
+    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj, release) : release;
     let targets = [m];
     if (sk.kind === 'aoe_target') {
       targets = this.monsters.filter((o) => !o.dead && dist(o, m) <= sk.radius + o.radius);
@@ -717,16 +723,16 @@ export class Game {
       }
     }
     const flip = this.leftOf(p, m);
-    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay, flip);
+    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay, flip, 'hit');
     targets.forEach((t, k) => {
       let dl = delay;
       if (sk.kind === 'chain' && k > 0) {
         dl = delay + k * 0.12;
         this.addProjectile(targets[k - 1], t, 'sheet', sk.color, sk.proj, dl - 0.12);
       }
-      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
+      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip, 'hit');
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
-        if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
+        if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, release + i * 0.12);
         this.skillHit(sk, t, stat, atk, i, dl, u);
       }
     });
@@ -734,9 +740,14 @@ export class Game {
 
   // 이펙트 시트 재생 (at = 몬스터/플레이어/좌표)
   // flip: 이펙트 그림은 오른쪽을 향해 그려져 있음 → 화면 왼쪽을 향하면 좌우 반전
-  fx(spec, at, delay = 0, flip = false) {
+  // part: 생략하면 16장 전체, 'cast' = 발동 · 방출(1~8장, 시전자), 'hit' = 명중 · 소멸(9~16장, 대상)
+  fx(spec, at, delay = 0, flip = false, part = null) {
     if (!spec?.sheet) return;
-    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip });
+    const ph = part && FX_PART[part];
+    this.effects.push({
+      type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay,
+      life: ph ? ph.dur : (spec.life || 0.6), from: ph ? ph.from : 0, frames: ph ? ph.n : 0, follow: at, flip,
+    });
   }
 
   // a 에서 b 가 화면 왼쪽인지 (아이소메트릭: 화면 x = 월드 x − y)
@@ -760,7 +771,7 @@ export class Game {
   castSelfSkill(sk, u = this.leader) {
     const ch = u.char;
     const p = u.ent;
-    p.castAnim = 0.4;
+    p.castAnim = HERO_ACTION.skill.dur;
     if (sk.kind === 'aoe') {
       this.spend(sk, u);
       this.floatText(p, sk.name, sk.color, 13);
@@ -768,7 +779,7 @@ export class Game {
       const atk = this.derived(u).attack;
       const stat = ch.stats[sk.stat];
       for (const m of this.monsters) {
-        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, 0.12, u);
+        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, releaseTime(), u);
       }
     } else if (sk.kind === 'buff') {
       this.spend(sk, u);

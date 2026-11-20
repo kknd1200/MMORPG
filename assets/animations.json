@@ -1,0 +1,3735 @@
+{
+  "source": "user-provided assets.zip; original image bytes preserved",
+  "heroes": {
+    "archer": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/archer/attack-1.webp",
+          "heroes/archer/attack-2.webp",
+          "heroes/archer/attack-3.webp",
+          "heroes/archer/attack-4.webp",
+          "heroes/archer/attack-5.webp",
+          "heroes/archer/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/archer/skill-1.webp",
+          "heroes/archer/skill-2.webp",
+          "heroes/archer/skill-3.webp",
+          "heroes/archer/skill-4.webp",
+          "heroes/archer/skill-5.webp",
+          "heroes/archer/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "archer_male": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 160,
+      "attack": {
+        "frames": [
+          "heroes/archer_male/attack-1.webp",
+          "heroes/archer_male/attack-2.webp",
+          "heroes/archer_male/attack-3.webp",
+          "heroes/archer_male/attack-4.webp",
+          "heroes/archer_male/attack-5.webp",
+          "heroes/archer_male/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/archer_male/skill-1.webp",
+          "heroes/archer_male/skill-2.webp",
+          "heroes/archer_male/skill-3.webp",
+          "heroes/archer_male/skill-4.webp",
+          "heroes/archer_male/skill-5.webp",
+          "heroes/archer_male/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "knight": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/knight/attack-1.webp",
+          "heroes/knight/attack-2.webp",
+          "heroes/knight/attack-3.webp",
+          "heroes/knight/attack-4.webp",
+          "heroes/knight/attack-5.webp",
+          "heroes/knight/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/knight/skill-1.webp",
+          "heroes/knight/skill-2.webp",
+          "heroes/knight/skill-3.webp",
+          "heroes/knight/skill-4.webp",
+          "heroes/knight/skill-5.webp",
+          "heroes/knight/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "knight_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 148,
+      "attack": {
+        "frames": [
+          "heroes/knight_female/attack-1.webp",
+          "heroes/knight_female/attack-2.webp",
+          "heroes/knight_female/attack-3.webp",
+          "heroes/knight_female/attack-4.webp",
+          "heroes/knight_female/attack-5.webp",
+          "heroes/knight_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/knight_female/skill-1.webp",
+          "heroes/knight_female/skill-2.webp",
+          "heroes/knight_female/skill-3.webp",
+          "heroes/knight_female/skill-4.webp",
+          "heroes/knight_female/skill-5.webp",
+          "heroes/knight_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "mage": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/mage/attack-1.webp",
+          "heroes/mage/attack-2.webp",
+          "heroes/mage/attack-3.webp",
+          "heroes/mage/attack-4.webp",
+          "heroes/mage/attack-5.webp",
+          "heroes/mage/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/mage/skill-1.webp",
+          "heroes/mage/skill-2.webp",
+          "heroes/mage/skill-3.webp",
+          "heroes/mage/skill-4.webp",
+          "heroes/mage/skill-5.webp",
+          "heroes/mage/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "mage_male": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 156,
+      "attack": {
+        "frames": [
+          "heroes/mage_male/attack-1.webp",
+          "heroes/mage_male/attack-2.webp",
+          "heroes/mage_male/attack-3.webp",
+          "heroes/mage_male/attack-4.webp",
+          "heroes/mage_male/attack-5.webp",
+          "heroes/mage_male/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/mage_male/skill-1.webp",
+          "heroes/mage_male/skill-2.webp",
+          "heroes/mage_male/skill-3.webp",
+          "heroes/mage_male/skill-4.webp",
+          "heroes/mage_male/skill-5.webp",
+          "heroes/mage_male/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "monk": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 160,
+      "attack": {
+        "frames": [
+          "heroes/monk/attack-1.webp",
+          "heroes/monk/attack-2.webp",
+          "heroes/monk/attack-3.webp",
+          "heroes/monk/attack-4.webp",
+          "heroes/monk/attack-5.webp",
+          "heroes/monk/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/monk/skill-1.webp",
+          "heroes/monk/skill-2.webp",
+          "heroes/monk/skill-3.webp",
+          "heroes/monk/skill-4.webp",
+          "heroes/monk/skill-5.webp",
+          "heroes/monk/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "monk_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/monk_female/attack-1.webp",
+          "heroes/monk_female/attack-2.webp",
+          "heroes/monk_female/attack-3.webp",
+          "heroes/monk_female/attack-4.webp",
+          "heroes/monk_female/attack-5.webp",
+          "heroes/monk_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/monk_female/skill-1.webp",
+          "heroes/monk_female/skill-2.webp",
+          "heroes/monk_female/skill-3.webp",
+          "heroes/monk_female/skill-4.webp",
+          "heroes/monk_female/skill-5.webp",
+          "heroes/monk_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "novice": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/novice/attack-1.webp",
+          "heroes/novice/attack-2.webp",
+          "heroes/novice/attack-3.webp",
+          "heroes/novice/attack-4.webp",
+          "heroes/novice/attack-5.webp",
+          "heroes/novice/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/novice/skill-1.webp",
+          "heroes/novice/skill-2.webp",
+          "heroes/novice/skill-3.webp",
+          "heroes/novice/skill-4.webp",
+          "heroes/novice/skill-5.webp",
+          "heroes/novice/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "novice_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/novice_female/attack-1.webp",
+          "heroes/novice_female/attack-2.webp",
+          "heroes/novice_female/attack-3.webp",
+          "heroes/novice_female/attack-4.webp",
+          "heroes/novice_female/attack-5.webp",
+          "heroes/novice_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/novice_female/skill-1.webp",
+          "heroes/novice_female/skill-2.webp",
+          "heroes/novice_female/skill-3.webp",
+          "heroes/novice_female/skill-4.webp",
+          "heroes/novice_female/skill-5.webp",
+          "heroes/novice_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "paladin": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 156,
+      "attack": {
+        "frames": [
+          "heroes/paladin/attack-1.webp",
+          "heroes/paladin/attack-2.webp",
+          "heroes/paladin/attack-3.webp",
+          "heroes/paladin/attack-4.webp",
+          "heroes/paladin/attack-5.webp",
+          "heroes/paladin/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/paladin/skill-1.webp",
+          "heroes/paladin/skill-2.webp",
+          "heroes/paladin/skill-3.webp",
+          "heroes/paladin/skill-4.webp",
+          "heroes/paladin/skill-5.webp",
+          "heroes/paladin/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "paladin_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/paladin_female/attack-1.webp",
+          "heroes/paladin_female/attack-2.webp",
+          "heroes/paladin_female/attack-3.webp",
+          "heroes/paladin_female/attack-4.webp",
+          "heroes/paladin_female/attack-5.webp",
+          "heroes/paladin_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/paladin_female/skill-1.webp",
+          "heroes/paladin_female/skill-2.webp",
+          "heroes/paladin_female/skill-3.webp",
+          "heroes/paladin_female/skill-4.webp",
+          "heroes/paladin_female/skill-5.webp",
+          "heroes/paladin_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "priest": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/priest/attack-1.webp",
+          "heroes/priest/attack-2.webp",
+          "heroes/priest/attack-3.webp",
+          "heroes/priest/attack-4.webp",
+          "heroes/priest/attack-5.webp",
+          "heroes/priest/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/priest/skill-1.webp",
+          "heroes/priest/skill-2.webp",
+          "heroes/priest/skill-3.webp",
+          "heroes/priest/skill-4.webp",
+          "heroes/priest/skill-5.webp",
+          "heroes/priest/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "priest_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/priest_female/attack-1.webp",
+          "heroes/priest_female/attack-2.webp",
+          "heroes/priest_female/attack-3.webp",
+          "heroes/priest_female/attack-4.webp",
+          "heroes/priest_female/attack-5.webp",
+          "heroes/priest_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/priest_female/skill-1.webp",
+          "heroes/priest_female/skill-2.webp",
+          "heroes/priest_female/skill-3.webp",
+          "heroes/priest_female/skill-4.webp",
+          "heroes/priest_female/skill-5.webp",
+          "heroes/priest_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "spellsword": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/spellsword/attack-1.webp",
+          "heroes/spellsword/attack-2.webp",
+          "heroes/spellsword/attack-3.webp",
+          "heroes/spellsword/attack-4.webp",
+          "heroes/spellsword/attack-5.webp",
+          "heroes/spellsword/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/spellsword/skill-1.webp",
+          "heroes/spellsword/skill-2.webp",
+          "heroes/spellsword/skill-3.webp",
+          "heroes/spellsword/skill-4.webp",
+          "heroes/spellsword/skill-5.webp",
+          "heroes/spellsword/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "spellsword_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/spellsword_female/attack-1.webp",
+          "heroes/spellsword_female/attack-2.webp",
+          "heroes/spellsword_female/attack-3.webp",
+          "heroes/spellsword_female/attack-4.webp",
+          "heroes/spellsword_female/attack-5.webp",
+          "heroes/spellsword_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/spellsword_female/skill-1.webp",
+          "heroes/spellsword_female/skill-2.webp",
+          "heroes/spellsword_female/skill-3.webp",
+          "heroes/spellsword_female/skill-4.webp",
+          "heroes/spellsword_female/skill-5.webp",
+          "heroes/spellsword_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "warrior": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/warrior/attack-1.webp",
+          "heroes/warrior/attack-2.webp",
+          "heroes/warrior/attack-3.webp",
+          "heroes/warrior/attack-4.webp",
+          "heroes/warrior/attack-5.webp",
+          "heroes/warrior/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/warrior/skill-1.webp",
+          "heroes/warrior/skill-2.webp",
+          "heroes/warrior/skill-3.webp",
+          "heroes/warrior/skill-4.webp",
+          "heroes/warrior/skill-5.webp",
+          "heroes/warrior/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    },
+    "warrior_female": {
+      "cell": 256,
+      "anchor": [
+        128,
+        236
+      ],
+      "bodyHeight": 152,
+      "attack": {
+        "frames": [
+          "heroes/warrior_female/attack-1.webp",
+          "heroes/warrior_female/attack-2.webp",
+          "heroes/warrior_female/attack-3.webp",
+          "heroes/warrior_female/attack-4.webp",
+          "heroes/warrior_female/attack-5.webp",
+          "heroes/warrior_female/attack-6.webp"
+        ],
+        "durationMs": 660,
+        "contactFrame": 3
+      },
+      "skill": {
+        "frames": [
+          "heroes/warrior_female/skill-1.webp",
+          "heroes/warrior_female/skill-2.webp",
+          "heroes/warrior_female/skill-3.webp",
+          "heroes/warrior_female/skill-4.webp",
+          "heroes/warrior_female/skill-5.webp",
+          "heroes/warrior_female/skill-6.webp"
+        ],
+        "durationMs": 800,
+        "releaseFrame": 3
+      }
+    }
+  },
+  "effects": {
+    "archer_a1": {
+      "image": "skills/archer_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a2": {
+      "image": "skills/archer_a2.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a3": {
+      "image": "skills/archer_a3.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a4": {
+      "image": "skills/archer_a4.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a5": {
+      "image": "skills/archer_a5.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a6": {
+      "image": "skills/archer_a6.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a7": {
+      "image": "skills/archer_a7.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_a8": {
+      "image": "skills/archer_a8.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "archer_basic": {
+      "image": "skills/archer_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a1": {
+      "image": "skills/knight_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a2": {
+      "image": "skills/knight_a2.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a3": {
+      "image": "skills/knight_a3.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a4": {
+      "image": "skills/knight_a4.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a5": {
+      "image": "skills/knight_a5.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a6": {
+      "image": "skills/knight_a6.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a7": {
+      "image": "skills/knight_a7.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_a8": {
+      "image": "skills/knight_a8.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "knight_basic": {
+      "image": "skills/knight_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a1": {
+      "image": "skills/mage_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a2": {
+      "image": "skills/mage_a2.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a3": {
+      "image": "skills/mage_a3.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a4": {
+      "image": "skills/mage_a4.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a5": {
+      "image": "skills/mage_a5.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a6": {
+      "image": "skills/mage_a6.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a7": {
+      "image": "skills/mage_a7.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_a8": {
+      "image": "skills/mage_a8.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "mage_basic": {
+      "image": "skills/mage_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "monk_basic": {
+      "image": "skills/monk_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "novice_a1": {
+      "image": "skills/novice_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "novice_basic": {
+      "image": "skills/novice_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "novice_p1": {
+      "image": "skills/novice_p1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "paladin_basic": {
+      "image": "skills/paladin_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a1": {
+      "image": "skills/priest_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a2": {
+      "image": "skills/priest_a2.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a3": {
+      "image": "skills/priest_a3.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a4": {
+      "image": "skills/priest_a4.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a5": {
+      "image": "skills/priest_a5.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a6": {
+      "image": "skills/priest_a6.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a7": {
+      "image": "skills/priest_a7.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_a8": {
+      "image": "skills/priest_a8.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "priest_basic": {
+      "image": "skills/priest_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "rat_bout": {
+      "image": "skills/rat_bout.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "spellsword_basic": {
+      "image": "skills/spellsword_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a1": {
+      "image": "skills/warrior_a1.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a2": {
+      "image": "skills/warrior_a2.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a3": {
+      "image": "skills/warrior_a3.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a4": {
+      "image": "skills/warrior_a4.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a5": {
+      "image": "skills/warrior_a5.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a6": {
+      "image": "skills/warrior_a6.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a7": {
+      "image": "skills/warrior_a7.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_a8": {
+      "image": "skills/warrior_a8.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "warrior_basic": {
+      "image": "skills/warrior_basic.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    }
+  },
+  "monsters": {
+    "sheets": 50,
+    "speciesPerSheet": 6,
+    "cell": 384,
+    "attackColumns": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "skillColumns": [
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "limitations": [
+    "No new walking poses were drawn; character movement uses the original neutral pose.",
+    "Monster attack and cast use the four distinct original poses per action.",
+    "Only the four existing playable classes are connected to gameplay; all 18 visual variants are included in the gallery."
+  ],
+  "flight": {
+    "flight_arrow_arcane": {
+      "image": "skills/flight_arrow_arcane.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_electric": {
+      "image": "skills/flight_arrow_electric.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_fire": {
+      "image": "skills/flight_arrow_fire.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_holy": {
+      "image": "skills/flight_arrow_holy.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_ice": {
+      "image": "skills/flight_arrow_ice.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_poison": {
+      "image": "skills/flight_arrow_poison.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_steel": {
+      "image": "skills/flight_arrow_steel.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_arrow_wind": {
+      "image": "skills/flight_arrow_wind.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_arcane": {
+      "image": "skills/flight_bolt_arcane.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_electric": {
+      "image": "skills/flight_bolt_electric.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_fire": {
+      "image": "skills/flight_bolt_fire.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_holy": {
+      "image": "skills/flight_bolt_holy.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_ice": {
+      "image": "skills/flight_bolt_ice.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_poison": {
+      "image": "skills/flight_bolt_poison.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_steel": {
+      "image": "skills/flight_bolt_steel.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    },
+    "flight_bolt_wind": {
+      "image": "skills/flight_bolt_wind.webp",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 96,
+      "phases": {
+        "activation": {
+          "frames": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "durationMs": 240
+        },
+        "emission": {
+          "frames": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "durationMs": 180
+        },
+        "impact": {
+          "frames": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "durationMs": 200
+        },
+        "dissipation": {
+          "frames": [
+            12,
+            13,
+            14,
+            15
+          ],
+          "durationMs": 320
+        }
+      }
+    }
+  }
+}

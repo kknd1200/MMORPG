@@ -1,3 +1,4 @@
+import { HERO_BODY } from '../data/hero-anim.js';
 // 사람형 캐릭터 (플레이어 · NPC) — 실제 비율(약 7등신) 다크 판타지 풍
 //
 // 좌표계: (0,0) = 발밑, 위쪽이 -y. 키 약 62px.
@@ -187,7 +188,8 @@ const CLOSE = 0.36;        // 두 다리가 모일 때 각 다리가 안쪽으�
 function drawSprite(ctx, x, y, s) {
   const im = heroFrame(s.sprite, s);
   if (!im) return false;
-  const sc = (HERO_PX / HERO.height) * (s.scale || 1);
+  const bodyH = HERO_BODY[s.sprite] || HERO.height; // 그림마다 원본 키가 달라서 따로 맞춤
+  const sc = (HERO_PX / bodyH) * (s.scale || 1);
   const flip = s.facing && s.facing.x < -0.01 ? -1 : 1;
   const moving = !!s.moving && !s.dead && !(s.attack > 0) && !(s.cast > 0);
   const t = s.time || 0, walk = s.walk || 0;
@@ -207,7 +209,7 @@ function drawSprite(ctx, x, y, s) {
     return true;
   }
   ctx.translate(-fx, -fy); // 이후 좌표는 원본 그림(256px) 기준
-  const legLen = HIP * HERO.height;
+  const legLen = HIP * bodyH;
   const hipY = fy - legLen;
   const sw = Math.sin(walk), cw = Math.cos(walk);
   const together = 1 - Math.abs(cw);               // 0 = 벌림(디딤), 1 = 모음(지나감)

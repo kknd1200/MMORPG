@@ -173,7 +173,7 @@ test('새 캐릭터: 성별 저장, 첫 단축칸은 Lv.1 스킬', () => {
   const c = S.createCharacter({ id: 'g', name: '성별', classId: 'knight', stats: alloc('knight', { con: 6 }), gender: 'f' });
   assert.equal(c.gender, 'f');
   assert.equal(SKILLS[c.hotbar[0].id].level, 1);
-  assert.equal(S.createCharacter({ id: 'h', name: '기본', classId: 'elf', stats: alloc('elf', { con: 6 }) }).gender, 'f');
+  assert.equal(S.createCharacter({ id: 'h', name: '기본', classId: 'elf', stats: alloc('elf', { con: 6 }) }).gender, 'm'); // 기본 외형: 요정 = archer_male
 });
 
 test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 오를수록 HP·공격·경험치 상승', async () => {

@@ -1,0 +1,1682 @@
+{
+  "files": [
+    {
+      "file": "monsters/vit-05.webp",
+      "sha256": "617f9feada6cf90290754faa4b0d9d2f8fbbffd1445332e9e880af6edcf98a1d"
+    },
+    {
+      "file": "monsters/vit-08.webp",
+      "sha256": "1dfee8f1593649ea9a3ef64b0e20cb56951a8b733fb1c35ec786e3a97f89cb41"
+    },
+    {
+      "file": "monsters/vit-03.webp",
+      "sha256": "33064d87af0147bf7c8ab01a158eddc82bc42c728df69c8a9dd4075451c3536c"
+    },
+    {
+      "file": "monsters/int-07.webp",
+      "sha256": "287d63af560d8285c450f5f0bef1af17d34f0a83d1504968f04b2a2bd715c4b7"
+    },
+    {
+      "file": "monsters/str-06.webp",
+      "sha256": "3dc0755c4bf05be22b83ce77be3a5cd8158ceb47d327487fd61947a232a806eb"
+    },
+    {
+      "file": "monsters/str-08.webp",
+      "sha256": "36ac1e0cb892ac9ec52784b684720e1d20356567afcd5bd373d675bf92885332"
+    },
+    {
+      "file": "monsters/str-03.webp",
+      "sha256": "ea9ae13761327ca73f4938dc0fb67de039665973f786ce6707072cd28039e26f"
+    },
+    {
+      "file": "monsters/int-04.webp",
+      "sha256": "6dfaca0b7db632d0d2d5ae58ecb7e0ea0913103b11e584e5da2c33f236eab2fe"
+    },
+    {
+      "file": "monsters/str-05.webp",
+      "sha256": "f9880729018584e0a226be3966611d026a07a960482c1c8c6ebeb4ccc2758c1d"
+    },
+    {
+      "file": "monsters/agi-07.webp",
+      "sha256": "590569351ec355e5f9e8f74ed3bb34162f1b7d4464bb4055c57a692a23695f75"
+    },
+    {
+      "file": "monsters/str-09.webp",
+      "sha256": "e75f57ff3ed74956489c6becdeaf733a1d893700386656795dbc03046acfe8fb"
+    },
+    {
+      "file": "monsters/agi-10.webp",
+      "sha256": "3d8f120ca1b344d4fe5024e009ca22e531225356acd3a3ab494f0eb543401d8c"
+    },
+    {
+      "file": "monsters/int-09.webp",
+      "sha256": "1e2aab0eff3d13a80c3165e45392a0fedd5a0f6a0cf9b4e3ff6d754344771b52"
+    },
+    {
+      "file": "monsters/gear-03.webp",
+      "sha256": "120f3fdec7e0605f43218307e4225cd9e491819c7afb84d42ae5eecc39d21b70"
+    },
+    {
+      "file": "monsters/vit-07.webp",
+      "sha256": "9f6c5e051d9c100faa701dd2079723ba1817d69afe8ba6cfbdb71846300ac870"
+    },
+    {
+      "file": "monsters/vit-01.webp",
+      "sha256": "e0e181067d76e30a58236a8c8a92c0fc96cfcbd25498e05bf63b01cb2d1446c9"
+    },
+    {
+      "file": "monsters/vit-09.webp",
+      "sha256": "07224390a10b1d7a0b8b5d69cf070c707ff76ae0e29231552f1951b8474a6b65"
+    },
+    {
+      "file": "monsters/int-10.webp",
+      "sha256": "b0052a3ef712d46848e9d962eb53e5e6a3e73d5c0828cf14b2fd37c80ac730b9"
+    },
+    {
+      "file": "monsters/gear-01.webp",
+      "sha256": "f85f065d6cfa27b7b2a2d77b89d12a41c5808993f3bb291251e52cd45e311431"
+    },
+    {
+      "file": "monsters/int-01.webp",
+      "sha256": "7dbdaf18c1d06355fc2dfa6918c5fe0f5557d8c48bbcbcb7e32a6438b1faa0d7"
+    },
+    {
+      "file": "monsters/int-06.webp",
+      "sha256": "8446759790180830dfdadfc00294cf57dc53803c193ad5ce6802f0946c7ffb20"
+    },
+    {
+      "file": "monsters/int-02.webp",
+      "sha256": "0a49c1a6f36e0486b95ac7678db198cd8eb839c274e0f74e0b3ba5aac601ee30"
+    },
+    {
+      "file": "monsters/agi-05.webp",
+      "sha256": "3994fc267b09482b68e511339e537b96e14a23ed8f9ca2944242b22e9d0c5970"
+    },
+    {
+      "file": "monsters/str-07.webp",
+      "sha256": "e2f7dcb57a2887526888fb6d4ab4b16479fd8ac00137d6c32b24eee4b8e6d195"
+    },
+    {
+      "file": "monsters/gear-05.webp",
+      "sha256": "fce99639ff70808d0c25c0614760554b9ac76896f2cd2b26404f2deebd6dfca4"
+    },
+    {
+      "file": "monsters/str-01.webp",
+      "sha256": "9d6a47bd98654e786df3aac46e251789b436e1abca43812b51e224492ac4b86b"
+    },
+    {
+      "file": "monsters/gear-02.webp",
+      "sha256": "4bf344329701f4114bd3e199168d0ee3c8bfa8047d9833a9056e3ac017c47411"
+    },
+    {
+      "file": "monsters/int-08.webp",
+      "sha256": "40325fcc7c646a1ceb3ac98b32e8347cf604be9a194e2769ec8fd427b98758d7"
+    },
+    {
+      "file": "monsters/gear-09.webp",
+      "sha256": "155c793b8db712b4391d03e047d87a38b6a37aeb9ef3e7a29e1958ce5ac29041"
+    },
+    {
+      "file": "monsters/agi-09.webp",
+      "sha256": "5d3d0864eb19f069dbcdebe1bb5755e2c2c58d43876e0fc8317c86b3b5bcb586"
+    },
+    {
+      "file": "monsters/gear-10.webp",
+      "sha256": "15012b38e2f751ecc5c5e301d1f0ceed6a95efe28cf387aa5c917fa5837ad1f3"
+    },
+    {
+      "file": "monsters/str-02.webp",
+      "sha256": "ed8571e8592f5658b01af937c9c1ec96e892dd27f15bcee9aff6c3988a793ce0"
+    },
+    {
+      "file": "monsters/int-03.webp",
+      "sha256": "dd2a14c487b6ed90e055966d24fd4ee8a65ec39761c88245b3c38f9b6ef6ea98"
+    },
+    {
+      "file": "monsters/agi-04.webp",
+      "sha256": "424eb3c0441c6563e4e950e6bdcbe345d4d86d69fbb606236c0b0bd6ab55421a"
+    },
+    {
+      "file": "monsters/agi-01.webp",
+      "sha256": "af5aba072f29894aca232befee021122d0be5fd153f5d2ce5cf40ec4567054a0"
+    },
+    {
+      "file": "monsters/vit-06.webp",
+      "sha256": "2dcde281e8760f0aedc897b7402f0d6265f6955e7b91e5f425b4f99dd6a998ad"
+    },
+    {
+      "file": "monsters/gear-07.webp",
+      "sha256": "8044e7c870584d742d1923827a6d600bfd1f27ed9dfda088c5f909b98a2b9de6"
+    },
+    {
+      "file": "monsters/int-05.webp",
+      "sha256": "787ef9e576f401348b7e8011617d07b2a943c9817aecafe319fcabdfe7728c5b"
+    },
+    {
+      "file": "monsters/gear-08.webp",
+      "sha256": "193275d3f2a5b92a13e48418403b9ca467552702b4a58df02709073cb0a8fe64"
+    },
+    {
+      "file": "monsters/agi-03.webp",
+      "sha256": "dd7d9bb25730873f7b7b83f39e9000cda1f9393043e815acd31a6377342e6298"
+    },
+    {
+      "file": "monsters/str-04.webp",
+      "sha256": "e30951a8103b17cf6d9f36b7d030581b74e9b331f65d80114c09837458b12516"
+    },
+    {
+      "file": "monsters/vit-10.webp",
+      "sha256": "57f461d7618298c28ab04c345a752c0505efce409aac8fc731b104221d605abb"
+    },
+    {
+      "file": "monsters/agi-08.webp",
+      "sha256": "a2a9cc0547930c3c3fa09c29a86e1bac88f0fd41daa79786cf5fcb18a594ab18"
+    },
+    {
+      "file": "monsters/gear-06.webp",
+      "sha256": "da51b1a015f3089765cdea3f09e45f4a57384dd7913d8e1e6ccc889c7cfc27ad"
+    },
+    {
+      "file": "monsters/vit-04.webp",
+      "sha256": "70c0e6e675c1a0e44ee0c2e4c6f1911bf236451893a59cb9d5e2fc7862728849"
+    },
+    {
+      "file": "monsters/agi-06.webp",
+      "sha256": "6adfa228fccedbbc08bce1d8527c7f45e3a72112e08eb2650577d5c934e45a1c"
+    },
+    {
+      "file": "monsters/vit-02.webp",
+      "sha256": "2a21afb2dababb207432103d37f87d36965f7a3b8d8abafd28886949fe6bd243"
+    },
+    {
+      "file": "monsters/agi-02.webp",
+      "sha256": "7389a42acc7798a4a4abaa6ab35346545b5c834e50a353a07936a38fdc708d13"
+    },
+    {
+      "file": "monsters/str-10.webp",
+      "sha256": "cb9f3be1d85b33c26832337484a66e89fc43c3a9c888f116190875163791340f"
+    },
+    {
+      "file": "monsters/gear-04.webp",
+      "sha256": "b9ad0b3b341a35f286e83b50088cfc3fb9554e1c46eae98f40db81959185548a"
+    },
+    {
+      "file": "heroes/knight-walk.webp",
+      "sha256": "fd485634c88a4e460a9947c315125efc0065e52afd82db5dce7ec97bf37e72bd"
+    },
+    {
+      "file": "heroes/mage-walk.webp",
+      "sha256": "06c3747cfa91bb636f7ebae6d0e5aa8e4000d54992b1b01b96b8c16f4e47775b"
+    },
+    {
+      "file": "heroes/priest-walk.webp",
+      "sha256": "c8f42fa3382d47bc425fc39a2d981da00e8a26d587c2468984355c6c19bb5530"
+    },
+    {
+      "file": "heroes/walk-qc.json",
+      "sha256": "c03de3796b6cf9c8ef0fdde94c080b499fe58bb2bea5d7ea90a04f9b2d120657"
+    },
+    {
+      "file": "heroes/elf-walk.webp",
+      "sha256": "230d68532c607be6b78c4e84e308e1efc0ad5e0b64be8a8a9975c08e53a69fb2"
+    },
+    {
+      "file": "portraits/mage_male.webp",
+      "sha256": "13ce88b782de7895cb7963746530b6bc1551ed582951a8f3c282357a325f8227"
+    },
+    {
+      "file": "portraits/monk_female.webp",
+      "sha256": "9c1106a97655920d23af2cdac1dcd0d23cac4075f28019a78fb09d8b5784072b"
+    },
+    {
+      "file": "portraits/warrior.webp",
+      "sha256": "6dacc1f2238ff3e4f776430deb5c001930b439af64f9731bc566e71bc93ceec7"
+    },
+    {
+      "file": "portraits/priest.webp",
+      "sha256": "750e6cc8c75d27bbf7b6e7d9a29dec6a9d00a38b1f6bfc2e75c27be645855d27"
+    },
+    {
+      "file": "portraits/knight_female.webp",
+      "sha256": "9e60fddd024fdb67fdb3de15666b938f6bbb33b01a9a3ad3afc3ef2f83a219b7"
+    },
+    {
+      "file": "portraits/archer.webp",
+      "sha256": "6c8ae8a885887ef5c5c0b411269e681d78795d8af6e44eb729b1cc13d978c955"
+    },
+    {
+      "file": "portraits/knight.webp",
+      "sha256": "c0068388fe0496e6f3cf607545e3194586f392eedae623c9504cb4e4789e1909"
+    },
+    {
+      "file": "portraits/novice.webp",
+      "sha256": "40340e2408b84c0db7e772a8ae480710d235990f356c4f1a42561e47aa073535"
+    },
+    {
+      "file": "portraits/novice_female.webp",
+      "sha256": "dca34ae82832629a307664c94debf6e27c82f3dd602b600356b6eae40b2a16e6"
+    },
+    {
+      "file": "portraits/spellsword_female.webp",
+      "sha256": "1961ca16ba27c35246f7b0a2a3e9fc4dcab63ebe1059cc6923cea2d5399c0b7b"
+    },
+    {
+      "file": "portraits/spellsword.webp",
+      "sha256": "9035682d372d4c0c8f4488a4883d4a08e0f9ad08bfc38bb6fc014971101c989c"
+    },
+    {
+      "file": "portraits/monk.webp",
+      "sha256": "52f220955bb06cf160624cc8f6bd960da6b0fdb53afb435a24a510b90550f418"
+    },
+    {
+      "file": "portraits/warrior_female.webp",
+      "sha256": "fed4f8124d7d70cf1c24e3e68b52c9e02e53a139b6e6dc40ee2257a0cdfae729"
+    },
+    {
+      "file": "portraits/paladin_female.webp",
+      "sha256": "f1e6728acb7e1b47581441698374ee287594f2e66654788a358e4c8593e18129"
+    },
+    {
+      "file": "portraits/priest_female.webp",
+      "sha256": "46ff9b9af63c883a13a3a5a2115f44adbc66e8e73f5eaf4a7905eab7fcdfbef8"
+    },
+    {
+      "file": "portraits/mage.webp",
+      "sha256": "df0e884a9ed0bd3003cca74c571b661921787d15fbb4d1efda4a131aaef123de"
+    },
+    {
+      "file": "portraits/archer_male.webp",
+      "sha256": "5306756492c106fbd6dec001b0324889725ca4c61fe0c534f102d7b0d4e553c2"
+    },
+    {
+      "file": "portraits/paladin.webp",
+      "sha256": "df0cecf83ea14eeef9c1991b8a5082ebaf83ea4ebb17f658792c0fc0bda797d3"
+    },
+    {
+      "file": "skills/mage_a7.webp",
+      "sha256": "8553679ca2edb632928ed44fc332562c0b0f0ace2beb230f319f84c5fb7dfdb0"
+    },
+    {
+      "file": "skills/mage_a1-icon.webp",
+      "sha256": "1d276a0441ae777dc0fa9c2858dde0891efea5c54de2f0d7993b056e1c777919"
+    },
+    {
+      "file": "skills/warrior_a2.webp",
+      "sha256": "e731200c159f5b82b143f223befe99909114d84027d07bfb2cf077f62bb09763"
+    },
+    {
+      "file": "skills/novice_basic.webp",
+      "sha256": "7884c322bcd0a6aeb43a3ff57b640d80146aef011dd09c709229aae285ab62b5"
+    },
+    {
+      "file": "skills/archer_a5.webp",
+      "sha256": "01ca066e94abfcf29663ce97cb598e1753cf075b0730913c1d48749dcb9da88d"
+    },
+    {
+      "file": "skills/priest_a8-icon.webp",
+      "sha256": "8413ff8f5f45aaeac96bd70568de335c9632bb500c4b05d077fccf79f98875b9"
+    },
+    {
+      "file": "skills/priest_a3.webp",
+      "sha256": "b02acabe9c7c12502d1a413e51bd332b43c2fb1930f4b06fac23c26a440ac009"
+    },
+    {
+      "file": "skills/priest_a5-icon.webp",
+      "sha256": "3f5e85fcb3b5da1872597aa160012759a00881ed293b31131ee21ed4050db3d2"
+    },
+    {
+      "file": "skills/mage_a8.webp",
+      "sha256": "db4dd4ffe92701b29a9316b194a865241e424afad23fab61f7b363eefcbea469"
+    },
+    {
+      "file": "skills/flight_bolt_poison.webp",
+      "sha256": "e558605a878868de5e3d819365dfa6095c0f110096e917bc69a2a6437c5b4787"
+    },
+    {
+      "file": "skills/priest_a6-icon.webp",
+      "sha256": "78a2923cb4a58ce430268a68ccf64939166ebc5383da7269c69c2f12df21c01f"
+    },
+    {
+      "file": "skills/archer_a6-icon.webp",
+      "sha256": "86b5ee5091e9a109335123b733a63aabd823518698cee1470990cff6a3a6c6de"
+    },
+    {
+      "file": "skills/flight_arrow_holy.webp",
+      "sha256": "2dba5a978e629a1561a498361455193160ce387db4ca3565017adbad0b19b57b"
+    },
+    {
+      "file": "skills/knight_a8-icon.webp",
+      "sha256": "cf80e29fd4a59c045b0fdd6146ff42a49abd0561bca7918e97eaa703e381dadc"
+    },
+    {
+      "file": "skills/knight_a6.webp",
+      "sha256": "fbc8eb0d0e5690ecad7f726fc00e885db9754efe4725beb84e9dd7a8537d1d7f"
+    },
+    {
+      "file": "skills/warrior_a5-icon.webp",
+      "sha256": "e9516b42d13e2da07598dc8ad4895648cc15f1fc67d40d7e9c0c40a097610035"
+    },
+    {
+      "file": "skills/archer_a7.webp",
+      "sha256": "7bfa339fad620e0e814b28d2c0f2497c40bc1343f7e79c8f76e02e810be39a7c"
+    },
+    {
+      "file": "skills/priest_a7.webp",
+      "sha256": "8d039a76db66992701d8ffb51fcb9fcf461a676de8df13e02c6096e69235f81e"
+    },
+    {
+      "file": "skills/archer_a5-icon.webp",
+      "sha256": "46b82f46e0fa61e1eec810c90629a498f00274bc1656c5db9e247371aac86ba1"
+    },
+    {
+      "file": "skills/priest_a4.webp",
+      "sha256": "256a8fecd903a5c63f65ce347c8444114c6e0d64f6c29126543bd47e4afd92ad"
+    },
+    {
+      "file": "skills/knight_a5-icon.webp",
+      "sha256": "27b327718aadb154861682a629bbdbcf73d78886ac24e2333fa1ef923d0da799"
+    },
+    {
+      "file": "skills/warrior_a8-icon.webp",
+      "sha256": "60aa62f9b2ac767674193b7a6a1e2b214319dfce5fba2c176cea1c8a726d7493"
+    },
+    {
+      "file": "skills/warrior_a7-icon.webp",
+      "sha256": "75059a2b5471bdf78edefd62bd0d3afd53f4b9adee51e0e17fc5b24d7cbf8c59"
+    },
+    {
+      "file": "skills/knight_a5.webp",
+      "sha256": "957fc56e91fd1b6bc9c93ace1c041bb3f248acce6f3424dde1ad1dc914dd67cb"
+    },
+    {
+      "file": "skills/warrior_a1.webp",
+      "sha256": "ff913a3df4d38da7db5275c242f5f94a1086e919e72b8e2b9c400868532555d6"
+    },
+    {
+      "file": "skills/archer_a3.webp",
+      "sha256": "262a69d44110088e5ea8a6ed25f5eb1c50039cde2f51ee935784071407d31e0d"
+    },
+    {
+      "file": "skills/mage_a6.webp",
+      "sha256": "3b4d9e067ee448be1bfed4e835667bc00eb50d874b0df83f7445182bcbf5b3db"
+    },
+    {
+      "file": "skills/warrior_a4.webp",
+      "sha256": "f0419def83ed93a2f0dacec4be8de1fad96de36b37725e673d933f11ae4e2dbe"
+    },
+    {
+      "file": "skills/mage_basic.webp",
+      "sha256": "4eb01f699c188e1a055afad045fac7e75b608afbdef9279c2ce2a796a772bca5"
+    },
+    {
+      "file": "skills/mage_a5.webp",
+      "sha256": "d285fc5b1aa23dcbf28711251007ecb47fe93104c9db60b9a53982a7f4572555"
+    },
+    {
+      "file": "skills/archer_a4.webp",
+      "sha256": "35b685501d09ee48a492e7b5331a46cf7bfd4ff9efeb3e6919e03381021019b7"
+    },
+    {
+      "file": "skills/monk_basic.webp",
+      "sha256": "c37446b5c30655a7c936b4b6b2be792bbe270774029930cd5e2e435f0d136eda"
+    },
+    {
+      "file": "skills/priest_a2.webp",
+      "sha256": "17cfa0dd15a08c700f20ec0d84afe74e85e76551f5d320206d9f1948673b4ddc"
+    },
+    {
+      "file": "skills/flight_bolt_arcane.webp",
+      "sha256": "f06df7e44864c029b24db4025999ac5a549fec0e0023a6dc946c81cc79ae0599"
+    },
+    {
+      "file": "skills/priest_a1-icon.webp",
+      "sha256": "89cccdd422c316a494718791d9c145bd4e2c2f143dfeee988b261869702168fe"
+    },
+    {
+      "file": "skills/archer_a6.webp",
+      "sha256": "63770f90e10a0d1f1e3bb6c0b5e574eb3a1d09da2530cd7129cfa77c03dc79c3"
+    },
+    {
+      "file": "skills/mage_a5-icon.webp",
+      "sha256": "5db0493d95c27e92548db6e6a699f4f35a09da815332e6de0679fe631b770d5d"
+    },
+    {
+      "file": "skills/paladin_basic-icon.webp",
+      "sha256": "4340c565c978e7941239091678f7f3f3c878ebcecab46aa9c65dfa48083fe003"
+    },
+    {
+      "file": "skills/warrior_a1-icon.webp",
+      "sha256": "76652f4a024ce584080b3bbc1f4a34ea2101e73a85f1e5b43b5d979ec206a9fc"
+    },
+    {
+      "file": "skills/knight_basic-icon.webp",
+      "sha256": "3d8ef369714dff761dd8ae466d8c1059c4b95720923ef28625fba8ea13e95470"
+    },
+    {
+      "file": "skills/knight_a8.webp",
+      "sha256": "16ed230fc7145d675868466d9ce9e507b5ba132428c049061c96f5527bfe96d7"
+    },
+    {
+      "file": "skills/mage_a4-icon.webp",
+      "sha256": "a0d61f50dd226e4c51c6f7b419cee98001a1ca1429247444925ca4a897824f09"
+    },
+    {
+      "file": "skills/novice_a1.webp",
+      "sha256": "9fb396c38f678b3cc3036e7fcfc231b105530ead1e840e6b857fc51c2c1bf422"
+    },
+    {
+      "file": "skills/flight_arrow_arcane.webp",
+      "sha256": "ddc9e8a789b1313b614b3d1e05db3f5d75dff019fa4d396be0e555c47046264a"
+    },
+    {
+      "file": "skills/priest_basic-icon.webp",
+      "sha256": "89cccdd422c316a494718791d9c145bd4e2c2f143dfeee988b261869702168fe"
+    },
+    {
+      "file": "skills/novice_p1.webp",
+      "sha256": "930984241a800ae191921420ab818378ce9725710d99f516d992074846f3129a"
+    },
+    {
+      "file": "skills/flight_bolt_electric.webp",
+      "sha256": "7b192a56e38cc2acd268e164466844d3764599d958b2173a80151f530a93cc23"
+    },
+    {
+      "file": "skills/flight_bolt_steel.webp",
+      "sha256": "fa20936165a601f483cd7fc192f78a7f995677993279fd739ef390c4a5a4b5af"
+    },
+    {
+      "file": "skills/priest_a2-icon.webp",
+      "sha256": "d80e082ad780264b98dc66308f5f474e9e8bfb250b94eb85337339ed12402064"
+    },
+    {
+      "file": "skills/warrior_a2-icon.webp",
+      "sha256": "0265bed63633577dccbbf5d081e7cfa1f6827bb6979ec210a178ada21fd7a0c4"
+    },
+    {
+      "file": "skills/knight_a4-icon.webp",
+      "sha256": "7caaf352db6aea967261f2ba5b7723165710f524e6223091e85a8711a64b1228"
+    },
+    {
+      "file": "skills/mage_a4.webp",
+      "sha256": "68e8efb0a37b37cc37309a1fce16502a85f6d4b01fdad7b29b1b0a66acdcbf89"
+    },
+    {
+      "file": "skills/warrior_a7.webp",
+      "sha256": "41d00d87bb0c819315de49c9fc03aedcdeb3302726de0bef86b7ae9a24a29a6d"
+    },
+    {
+      "file": "skills/warrior_basic-icon.webp",
+      "sha256": "84ce23f4d134c4ca7986f24c7ddea51c7602baeb6b4e231bb5706c107848b3ba"
+    },
+    {
+      "file": "skills/spellsword_basic.webp",
+      "sha256": "3fece8d22844ff8d81d12339ff6550d1b750ed3407a8e5c20a771190c8950211"
+    },
+    {
+      "file": "skills/knight_a1-icon.webp",
+      "sha256": "90e200ffdbbd2b5251b11ceaba6028e03f84efad281be99714b311d05aae0719"
+    },
+    {
+      "file": "skills/archer_a4-icon.webp",
+      "sha256": "03ed4168e666c2a7983bd75a4cd0d435ad788fc0cb1172b9269ff3c283489fb1"
+    },
+    {
+      "file": "skills/knight_basic.webp",
+      "sha256": "7dd8dea4a2de8d12989661c84166fbdf37e8ee8360fbca5b9fa5b4493277aaae"
+    },
+    {
+      "file": "skills/rat_bout.webp",
+      "sha256": "c0b1225278affd6429e5457507cea53a9310456b2ab5464b28776ad738cdd586"
+    },
+    {
+      "file": "skills/flight_bolt_fire.webp",
+      "sha256": "cb53e6beec5a7a994872e2cd4e2518dac528a7df73ae51f650ef657c5d8fbe95"
+    },
+    {
+      "file": "skills/archer_basic.webp",
+      "sha256": "8f47994d17b82bc1e772af192526dbaeb6f66e25447ca7cf2acee267dfd256d8"
+    },
+    {
+      "file": "skills/priest_a5.webp",
+      "sha256": "3b39a6cbdca608770c04e2a86fb150057b354d0e6cd7318a3ae622faa3b9a78c"
+    },
+    {
+      "file": "skills/knight_a3-icon.webp",
+      "sha256": "96518f41a2eccb0d4e63a6e8e318547a6f15e4968ea226833d4f8bb143094231"
+    },
+    {
+      "file": "skills/mage_a6-icon.webp",
+      "sha256": "7c2419555810f8700c001a54223c7a49c76360f499fab9076131fecfb84a3783"
+    },
+    {
+      "file": "skills/warrior_basic.webp",
+      "sha256": "f761d67405c3de05770f74d66cdff3004e24b88553967e519ec73b95cd004c5b"
+    },
+    {
+      "file": "skills/knight_a2-icon.webp",
+      "sha256": "6f2d2af13f5ae91eb3b22ff5d58edba8636bd0641629e09da25f8127f1659e28"
+    },
+    {
+      "file": "skills/mage_a3.webp",
+      "sha256": "f7e165833b5753e3b79e88b7e27f44290c1181ea0e09ef2372377499c25e7776"
+    },
+    {
+      "file": "skills/mage_a2.webp",
+      "sha256": "cc35d3e2ac70abcb09431f95b19c168333ab06778bc5f1b81146ab379bf3fbf2"
+    },
+    {
+      "file": "skills/archer_a1-icon.webp",
+      "sha256": "80f70ec7f929a06dbce4aa2c3bed041cb55d799d8d9ad428cef888e2904edc10"
+    },
+    {
+      "file": "skills/flight_bolt_holy.webp",
+      "sha256": "6b1a4049d8c47ad13522b17b3c130a482ce8fd568ec0a9e7320980519d87f6b7"
+    },
+    {
+      "file": "skills/flight_bolt_ice.webp",
+      "sha256": "639e2433eee962703db20103f5f63ad45a6cb0162f762e4d00effd2b8a10aa69"
+    },
+    {
+      "file": "skills/knight_a1.webp",
+      "sha256": "3f6b8c53f1bed6eb13aaa4bea4ef8c314fe4e20cbe86813aa226f26046fc70ea"
+    },
+    {
+      "file": "skills/archer_a2-icon.webp",
+      "sha256": "38630d928858b160e1f74a2eb7dc3621b6f75aa8a8a02ece8e4ab577685ce537"
+    },
+    {
+      "file": "skills/flight_arrow_poison.webp",
+      "sha256": "fb7a48ecc2b2de3149b81677914c6964b175d0a5912b16c099753cc07653405d"
+    },
+    {
+      "file": "skills/flight_arrow_ice.webp",
+      "sha256": "829654d148c29dde5d86f8e9db54a506b88d6ccb64a857628c9e5d217cc898e0"
+    },
+    {
+      "file": "skills/archer_a8-icon.webp",
+      "sha256": "96e994b373b8aa1cfe6b919ed933d978c4ff08b86609585b8c3d3ed205006c65"
+    },
+    {
+      "file": "skills/paladin_basic.webp",
+      "sha256": "26738d1b9a1dc7c88a44ffd24c84e43f4445cd6f4788fc456bbd8e6f200daaab"
+    },
+    {
+      "file": "skills/priest_a4-icon.webp",
+      "sha256": "c128f603d97723ca2e744206682406c640e09512aaa163a40897c579eaba496a"
+    },
+    {
+      "file": "skills/priest_a6.webp",
+      "sha256": "525db06a7d211445824acda13f56988dc5fc49f6b07e2dc14484003220284245"
+    },
+    {
+      "file": "skills/archer_a7-icon.webp",
+      "sha256": "26aacd09d808aac83cb4b98db481fd4ae94ae6b14f6048bfeae9168c633862db"
+    },
+    {
+      "file": "skills/warrior_a6.webp",
+      "sha256": "f30d0e929d28272fd6c6f2bfdd82625905a98f4dba1e0cf7edccb27d404e0ddd"
+    },
+    {
+      "file": "skills/archer_a2.webp",
+      "sha256": "f386d4aed5c4d84fdf754bfd6c8d0f36015fc63eed61e19ad13413e8f5ba9f64"
+    },
+    {
+      "file": "skills/flight_arrow_wind.webp",
+      "sha256": "3352a50e8b0f57b83444f29ddb685ebb84d4e172495d0dd24b32cb9c85b88696"
+    },
+    {
+      "file": "skills/priest_a3-icon.webp",
+      "sha256": "4ae2de83d9400bfc2af29e1749d44caae81e52753758c6b2b22c9e07a8a684b3"
+    },
+    {
+      "file": "skills/flight_arrow_steel.webp",
+      "sha256": "2d1115450f207f970f36d6fd69dc7cf8e34c6e40563d23b0f39b805775b05d48"
+    },
+    {
+      "file": "skills/knight_a6-icon.webp",
+      "sha256": "b23cbac6ac10e1b4f94b8d68d76804c9da4a112c31be3d6660e92b0c01395c0d"
+    },
+    {
+      "file": "skills/warrior_a3.webp",
+      "sha256": "942b7c6e8d8890adfc605363dd0fd2e5278e226798d698c9d7c90dba86bd013d"
+    },
+    {
+      "file": "skills/mage_a3-icon.webp",
+      "sha256": "a56d46c3a85e1290020d43a379cd4ca166e19d2c80adcc99217077eecd153dad"
+    },
+    {
+      "file": "skills/warrior_a6-icon.webp",
+      "sha256": "fbe3764bae1d66d45944003f2c1dff7ff6183c04e36d77a51f6b4a25c2634501"
+    },
+    {
+      "file": "skills/knight_a4.webp",
+      "sha256": "78f29e8c45beab68d63c0b8637ffdea3b1fba88c68d2914565fea6d705f351bf"
+    },
+    {
+      "file": "skills/mage_a2-icon.webp",
+      "sha256": "6c6e7cb55287ccb006aa6bee3e2d5fcfa1e7995e85d45697133464766110f038"
+    },
+    {
+      "file": "skills/priest_basic.webp",
+      "sha256": "7c13c1a08662a27a4f5915f7dd26907d024cf1d8a6043cb98ab63a73fd5e8905"
+    },
+    {
+      "file": "skills/archer_a3-icon.webp",
+      "sha256": "5e7248b6b77f85c77b0dd921297781f295eec8635e551f2ca41b15f4fae0fe16"
+    },
+    {
+      "file": "skills/novice_a1-icon.webp",
+      "sha256": "1329b3821a0baa101c624b6fa712b9250b747e245fcc521e74547276998609cb"
+    },
+    {
+      "file": "skills/flight_arrow_electric.webp",
+      "sha256": "d096e2f63ce4e86e8e5d4af776204a1a03d22796b93449c7084e40c14490374d"
+    },
+    {
+      "file": "skills/knight_a3.webp",
+      "sha256": "637a38b950e5f258eec0cac65b95a16d62577315be81fb2341a993a34a03299a"
+    },
+    {
+      "file": "skills/warrior_a3-icon.webp",
+      "sha256": "3da8786b68beedfb5bd4f026dcb4d6c43860c801cf64fa852eacdaf1bad78e00"
+    },
+    {
+      "file": "skills/flight_arrow_fire.webp",
+      "sha256": "5ddb05a25e35ef54fe88cef4818f74b4c1bc087ae3559b1fcb35ba90d28dfc41"
+    },
+    {
+      "file": "skills/mage_basic-icon.webp",
+      "sha256": "a73a47800cc4e97a7d0e58fc22dd1cf98e57c4d54e8c1203aa0487f9ba361f68"
+    },
+    {
+      "file": "skills/spellsword_basic-icon.webp",
+      "sha256": "9283f2c2ac71c8a9f7f5d70a1dcb80fced5900de9b8e283808b9932585c7c6f5"
+    },
+    {
+      "file": "skills/monk_basic-icon.webp",
+      "sha256": "bfea69586f5bc9399d2419275c041a72cad01cab89c550b52efae873330d26e0"
+    },
+    {
+      "file": "skills/priest_a8.webp",
+      "sha256": "e14be22efddf002600ab16f27e7419e0032f09d2b0bd48a1895032abe4cf80d7"
+    },
+    {
+      "file": "skills/warrior_a4-icon.webp",
+      "sha256": "071464d0970b47c7459c693e0e2b930ba202b8c14f26bb2e187eb5fe03d2ee55"
+    },
+    {
+      "file": "skills/novice_basic-icon.webp",
+      "sha256": "fc8a9a15f0524575976b2106d5ffe62d7dfdd304427882c21fb25c925c6af7ca"
+    },
+    {
+      "file": "skills/archer_basic-icon.webp",
+      "sha256": "3c974f6baf1b10526047230450164abbb102732ddf5b08c70707d0a577930d72"
+    },
+    {
+      "file": "skills/mage_a7-icon.webp",
+      "sha256": "3820ce3917260e633fa0539946c81552bb7d4b24f8483b98271fdbc339d28f1a"
+    },
+    {
+      "file": "skills/warrior_a5.webp",
+      "sha256": "edba3e0b508b6dea2490b84f25ae575638d15bf2d81212f675c9e3bceea0298b"
+    },
+    {
+      "file": "skills/knight_a2.webp",
+      "sha256": "d52d122d19fcded2d0f947a66c70dd6b2a85424f3ecd01914f0a09f7c0960c98"
+    },
+    {
+      "file": "skills/archer_a1.webp",
+      "sha256": "d405c4ba66f9f994a4884224d9f4fe043790ccd15fa4bce6aea753edab263c6c"
+    },
+    {
+      "file": "skills/priest_a7-icon.webp",
+      "sha256": "8d86d88c4d243d37c417bb0b90a9506d7b2c4922b97d170252af17292599ddd3"
+    },
+    {
+      "file": "skills/mage_a8-icon.webp",
+      "sha256": "75e3cd9cd97513514c083a95298671a4f7bb6cc47ef2bbc448a31afabbb5e3f0"
+    },
+    {
+      "file": "skills/knight_a7-icon.webp",
+      "sha256": "a86d54b3022d3f841a44903d50cbf1efec0991a75696d3fa7d08d7270552d058"
+    },
+    {
+      "file": "skills/mage_a1.webp",
+      "sha256": "9184c60ada197341a79b2af707e67445510e8bcdb88ecc41b6873dd3fb76772d"
+    },
+    {
+      "file": "skills/flight_bolt_wind.webp",
+      "sha256": "507461b878a305c9e5e5b92d8ed1ca1bb00700be762c9011cada1ea7fa2ab35c"
+    },
+    {
+      "file": "skills/warrior_a8.webp",
+      "sha256": "365d80ac1058a8fa689cebdd0a6486cce053c836f123e6347a22016df3e2a09d"
+    },
+    {
+      "file": "skills/archer_a8.webp",
+      "sha256": "2a4a287921172964c91af98a88e0b663db9b41dc1125534bef36951ff64a1a68"
+    },
+    {
+      "file": "skills/knight_a7.webp",
+      "sha256": "53eb6e66d51909c70f70c1ee2f43b3efb8eec2442ef039975c4e885dcf53a132"
+    },
+    {
+      "file": "skills/rat_bout-icon.webp",
+      "sha256": "fbfe18147744d56ae0418161301a2f65100901e14dee3773b47401deae6859d7"
+    },
+    {
+      "file": "skills/priest_a1.webp",
+      "sha256": "6c4ea3901b570edb76e3c1b6321883c5d96e6429e8d4c1cc01cd3c1a564fa78d"
+    },
+    {
+      "file": "ui/frost.webp",
+      "sha256": "38ac3cceb537c378c1a4d1d3406bbb2ccf1d8252b3a08254a19cb03767c427c4"
+    },
+    {
+      "file": "ui/scroll.webp",
+      "sha256": "1718a6eb8299e70b60b2e199b822f776ff328702ec23f8a31744e7799de4a96f"
+    },
+    {
+      "file": "ui/seed.webp",
+      "sha256": "a83b2d0dd0094a04150de2aa4f1f96fba294d633931e16f48f3feae42552c870"
+    },
+    {
+      "file": "ui/instinct.webp",
+      "sha256": "2706e7676f9ce258f1cf03efb5f281d128d86383f006e9fd2777d033bc467ed3"
+    },
+    {
+      "file": "ui/burn.webp",
+      "sha256": "2da896941b5749d83cf9d51cfa7bc6452a63913b30dd6bb0d978d2c993d82d72"
+    },
+    {
+      "file": "ui/shock.webp",
+      "sha256": "655c3854c3f22b5fcbedf5cd20ce798b3e7a0d34a06347f1701492be77944bcc"
+    },
+    {
+      "file": "ui/roar.webp",
+      "sha256": "38e564e35216ff0bf1f3536e8bfa62f1c8c765218b997cade5fc9ede0ed45399"
+    },
+    {
+      "file": "ui/poison.webp",
+      "sha256": "aa0108c1ee3f2f58ebbf48a912d1ea7c4f3b576c6c4dbdb08c4f021621b3f41d"
+    },
+    {
+      "file": "ui/bleed.webp",
+      "sha256": "0b1bdeb55f82b911809fc6c449311b3648243674c5c6cb7d68721e0fed4cab20"
+    },
+    {
+      "file": "ui/potion.webp",
+      "sha256": "534912b0e01f5ba435828524915ff6f98f6949adeaee7f685e7039a34344d4f7"
+    },
+    {
+      "file": "ui/guard.webp",
+      "sha256": "62319344f4c9b4b2b70a9584267c00233d9f3ad48b432845a0b954304839f3a9"
+    },
+    {
+      "file": "heroes/monk/attack-6.webp",
+      "sha256": "005487ecdb19f661e6512a89e065e1927947363892a8976b54d069890528217b"
+    },
+    {
+      "file": "heroes/monk/attack-1.webp",
+      "sha256": "d1e28a2a04f2ee28d3fdc627650107ddc2722bf550e5255f36cdcb9003743883"
+    },
+    {
+      "file": "heroes/monk/skill-6.webp",
+      "sha256": "30233a407395d928fed2ead35925a7eebfdeaa283858e3617fcd9ef9555700a3"
+    },
+    {
+      "file": "heroes/monk/attack-3.webp",
+      "sha256": "48980d56ef491d7cc01a5fb669559f441cf2179a7b40fbc0bd26b5fa87ca5e2b"
+    },
+    {
+      "file": "heroes/monk/skill-4.webp",
+      "sha256": "2eb70344e30a520dd43e7b8a01920efd4bf1df7b099478f26148216506cb9bc8"
+    },
+    {
+      "file": "heroes/monk/skill-1.webp",
+      "sha256": "dea917aedb59a71f827a776ceae7c3b195b89fa89b3da0417fd7685b63803995"
+    },
+    {
+      "file": "heroes/monk/skill-3.webp",
+      "sha256": "197521bd1fd252cf65782e3ff2fd92e587a9922414a129b07665f5cc8052a6e1"
+    },
+    {
+      "file": "heroes/monk/attack-4.webp",
+      "sha256": "de429893384a4a328d7a5c63fcf577711e282a138f5c7b59281e6245332a5b11"
+    },
+    {
+      "file": "heroes/monk/attack-2.webp",
+      "sha256": "1cc17c792c65eca362021d587e9de1223508591612f5c87db98ce06e347606ab"
+    },
+    {
+      "file": "heroes/monk/skill-2.webp",
+      "sha256": "fed6c5b478c85600a42b7a3657d281ae72cd6c435e15d5f5e1aef7b9ca34b34c"
+    },
+    {
+      "file": "heroes/monk/skill-5.webp",
+      "sha256": "565dd3a784aa15cb1f21b207a3eaa33ef3f92e8a5f6385d68931fa398c53aa09"
+    },
+    {
+      "file": "heroes/monk/attack-5.webp",
+      "sha256": "3385fd38118a6a8a04020266d5bd260c4a64389a57dd818bbdd751bfb81ad5d8"
+    },
+    {
+      "file": "heroes/mage_male/attack-6.webp",
+      "sha256": "4f7b5beb54beba2f39bdbe2961854d82f2152ce466f8afdb1a51e4f70a4400b4"
+    },
+    {
+      "file": "heroes/mage_male/attack-1.webp",
+      "sha256": "09c257a44d859cab4e97fb258549c192a97959ec85c276547a6c074215631fb8"
+    },
+    {
+      "file": "heroes/mage_male/skill-6.webp",
+      "sha256": "56fa64311c211d6650ec6c4347e221c484af27cb5602f8b5c2d802acbb5c7333"
+    },
+    {
+      "file": "heroes/mage_male/attack-3.webp",
+      "sha256": "84b5fbd3725cfaa7a68f7e5051cdcee16fb4c81bd7cb1f76b4ee0828c576a2cd"
+    },
+    {
+      "file": "heroes/mage_male/skill-4.webp",
+      "sha256": "e654597602f262821689a42541e4d064f48fb709b82d241e15a02d049c59359b"
+    },
+    {
+      "file": "heroes/mage_male/skill-1.webp",
+      "sha256": "8f4803d78064fbe5e9ef28bbafbf55e369e1dbb4b4bec90ba04ce28b693bb967"
+    },
+    {
+      "file": "heroes/mage_male/skill-3.webp",
+      "sha256": "0f07e2a0dda26eb6fda657e72eba909ceebd3ae470729048dfe9ffd4e9d43445"
+    },
+    {
+      "file": "heroes/mage_male/attack-4.webp",
+      "sha256": "26535759158c23dd92926eeb0ce47ef852416b9659f5254ae77c078c1d7a3939"
+    },
+    {
+      "file": "heroes/mage_male/attack-2.webp",
+      "sha256": "95bb92836e04efe8e6d72151715b979319b018cea668b0425d6565f985e30b7e"
+    },
+    {
+      "file": "heroes/mage_male/skill-2.webp",
+      "sha256": "5a7329b655ed512123bfae728f9f787b335caab7378ce08775ae06337c810b08"
+    },
+    {
+      "file": "heroes/mage_male/skill-5.webp",
+      "sha256": "09ff554580799da1352ee2a3c3e5f2f209e90f2b0b8c3d96bafa9ecc50f991ee"
+    },
+    {
+      "file": "heroes/mage_male/attack-5.webp",
+      "sha256": "04a0d259900af52b12b5055b1a0c135429c0f80ffe7444d3f5d97d0c22fdc654"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-6.webp",
+      "sha256": "2756a1356ce33d3a13fb4cade3b02bd04cd32470923d38db750dc356108901a1"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-1.webp",
+      "sha256": "c62eb6ae8fcc11a6d3cb0843b205be577f2b074f75346a0509cbea763ef147ea"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-6.webp",
+      "sha256": "3dc2b30ddb634ad5ecb4bee48dac14cfd3c77e4cacf353778fa9b03cfa8b6cea"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-3.webp",
+      "sha256": "f2fdb8f69ac2c0ba6b652d5818506edb5c35a644932c027b1e6939752f85917c"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-4.webp",
+      "sha256": "999d39a690a5b68c52cba73cdf2972e611ad5a485a5b7b48f7d8edc4480496dc"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-1.webp",
+      "sha256": "57060c1e22c5de30ca78601cc5e08017af8cb7e84264cb10faa823dd4538164b"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-3.webp",
+      "sha256": "a3e6363a70444be37306eb6928df64b11e5783fe162c9ffbf903461a31d1441d"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-4.webp",
+      "sha256": "2164594ca1e296c5dbc7764e11e14cec87258e6678adf278c532fe4283414f9e"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-2.webp",
+      "sha256": "481e5f4fc9233f47ae4546747e221cf56ebedbea34223fc57a8fd3e6b7760bd1"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-2.webp",
+      "sha256": "8272cbfea5fa5dae4e365dd10d981c172403efec5ccc9e9b66159debe0f421d3"
+    },
+    {
+      "file": "heroes/spellsword_female/skill-5.webp",
+      "sha256": "94c55f892c24fb3052577c3196a2c5e6f51012d1d820001321359d327bc69cce"
+    },
+    {
+      "file": "heroes/spellsword_female/attack-5.webp",
+      "sha256": "55728d5800125983612f5d8948d0b1ffcf5b972fb47baa89dabbd4180493e61f"
+    },
+    {
+      "file": "heroes/novice_female/attack-6.webp",
+      "sha256": "1e277b850533d1177e7bf71febd8c32be419adf9c3a51ee888044d4ffb424409"
+    },
+    {
+      "file": "heroes/novice_female/attack-1.webp",
+      "sha256": "d68acb861fb4498d4f9c2c99e58393cab858baf090c0dad75f77edcb2455d068"
+    },
+    {
+      "file": "heroes/novice_female/skill-6.webp",
+      "sha256": "5b3327e9683cac9842512abf51a24a9914f3ad7241cd9bb8e404ce6eedfec965"
+    },
+    {
+      "file": "heroes/novice_female/attack-3.webp",
+      "sha256": "df7db4be9b163fba093f156b0767fbe41a24a3ed4e17ec09cdc45b74f999389b"
+    },
+    {
+      "file": "heroes/novice_female/skill-4.webp",
+      "sha256": "15b065cec031cf73aaff16e14a2f006a4e1319d6962a898d21a22dec315a5a78"
+    },
+    {
+      "file": "heroes/novice_female/skill-1.webp",
+      "sha256": "d67559f39e1d382d6e0ba7c562f2f6e0d4fafc20fd7876e1e9fa71e155093c76"
+    },
+    {
+      "file": "heroes/novice_female/skill-3.webp",
+      "sha256": "0187da7654ea92d58b225ce9b7d89df2d58a462ad0ec2a5db20ff537dc38e900"
+    },
+    {
+      "file": "heroes/novice_female/attack-4.webp",
+      "sha256": "cce327442da46c2b8fd8bde2bce7e031db2ddc404d0843fa33d56b49300ca0d7"
+    },
+    {
+      "file": "heroes/novice_female/attack-2.webp",
+      "sha256": "69784c5efcb0b984aecd2b09f76418219eed6aa1141386af1a3d6407ab4dc731"
+    },
+    {
+      "file": "heroes/novice_female/skill-2.webp",
+      "sha256": "96c1b639edbba94a955b221949f6f9af77498fdf8778509450ae214b46b3e9df"
+    },
+    {
+      "file": "heroes/novice_female/skill-5.webp",
+      "sha256": "7033aa6431c46a0aa0245034892e1d665cd2f12c73aadad600d1712d9fe3120d"
+    },
+    {
+      "file": "heroes/novice_female/attack-5.webp",
+      "sha256": "6cc40eb9805008d50f9f99d9ba0a4f16d0e71bf0ef124653e2f304da6a5135ac"
+    },
+    {
+      "file": "heroes/mage/attack-6.webp",
+      "sha256": "ce208685ce38a77996aa9105c483b747627a6b7389e0ed7e28f5ccfc14ce43fc"
+    },
+    {
+      "file": "heroes/mage/attack-1.webp",
+      "sha256": "5e797104557d9446ea56aff46ade3b1dabde2f69bf8e598621a9409d6e8955d4"
+    },
+    {
+      "file": "heroes/mage/skill-6.webp",
+      "sha256": "badd33b3661bdc822cab625451bf6eb91d1d703052168226fd55e7965fef1a38"
+    },
+    {
+      "file": "heroes/mage/attack-3.webp",
+      "sha256": "885a80f8a1b0b72107c302096179c9044ec0f7b75c917dd41fc0efa2549a1ee8"
+    },
+    {
+      "file": "heroes/mage/skill-4.webp",
+      "sha256": "f606bc760c6a09b9d9fa4fc918f790aa3ea523c0ea401b693d81346dc0b28269"
+    },
+    {
+      "file": "heroes/mage/skill-1.webp",
+      "sha256": "13b7a86d3735f316419b0c20b7bc6d07fdbc5ec815e1bf69e25c0b2b3529007b"
+    },
+    {
+      "file": "heroes/mage/skill-3.webp",
+      "sha256": "5186dc4d2c76aaeb0fa79f2c7a8b07ae4dc8ec3263562910f2023151a331341b"
+    },
+    {
+      "file": "heroes/mage/attack-4.webp",
+      "sha256": "32d94ad0118106192966ca5f7113962251b1af2aaccb5d2c9ccb74cbe1f761f0"
+    },
+    {
+      "file": "heroes/mage/attack-2.webp",
+      "sha256": "1d68abf4edcd171d42206bb88f4fdee15674c588a653c93630c782cf9086c245"
+    },
+    {
+      "file": "heroes/mage/skill-2.webp",
+      "sha256": "8595edace5213329f3a47e02b16f41b77728010a2ad312e9d41159d08310ae71"
+    },
+    {
+      "file": "heroes/mage/skill-5.webp",
+      "sha256": "697d73abb6e959927510ec9c5729279aed3ab6c06608f0f95250bcb7effe29c5"
+    },
+    {
+      "file": "heroes/mage/attack-5.webp",
+      "sha256": "687b99267a6b728776a6e0788b203b28efbf6fb5d9623df60417f52bc55e88a1"
+    },
+    {
+      "file": "heroes/paladin_female/attack-6.webp",
+      "sha256": "9789b233f3f5f9e2e93a2b885a694b832c0840b301f55f85dfb8efd9b7ab2a08"
+    },
+    {
+      "file": "heroes/paladin_female/attack-1.webp",
+      "sha256": "5bbd830c56d02ae176753e54784bba723a106166c6379ab84dca98f911f85523"
+    },
+    {
+      "file": "heroes/paladin_female/skill-6.webp",
+      "sha256": "d300c0c20b7b3acedbe10f190c6228f3b92c9420dc406af7c0749f4d07be70ab"
+    },
+    {
+      "file": "heroes/paladin_female/attack-3.webp",
+      "sha256": "267a8449569aef02a55bc416ad032ef006953c6ca32d17f622d38142c77d39d4"
+    },
+    {
+      "file": "heroes/paladin_female/skill-4.webp",
+      "sha256": "697c7931661f81aaa2941df3f926e354ad8b60dd0548290b36570326823b5ecd"
+    },
+    {
+      "file": "heroes/paladin_female/skill-1.webp",
+      "sha256": "35ac707b950bb89b9d5379f5cecafb0df4f679eceb284432d7e7aade27b5867a"
+    },
+    {
+      "file": "heroes/paladin_female/skill-3.webp",
+      "sha256": "a088d884638fa2312f709d68e52d14ae9a7363d235c1e177ed8060549cbd364f"
+    },
+    {
+      "file": "heroes/paladin_female/attack-4.webp",
+      "sha256": "5d4de7238b879276de239f4c51f67c010553752344ec28f3210dd23cc33234ad"
+    },
+    {
+      "file": "heroes/paladin_female/attack-2.webp",
+      "sha256": "730d57a0753d9c5056b0c7d99fd3b8e1a7ac1f753a46c1535c1577ee6315e8ca"
+    },
+    {
+      "file": "heroes/paladin_female/skill-2.webp",
+      "sha256": "f998c49a9e66cb008f5197b4a07895ce27f95f0f80ae7b392c72508ef136c027"
+    },
+    {
+      "file": "heroes/paladin_female/skill-5.webp",
+      "sha256": "2a7b16593b190dd4f71fb131aa61b20c31fad7b879c0ce0119601caa6a5095b2"
+    },
+    {
+      "file": "heroes/paladin_female/attack-5.webp",
+      "sha256": "b1de74935f632180700137cb40974075535a75ff40a55454b5eb629ff300aed1"
+    },
+    {
+      "file": "heroes/monk_female/attack-6.webp",
+      "sha256": "721c15483efefbeec13809bb4fb4865cd19f9f8343076ec428f59c349fe7082c"
+    },
+    {
+      "file": "heroes/monk_female/attack-1.webp",
+      "sha256": "7fe57f7d21931fe3af96106effc3c490aa72b315381f6a70d8bdf7e3c91b27cc"
+    },
+    {
+      "file": "heroes/monk_female/skill-6.webp",
+      "sha256": "ff6c19702aa83f729bd5ba025164431923ba12e5d1e87b099f8c403a386e76bf"
+    },
+    {
+      "file": "heroes/monk_female/attack-3.webp",
+      "sha256": "30fc8110c8c7dd32db80b5ec9f804c8e3481db398db991fe8e1ab36c4fdff3e9"
+    },
+    {
+      "file": "heroes/monk_female/skill-4.webp",
+      "sha256": "520adc441cda14fcf10bdabdcddd293dafaa582dd80ca88679a794ac7eed4430"
+    },
+    {
+      "file": "heroes/monk_female/skill-1.webp",
+      "sha256": "98e92afb9b4d3463003a7b05e7c8cf5bccc33211564d623d528df1c84266e37b"
+    },
+    {
+      "file": "heroes/monk_female/skill-3.webp",
+      "sha256": "c10aa99b30a54dd9d9f61647fa25de2b0e8e2d2257fbc99977e9a4b4a83867e2"
+    },
+    {
+      "file": "heroes/monk_female/attack-4.webp",
+      "sha256": "e66267b6aafcc8142a944fe8983be8f78408225e5ef60792eec9793b4932061e"
+    },
+    {
+      "file": "heroes/monk_female/attack-2.webp",
+      "sha256": "8804bc722ce62114751f868714b519e2d225344b4e98d5710263c9b6ec7ff066"
+    },
+    {
+      "file": "heroes/monk_female/skill-2.webp",
+      "sha256": "b22b954d8b3cf9c66ffce086d966c21fc9382cd2ba72e0bc00811332bcbd789a"
+    },
+    {
+      "file": "heroes/monk_female/skill-5.webp",
+      "sha256": "4985eca4d5409cb1029323794496860d6227d2e43a4a1a8c7180d261a1dfbc33"
+    },
+    {
+      "file": "heroes/monk_female/attack-5.webp",
+      "sha256": "563d5c458d3484c568b7227c658bff1bf3074f9dddd34db764446c0d9f33fd75"
+    },
+    {
+      "file": "heroes/knight/attack-6.webp",
+      "sha256": "396753f42489831e8a3d7532c1c15328fadb8bfdd246226e8d31ef45ef720cb4"
+    },
+    {
+      "file": "heroes/knight/attack-1.webp",
+      "sha256": "42c54fa23d73fa521e2dd62c95be96c271b7c653e205bf07a57216f579f17cbb"
+    },
+    {
+      "file": "heroes/knight/skill-6.webp",
+      "sha256": "39d93e7397df0fe09f7aff61523409a27b833616c5724ff77a716682ac9ad456"
+    },
+    {
+      "file": "heroes/knight/attack-3.webp",
+      "sha256": "0e77ae437e9fc696633b77bd81cbb87dec974979c89440c58e3f2fc11da4065a"
+    },
+    {
+      "file": "heroes/knight/skill-4.webp",
+      "sha256": "be770eaf791ff56aeb5cec2540c7dc9982f8d3654aef5ecb79345985bd250daf"
+    },
+    {
+      "file": "heroes/knight/skill-1.webp",
+      "sha256": "7db821ae5fbe30ed50d86ecb12da81b0041b7c3213ce8b2524d28bc416f6bc20"
+    },
+    {
+      "file": "heroes/knight/skill-3.webp",
+      "sha256": "dd29bb7b01290ef3a50128fe3f373e95e373678d5f6ff4b687ddd63efc04e4a3"
+    },
+    {
+      "file": "heroes/knight/attack-4.webp",
+      "sha256": "1b45a2ca266cbc379fcef8b4ba6d36310db9d139c2253be9e0c53fedf8041c10"
+    },
+    {
+      "file": "heroes/knight/attack-2.webp",
+      "sha256": "8e102bfb472ca048372ebf74f5b16334e6a8cfb57ee8052224e4c098eb45649e"
+    },
+    {
+      "file": "heroes/knight/skill-2.webp",
+      "sha256": "74dc173c336ec67a3a04300b30756f01ce2835e6f0f641394a08c024342ff069"
+    },
+    {
+      "file": "heroes/knight/skill-5.webp",
+      "sha256": "677e165cf23909d928d286722b75c30404c859f3dc738b7110010f07dd66a651"
+    },
+    {
+      "file": "heroes/knight/attack-5.webp",
+      "sha256": "ccce2b02c5d8f85b103b25a3373e1945114a0dfe8f4007ad26ea5c48b8cea674"
+    },
+    {
+      "file": "heroes/knight_female/attack-6.webp",
+      "sha256": "deb76eebeb71b4f80ee6be2c02f69dc94b919e371183fa429eab900e4224eb0c"
+    },
+    {
+      "file": "heroes/knight_female/attack-1.webp",
+      "sha256": "bf1f78de5570b3ff9cf7f035bfe3ed96b109f9117662b4656ee381b8ca71bc45"
+    },
+    {
+      "file": "heroes/knight_female/skill-6.webp",
+      "sha256": "6a72b8d1c96de0b1e200d3c97f9edef3ad1820c0f24b64f48aada923157bfad1"
+    },
+    {
+      "file": "heroes/knight_female/attack-3.webp",
+      "sha256": "e80d1a52179f4f9c319c34368cba35dda2e8763cf20aaec0af3febcb8f438097"
+    },
+    {
+      "file": "heroes/knight_female/skill-4.webp",
+      "sha256": "5e37ecf14fc59de007695d3a73e534744182d6e6997fab63c43064dd98a49ad6"
+    },
+    {
+      "file": "heroes/knight_female/skill-1.webp",
+      "sha256": "a9ccdd61c8b3018a63545b513067eea72b4b987b3ce8ee44fca127446ad8e68b"
+    },
+    {
+      "file": "heroes/knight_female/skill-3.webp",
+      "sha256": "8a5cf1e07c6c3c255dd8185bcfe0a82c0be9cfb69b4bb3f3ac757c8bb2d12b2e"
+    },
+    {
+      "file": "heroes/knight_female/attack-4.webp",
+      "sha256": "9d87029ae5524ed2f244d2c016aa15c69cf92ca9c86525e689aedafb90af6c41"
+    },
+    {
+      "file": "heroes/knight_female/attack-2.webp",
+      "sha256": "807eb211301ce186e23edb6dbae8e914d388ab78a26f9c14b328b242e0b96ca1"
+    },
+    {
+      "file": "heroes/knight_female/skill-2.webp",
+      "sha256": "2bf90832c23e0f80992264932efd099e331ca326c92932f0b6c56582eee3e906"
+    },
+    {
+      "file": "heroes/knight_female/skill-5.webp",
+      "sha256": "e344302cc15587aa3bb495296ad2cd4bdb0bbf576c27a4cea50bac5027241f2a"
+    },
+    {
+      "file": "heroes/knight_female/attack-5.webp",
+      "sha256": "facb047931204285bc9699468d41d87e0b5511a298ed7e06a602fc958e7c6d31"
+    },
+    {
+      "file": "heroes/archer/attack-6.webp",
+      "sha256": "0a2566263c5379747345e155f6ba21a7f2d3b115a11c43a9999cf7d16143603b"
+    },
+    {
+      "file": "heroes/archer/attack-1.webp",
+      "sha256": "27746a84c55ededa27a4c9f04fb9a3baec12a0e61fc9ae610108e0b9d5fd6f5c"
+    },
+    {
+      "file": "heroes/archer/skill-6.webp",
+      "sha256": "a6e3e0bb0a6c59d1f01b3d4f624b1cd81ad7b32cbe369ab5373004cf092d6e26"
+    },
+    {
+      "file": "heroes/archer/attack-3.webp",
+      "sha256": "30f2a867f69873b9d122db7e0e765f885cd414c7433f28298683e3f045add1fe"
+    },
+    {
+      "file": "heroes/archer/skill-4.webp",
+      "sha256": "1884b8ab253dfced9d22538bdfa1c810e546cc5fb4ceae715bcf1ec122202755"
+    },
+    {
+      "file": "heroes/archer/skill-1.webp",
+      "sha256": "c0fc95d6e9b56cc5499e03f79a48ed1363b650d5cfa149b25b0ef7f811f8d388"
+    },
+    {
+      "file": "heroes/archer/skill-3.webp",
+      "sha256": "d8345a3e8f9860f8a6c7c2a674b00214b78bd97778f80e672c9851a5dce5bffd"
+    },
+    {
+      "file": "heroes/archer/attack-4.webp",
+      "sha256": "603f7a66ade29f9b31ed26b5aa9a0b1e0469b043a33c3f6a10f706f21d194d8b"
+    },
+    {
+      "file": "heroes/archer/attack-2.webp",
+      "sha256": "bf58dfcd0ea36a4202543709b49b456c678b67bedaaf384f70d5342de84bf9ac"
+    },
+    {
+      "file": "heroes/archer/skill-2.webp",
+      "sha256": "11eae7846352f38dc582e54a0160dfe8ef8bbbaabb4b4d8cf330c386073821b3"
+    },
+    {
+      "file": "heroes/archer/skill-5.webp",
+      "sha256": "0256a8a0581dcb2840793821656c39c5105e79fb8e69404491623b259eb8c3bd"
+    },
+    {
+      "file": "heroes/archer/attack-5.webp",
+      "sha256": "077556dab6c471474f96801707b3e001400bd3785a1441f8ed4969ceda1f9e7d"
+    },
+    {
+      "file": "heroes/spellsword/attack-6.webp",
+      "sha256": "432127dfaf1df2ee6ba08bac81ce0abef44dac4f11cf96c45afab51a396429b4"
+    },
+    {
+      "file": "heroes/spellsword/attack-1.webp",
+      "sha256": "3d17aed0baeee73eeb82730e6a25b45ce33dd68fa271c227789c068c037c2a51"
+    },
+    {
+      "file": "heroes/spellsword/skill-6.webp",
+      "sha256": "b3229284a0bbff2922397903dd2002ecab44a3048ebd499129e2c3ba7c8a6ea6"
+    },
+    {
+      "file": "heroes/spellsword/attack-3.webp",
+      "sha256": "8bd7ca0b1736d4f06e0b478674f5648edca4104da290439b5288b7633e9bc727"
+    },
+    {
+      "file": "heroes/spellsword/skill-4.webp",
+      "sha256": "05c6feeb7bbbbaf10b055c223cab70ae88d5615adfe892e9c28756e80d37f8bf"
+    },
+    {
+      "file": "heroes/spellsword/skill-1.webp",
+      "sha256": "0c1eaf03f765869e4c5c8fc8da66bbdc11b22e494f40331d5617d3bb93c2ecbf"
+    },
+    {
+      "file": "heroes/spellsword/skill-3.webp",
+      "sha256": "c16b4b4783edc4b14c43384c561f2344c47e9ba1ccf096ad27a970e2a8b037f9"
+    },
+    {
+      "file": "heroes/spellsword/attack-4.webp",
+      "sha256": "8147effa5ab037e83ef0fddc8a330262c7188e565753675249ade8589f583094"
+    },
+    {
+      "file": "heroes/spellsword/attack-2.webp",
+      "sha256": "70c1e550d7b5b102040f92dcba1761cea395ba8acbbedf5e49d6ae15e7443f37"
+    },
+    {
+      "file": "heroes/spellsword/skill-2.webp",
+      "sha256": "920186098bf90fdcf506a94ab109f75474f57a7d0eb55822319ce2c811c33379"
+    },
+    {
+      "file": "heroes/spellsword/skill-5.webp",
+      "sha256": "8d454f8fa957331158587742f739bcc596f40bd1a4fed7c757cb935cc75f19e9"
+    },
+    {
+      "file": "heroes/spellsword/attack-5.webp",
+      "sha256": "1c802b2373e2f053e705dea0f827ecc0ab9a1e019d6833145d8c3b2860248a20"
+    },
+    {
+      "file": "heroes/archer_male/attack-6.webp",
+      "sha256": "c6d4d70cbb0013211d85fa18d33eedfa2ed4a224e6c4df3f2f6d157d1dde87a3"
+    },
+    {
+      "file": "heroes/archer_male/attack-1.webp",
+      "sha256": "4c42625211465e6f5fb43e6e004c7524d1347143fe60e3bbba168e311ed5cc84"
+    },
+    {
+      "file": "heroes/archer_male/skill-6.webp",
+      "sha256": "2b0c75a7c87c26e3429e7afb6e5871569ada543da76cd1dc094244a670a3360a"
+    },
+    {
+      "file": "heroes/archer_male/attack-3.webp",
+      "sha256": "6f3ba24391122d2e6f8a786c4359791fa9ea28750d504c05f08fe9d9ebebad74"
+    },
+    {
+      "file": "heroes/archer_male/skill-4.webp",
+      "sha256": "722319f0e11628d1ac458d06ab66e073e2e706d98289a5e3f7a96128d73f7ac1"
+    },
+    {
+      "file": "heroes/archer_male/skill-1.webp",
+      "sha256": "f6ab02abc43115cc49f7ae5e806738cdef561b1aca9894f37506e246e39b0fea"
+    },
+    {
+      "file": "heroes/archer_male/skill-3.webp",
+      "sha256": "0dc87d1977ff35b6af039e1d65b333cbf6de4159bc43b21fcbbe1e067dceee44"
+    },
+    {
+      "file": "heroes/archer_male/attack-4.webp",
+      "sha256": "de924732001315bc27715e4d640151892340c627b9586835e0c2df8832cecf25"
+    },
+    {
+      "file": "heroes/archer_male/attack-2.webp",
+      "sha256": "6b18916e8bca0104ddd93bfe8db25cd1db073a87490f5845d390893396540492"
+    },
+    {
+      "file": "heroes/archer_male/skill-2.webp",
+      "sha256": "d8decafaac5c5ac8e5425e9ff7bf66fa23ba7382e83c8f652b935fb1de23aae1"
+    },
+    {
+      "file": "heroes/archer_male/skill-5.webp",
+      "sha256": "dd4e8713fb5e163ab5fccfc36862c8985af706f7827dd02caac53ef6c25b6ab9"
+    },
+    {
+      "file": "heroes/archer_male/attack-5.webp",
+      "sha256": "b4d6fe6b778594400f3b9df73ffdb18cbc6f1dd19ecf786dfb8ef7c1514975d3"
+    },
+    {
+      "file": "heroes/novice/attack-6.webp",
+      "sha256": "184019252ad5b869908a2fdb690149e571e31cc763f8c1ccf737fb6a7e075bf9"
+    },
+    {
+      "file": "heroes/novice/attack-1.webp",
+      "sha256": "fa7b7800dd1ed17653548e201799f18851c3b9db8447b13c88706697be5e464c"
+    },
+    {
+      "file": "heroes/novice/skill-6.webp",
+      "sha256": "bf6eece97c0e8e6cba7577e6e64c3694f21172dd4807780a3f2ee63e010f7a0b"
+    },
+    {
+      "file": "heroes/novice/attack-3.webp",
+      "sha256": "a3aa4df11cabafd1e04bb82ce2faa24fe5b34059337f929e7df8d77a0a067109"
+    },
+    {
+      "file": "heroes/novice/skill-4.webp",
+      "sha256": "7dbc0ba0fccfa586fdf0e1dfb0eff99b43ad207efe5b1080adc8ba422f048226"
+    },
+    {
+      "file": "heroes/novice/skill-1.webp",
+      "sha256": "ea7f2babf979d29dbe61a6b2a1caea9228166b3761cdd1bba91de747140cd993"
+    },
+    {
+      "file": "heroes/novice/skill-3.webp",
+      "sha256": "2d5bcd8ff5b1b508095ecccca2de8570eeeea5e13589b5a6b55b51e97121a4b5"
+    },
+    {
+      "file": "heroes/novice/attack-4.webp",
+      "sha256": "0af4dd91ff6ccd28726385e355a99de832fbf1deaa50e94c12b65ca13aaa5daa"
+    },
+    {
+      "file": "heroes/novice/attack-2.webp",
+      "sha256": "39d8cb60b622dfd7f179849d46884dea76ff38c5531d80df8b41fd98d2db9fe4"
+    },
+    {
+      "file": "heroes/novice/skill-2.webp",
+      "sha256": "9c3d56b9fb1ca55f77a0eebf5482415c0ebc1a8c0745d52bd0960281188c0e06"
+    },
+    {
+      "file": "heroes/novice/skill-5.webp",
+      "sha256": "c807b27ceed6f5c30b57f8bad7fdf0ad33ddca9d92791e3e97630666c39cd290"
+    },
+    {
+      "file": "heroes/novice/attack-5.webp",
+      "sha256": "3438b8ed11f767326a33dd30eddff7b7884fd7f6bd1656b67eaada132bbcde48"
+    },
+    {
+      "file": "heroes/paladin/attack-6.webp",
+      "sha256": "3895222e16019d81ae4c3888d5847d87012acc430473691b82b22f92d765800b"
+    },
+    {
+      "file": "heroes/paladin/attack-1.webp",
+      "sha256": "2641f3c7f2c4da53132b50cf1930a6f44f1821e82604cbfb4ed0163578dfd851"
+    },
+    {
+      "file": "heroes/paladin/skill-6.webp",
+      "sha256": "b97844aef179bec023d0e8d464ea3be3c8577531486684614196afbdd019bdcd"
+    },
+    {
+      "file": "heroes/paladin/attack-3.webp",
+      "sha256": "4f79de9362767fdc6d184e55948641bc38c27c1602a02c08c9a38b191df1a676"
+    },
+    {
+      "file": "heroes/paladin/skill-4.webp",
+      "sha256": "dc03e165c64e2c444b380f75c042c918be01feecde840059882c113a890182e5"
+    },
+    {
+      "file": "heroes/paladin/skill-1.webp",
+      "sha256": "95c978ca509b62220acfa07a380adc9f3f5c1743d4d219512684cc086d8c017d"
+    },
+    {
+      "file": "heroes/paladin/skill-3.webp",
+      "sha256": "c33eec94a503451ea9b62cda296224350f5a82f569b48e5e14420955939a50c9"
+    },
+    {
+      "file": "heroes/paladin/attack-4.webp",
+      "sha256": "f6d29cb8a33e92c0efb30bb5824247f438314b1bd10a068cdab321d38e535c38"
+    },
+    {
+      "file": "heroes/paladin/attack-2.webp",
+      "sha256": "b9b77ee7da4a8f2e2b2008800796af356239c4018a95526bd50d9e4d72c0f967"
+    },
+    {
+      "file": "heroes/paladin/skill-2.webp",
+      "sha256": "ced0718982f3dc5dbd14e6ff5250b3b2f3551ede43514ad5511cb3a1227f8deb"
+    },
+    {
+      "file": "heroes/paladin/skill-5.webp",
+      "sha256": "a2a3f4d14d815b6ff3e877e1d844cfe6bbde7393ff5900f774a36e63c4908552"
+    },
+    {
+      "file": "heroes/paladin/attack-5.webp",
+      "sha256": "7a379879071f1a6e31b8ed5ca26145062e8a61d73c47fb122d830ab00a7bd3b0"
+    },
+    {
+      "file": "heroes/priest_female/attack-6.webp",
+      "sha256": "344bcfd1635cc19314584e34275221710da5a8ee0ea695100d695a1a3d44296a"
+    },
+    {
+      "file": "heroes/priest_female/attack-1.webp",
+      "sha256": "0429b2606bcb019af01dd9f2c6798dbbd5debac371847d46e011a978c8e30b07"
+    },
+    {
+      "file": "heroes/priest_female/skill-6.webp",
+      "sha256": "a7863feb81b3b177f146c31494c9c06da9de1a21fef8368145d24b1fa727fa7b"
+    },
+    {
+      "file": "heroes/priest_female/attack-3.webp",
+      "sha256": "df6d22070088b406f92d7a9bd5cbf4e3574e77ad6acdc36d04c8bd4a124d723a"
+    },
+    {
+      "file": "heroes/priest_female/skill-4.webp",
+      "sha256": "ef1d1b179dfc71b07597b0781af7cb1e78005a7ec0c14fb65889399e39ccfc87"
+    },
+    {
+      "file": "heroes/priest_female/skill-1.webp",
+      "sha256": "ced2d12cc7cdd919ee3218c3fd026841e1bca242cd7bf2e3555ebc6faea403b3"
+    },
+    {
+      "file": "heroes/priest_female/skill-3.webp",
+      "sha256": "47d70380b8bfe096dff46a54b787a019309ac4cab1ad8f571ab9cc766fc78cb7"
+    },
+    {
+      "file": "heroes/priest_female/attack-4.webp",
+      "sha256": "0093c076d5abb8bdaa4cc4b8273a565f7fd514b5c63cdef2b51df6f8cbf51f92"
+    },
+    {
+      "file": "heroes/priest_female/attack-2.webp",
+      "sha256": "ba36d4136beb8481e73ecc83a9985453896908bf6b04753d724050d7f5e6e7c6"
+    },
+    {
+      "file": "heroes/priest_female/skill-2.webp",
+      "sha256": "1ac58116e23f0e4cc6d67dc20de655a603d757a421349d516699111fe9bbac9e"
+    },
+    {
+      "file": "heroes/priest_female/skill-5.webp",
+      "sha256": "284c521c59f74de2243f1747a910f19428c11f95a24935b2c1c7849816a454c7"
+    },
+    {
+      "file": "heroes/priest_female/attack-5.webp",
+      "sha256": "6ea3bd4a09dc42b5471d42e0c715a6618b0ca3e783f29e256f35bf9316c1f830"
+    },
+    {
+      "file": "heroes/warrior_female/attack-6.webp",
+      "sha256": "6212381636d181f81c2122c64aef94c40a638b0d9a84601f97d82f7eb4db4d63"
+    },
+    {
+      "file": "heroes/warrior_female/attack-1.webp",
+      "sha256": "35f7c442d6da4b234b042b25f03463d3f8e55e609991b603d994d59e66920dc1"
+    },
+    {
+      "file": "heroes/warrior_female/skill-6.webp",
+      "sha256": "d2abf37daeb1cef1bc26c3d148551b57611b5b3a4ff4dd3aa460d3067e360446"
+    },
+    {
+      "file": "heroes/warrior_female/attack-3.webp",
+      "sha256": "eb17f8e115c9dd87a7d09d33ea2ca30303f1beff1b2f49f9d2e2c2ac5b23e7db"
+    },
+    {
+      "file": "heroes/warrior_female/skill-4.webp",
+      "sha256": "8fe2424cb9cfeaa367827cf2bb73cd3570b0d9b80240b76dcb270e0db12a3c87"
+    },
+    {
+      "file": "heroes/warrior_female/skill-1.webp",
+      "sha256": "0f71c4284459d7b6b5a98aa45bcac7e241b617d6df32f118c99d367d28685e2f"
+    },
+    {
+      "file": "heroes/warrior_female/skill-3.webp",
+      "sha256": "d724c9998d0bfa5544d338a5762dd054200384002e1bf7fe247defb020e266bc"
+    },
+    {
+      "file": "heroes/warrior_female/attack-4.webp",
+      "sha256": "e41d7b86a01832cd28b572dfb930793f432ac9063ede4af8ad7ce8bff9d18249"
+    },
+    {
+      "file": "heroes/warrior_female/attack-2.webp",
+      "sha256": "b44ef967b40a8235f4b3b28e38e4cb132f7933c979ab66a46a77c1498537db19"
+    },
+    {
+      "file": "heroes/warrior_female/skill-2.webp",
+      "sha256": "6138ba5364d501e770e591edb5caa6e490dfd6753b19083977bfadf52d6cb83e"
+    },
+    {
+      "file": "heroes/warrior_female/skill-5.webp",
+      "sha256": "9ab1b0b329ae5f2cd11ffa03452d88c056d376d8331bf5a65f73f17eaeae3dba"
+    },
+    {
+      "file": "heroes/warrior_female/attack-5.webp",
+      "sha256": "fb29b9945bc2eb2085129717f45e921f3a1c8b9c4a6a9ddd2ff6b7b7baf337bf"
+    },
+    {
+      "file": "heroes/warrior/attack-6.webp",
+      "sha256": "53d85ffa8dacc184f1bf7154716fce98ceee147728aee56882f8e25f32ac1db8"
+    },
+    {
+      "file": "heroes/warrior/attack-1.webp",
+      "sha256": "8ffc9b22a73ef8d27038732124ba93cde5b0881b4306f718fbca52349d6929e3"
+    },
+    {
+      "file": "heroes/warrior/skill-6.webp",
+      "sha256": "4e94a886cae17dfe5514533bf8d999b7a593650e471859bba8c24531c4516dc4"
+    },
+    {
+      "file": "heroes/warrior/attack-3.webp",
+      "sha256": "764dc750571561db4a2a049fee89688fdf189c96e9cbf88e3b9588509b46b7a8"
+    },
+    {
+      "file": "heroes/warrior/skill-4.webp",
+      "sha256": "f40e25079fc52fb8cb273aa2722ac04cd77175805cc2756714f9dcb81e5692fc"
+    },
+    {
+      "file": "heroes/warrior/skill-1.webp",
+      "sha256": "8023766b0e4c76aca3d4f074841b09e456cc00b4fa6d26b21f14f9ea012dbec1"
+    },
+    {
+      "file": "heroes/warrior/skill-3.webp",
+      "sha256": "44e58cc70ffc41695126f3a228ebf466420d017993c7adfc97e1da20a2fb83fa"
+    },
+    {
+      "file": "heroes/warrior/attack-4.webp",
+      "sha256": "bc42dad085283f4639836aa5b65f941cb8b16d32153ed8faaab9db629405005f"
+    },
+    {
+      "file": "heroes/warrior/attack-2.webp",
+      "sha256": "a28429c250d8336792dc30c584556e52078e062275214db441f8959c45a3663b"
+    },
+    {
+      "file": "heroes/warrior/skill-2.webp",
+      "sha256": "c5fcd247449f593b4ce219449a438eaa15bb7cc41e8f18fc04fcd012f75fc861"
+    },
+    {
+      "file": "heroes/warrior/skill-5.webp",
+      "sha256": "394af6dace6b86857d4cd49821e4781b7d6970ac18c223e174935809049268cc"
+    },
+    {
+      "file": "heroes/warrior/attack-5.webp",
+      "sha256": "3e356246592dd63a72cd699facccaeb9d1775bd6d48774590bbc144f2320976b"
+    },
+    {
+      "file": "heroes/priest/attack-6.webp",
+      "sha256": "ca749a32d4e18873effcecf371d113f2b4b4d234e712c5961e0f4738d87cc23a"
+    },
+    {
+      "file": "heroes/priest/attack-1.webp",
+      "sha256": "6e285b466b9d076da45b4b23ddf41e5aaf74693455c45c28f7f00b6ebda7ca51"
+    },
+    {
+      "file": "heroes/priest/skill-6.webp",
+      "sha256": "61c9a4dedbc416ab50bc0a64887e1376cfa9712319920b4087bc1bae031191c5"
+    },
+    {
+      "file": "heroes/priest/attack-3.webp",
+      "sha256": "48f9abad5bf154edab07d35849fa1885b32a29e493f8daffb12c9b9594069c6b"
+    },
+    {
+      "file": "heroes/priest/skill-4.webp",
+      "sha256": "f755c136655d77d8685ef1931bb58f7768516d62a083441da4fb472e9702e9b2"
+    },
+    {
+      "file": "heroes/priest/skill-1.webp",
+      "sha256": "301f8a7051713ca2bf7a72dc3885580b76232e46fed5e09181edb23cf2b0be79"
+    },
+    {
+      "file": "heroes/priest/skill-3.webp",
+      "sha256": "79c1fb80362ea021bcb5dc7d8d7e63a53ab3843a997617bffc08dd3ca8af8e9f"
+    },
+    {
+      "file": "heroes/priest/attack-4.webp",
+      "sha256": "8a9f54cdbcb979313a3224e971b4ddc490b547a11a23b530d66a8247c4c0f5b5"
+    },
+    {
+      "file": "heroes/priest/attack-2.webp",
+      "sha256": "dc8c25fcd9e8c28ac27cb47d34d8e0cfb44fd608e1eddf43ae85f04b65012fd4"
+    },
+    {
+      "file": "heroes/priest/skill-2.webp",
+      "sha256": "bd52f03f47d2660b90f8bc9eae43d5f25759f2b6a80bc42e7261b54b672457fb"
+    },
+    {
+      "file": "heroes/priest/skill-5.webp",
+      "sha256": "9a07b1bd7fd61c96e253cd832095876cf123aaeca193db61a222db4754d2224b"
+    },
+    {
+      "file": "heroes/priest/attack-5.webp",
+      "sha256": "9a3c599358354d073e0bdfca17a4120ac870ab14444f208e165a2d771c5386bf"
+    }
+  ],
+  "count": 419,
+  "allOriginalBytesPreserved": true
+}

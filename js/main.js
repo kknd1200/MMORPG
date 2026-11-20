@@ -16,7 +16,7 @@ const state = {
   user: null,
   selectedId: null,
   game: null,
-  create: { classId: 'knight', stats: null, gender: 'm' },
+  create: { classId: 'knight', stats: null, gender: 'f' },
 };
 
 // 로그인 화면: 시작 직업 4종 초상화 (「환생 루프」 초상화 그림)

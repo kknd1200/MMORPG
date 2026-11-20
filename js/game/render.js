@@ -1,3 +1,4 @@
+import { HERO_ACTION } from '../data/hero-anim.js';
 // 캔버스 렌더링 — 아이소메트릭(마름모 타일) 2.5D 시점
 //   월드 좌표 (x, y) → 화면 ((x − y)·32, (x + y)·16)
 //   바닥은 terrain.js 의 청크 캐시, 벽 · 나무 · 집 · 캐릭터는 깊이(x + y) 순서로 그림
@@ -298,8 +299,8 @@ export class Renderer {
       facing: screenDir(p.facing),
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
-      attack: (p.attackAnim || 0) / 0.3,
-      cast: (p.castAnim || 0) / 0.4,
+      attack: (p.attackAnim || 0) / HERO_ACTION.attack.dur,
+      cast: (p.castAnim || 0) / HERO_ACTION.skill.dur,
       weaponColor: weapon?.icon?.color,
       armorId: ch.equipment?.armor,
       hurt: !p.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0,
@@ -319,7 +320,7 @@ export class Renderer {
       look: LOOKS[ch.classId] || LOOKS.knight,
       sprite: game.spriteOf(u),
       facing: screenDir(e.facing), walk: e.walkPhase, moving: e.moving,
-      attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / 0.4,
+      attack: (e.attackAnim || 0) / HERO_ACTION.attack.dur, cast: (e.castAnim || 0) / HERO_ACTION.skill.dur,
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });
     if (e.dead) return;
@@ -431,7 +432,9 @@ export class Renderer {
         if (fx.t < 0) continue;
         const im = img(fxSheet(fx.key));
         if (!im) continue;
-        const f = Math.min(FX.frames - 1, Math.floor(k * FX.frames));
+        // 전체 16장 또는 한 부분(시전자 쪽 1~8장 / 대상 쪽 9~16장)
+        const n = fx.frames || FX.frames;
+        const f = (fx.from || 0) + Math.min(n - 1, Math.floor(k * n));
         const at = fx.follow || fx;
         const x = this.px(at.x, at.y), y = this.py(at.x, at.y) - fx.z;
         const size = FX.cell * fx.scale;
