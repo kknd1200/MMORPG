@@ -197,3 +197,13 @@ test('레벨업하면 HP · MP 모두 회복', () => {
   assert.equal(c.hp, c.maxHp);
   assert.equal(c.mp, c.maxMp);
 });
+
+test('공격 사거리: 기사 · 전사 1칸, 마법사 · 사제 3칸, 궁수 5칸 (스킬도 같은 사거리, 돌진만 5칸)', () => {
+  const want = { knight: 1, warrior: 1, mage: 3, priest: 3, elf: 5 };
+  for (const [id, r] of Object.entries(want)) assert.equal(CLASSES[id].attackRange, r, id);
+  for (const sk of Object.values(SKILLS)) {
+    if (sk.kind === 'damage' || sk.kind === 'chain' || sk.kind === 'aoe_target') {
+      assert.equal(sk.range ?? CLASSES[sk.classId].attackRange, sk.dash ? 5 : CLASSES[sk.classId].attackRange, sk.id);
+    }
+  }
+});

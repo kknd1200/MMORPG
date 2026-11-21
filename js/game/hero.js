@@ -143,7 +143,8 @@ let tintCanvas = null;
  */
 export function drawHumanoid(ctx, x, y, s) {
   // 8방향 도트 캐릭터 (assets/chars) 가 있으면 그것으로
-  if (hasChar(s.sprite) && drawChar(ctx, x, y, s)) return;
+  // (그림을 불러오는 중이면 잠깐 도형 캐릭터로 — 예전 옆모습 그림은 쓰지 않음)
+  if (hasChar(s.sprite)) { if (!drawChar(ctx, x, y, s)) drawBody(ctx, x, y, s); return; }
   if (!(s.hurt > 0) || typeof document === 'undefined') { drawAny(ctx, x, y, s); return; }
   const sc = ctx.getTransform().a || 1;
   const W = 140, H = 130, AX = 70, AY = 108;
@@ -174,8 +175,8 @@ const HERO_PX = 70; // 화면에서의 키(px)
 
 function heroFrame(key, s) {
   let kind = 'attack', i = 0;
-  if (s.cast > 0) { kind = 'skill'; i = Math.min(5, Math.floor((1 - s.cast) * 6)); }
-  else if (s.attack > 0) i = Math.min(5, Math.floor((1 - s.attack) * 6));
+  if (s.cast > 0) { kind = 'skill'; i = Math.max(0, Math.min(5, Math.floor((1 - s.cast) * 6))); }
+  else if (s.attack > 0) i = Math.max(0, Math.min(5, Math.floor((1 - s.attack) * 6)));
   return img(`heroes/${key}/${kind}-${i + 1}.webp`) || img(`heroes/${key}/attack-1.webp`);
 }
 

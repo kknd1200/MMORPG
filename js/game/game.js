@@ -146,6 +146,38 @@ export class Game {
     return hitTimes(key, name);
   }
 
+  // 근접 파티원이 설 자리: 대상 둘레 8곳 중 다른 파티원이 없고 막히지 않은, 가장 가까운 곳 (잠깐 유지해서 흔들리지 않게)
+  approachSpot(u, t, range) {
+    const e = u.ent;
+    const rr = Math.max(0.75, range - 0.35);
+    const d = dist(e, t);
+    // 같은 자리를 잠깐 유지. 다가가지 못하고 있으면(막힘) 그 자리를 빼고 다시 고름
+    if (u.spot && u.spot.t === t) {
+      if (d < u.spot.bestD - 0.05) { u.spot.bestD = d; u.spot.since = this.time; }
+      const stuck = this.time - u.spot.since > 0.7;
+      if (stuck) { u.spot.bad.add(u.spot.a); u.spot.until = 0; u.spot.since = this.time; u.spot.bestD = d; }
+      if (this.time < u.spot.until) return { x: t.x + Math.cos(u.spot.a) * rr, y: t.y + Math.sin(u.spot.a) * rr };
+    } else {
+      u.spot = { t, a: null, until: 0, since: this.time, bestD: d, bad: new Set() };
+    }
+    const others = this.aliveUnits().filter((o) => o !== u).map((o) => o.ent);
+    // 그림끼리 겹치지 않게 밀어내는 거리(화면 기준)와 같은 기준으로 붐비는지 봄
+    const near = (o, x, y) => Math.hypot((o.x - x) - (o.y - y), ((o.x - x) + (o.y - y)) / 2) < 1.25;
+    let best = null, bs = Infinity;
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4;
+      if (u.spot.bad.has(a) && u.spot.bad.size < 8) continue;
+      const x = t.x + Math.cos(a) * rr, y = t.y + Math.sin(a) * rr;
+      if (this.world.blocked(x, y, e.radius)) continue;
+      const crowd = others.reduce((n, o) => n + (near(o, x, y) ? 1 : 0), 0);
+      const score = Math.hypot(e.x - x, e.y - y) + crowd * 4;
+      if (score < bs) { bs = score; best = a; }
+    }
+    if (best == null) { u.spot.bad.clear(); return t; }
+    u.spot.a = best; u.spot.until = this.time + 0.6;
+    return { x: t.x + Math.cos(best) * rr, y: t.y + Math.sin(best) * rr };
+  }
+
   makeMercUnit(char, near, i = 0) {
     fillSlots(char);
     const off = [[-1.2, 0.8], [0.8, 1.3], [-0.6, 2]][i % 3];
@@ -361,9 +393,11 @@ export class Game {
         if (this.autoSkill(u, t)) { u.gcd = 0.8; return; }
         u.gcd = 0.3;
       }
-      const range = cls.attackRange + t.radius;
+      const range = cls.attackRange + t.radius + 0.2; // 서로 밀어내는 만큼 조금 여유
       if (dist(e, t) > range) {
-        const r = this.navigate(e, t, speed, dt);
+        // 근접: 다른 파티원이 앞을 막고 있으면 몬스터 둘레의 빈자리로 돌아 들어감
+        const goal = cls.attackRange < 2 ? this.approachSpot(u, t, range) : t;
+        const r = this.navigate(e, goal, speed, dt);
         e.moving = r === 'moving';
       } else {
         this.clearPath(e);
@@ -402,9 +436,12 @@ export class Game {
       const A = list[i];
       for (let j = i + 1; j < list.length; j++) {
         const B = list[j];
-        const min = (A.r + B.r) * 1.414;
+        // 파티원끼리 · 몬스터끼리는 화면 기준(그림이 안 겹치게), 파티원 ↔ 몬스터는 실제 거리 기준
+        //   (화면 기준으로 떼어 놓으면 위아래 방향에서 근접 공격 사거리 밖으로 밀려나 공격을 못 함)
+        const world = A.mon !== B.mon;
+        const min = world ? (A.r + B.r) : (A.r + B.r) * 1.414;
         const dx = B.e.x - A.e.x, dy = B.e.y - A.e.y;
-        let a = dx - dy, b = (dx + dy) / 2;
+        let a = world ? dx : dx - dy, b = world ? dy : (dx + dy) / 2;
         if (Math.abs(a) >= min || Math.abs(b) >= min) continue;
         let d = Math.hypot(a, b);
         if (d >= min) continue;
@@ -413,7 +450,7 @@ export class Game {
         if (d < 1e-4) { const ang = (i * 7 + j * 13) % 6.283; a = Math.cos(ang); b = Math.sin(ang); d = 0; } else { a /= d; b /= d; }
         const push = (min - d) * k;
         // 화면 방향 (a, b) → 월드 이동: x = (a + 2b)/2, y = (2b − a)/2
-        const mx = (a + 2 * b) / 2 * push, my = (2 * b - a) / 2 * push;
+        const mx = world ? a * push : (a + 2 * b) / 2 * push, my = world ? b * push : (2 * b - a) / 2 * push;
         this.nudge(A, -mx * (A.w / wsum), -my * (A.w / wsum));
         this.nudge(B, mx * (B.w / wsum), my * (B.w / wsum));
       }
@@ -601,7 +638,7 @@ export class Game {
     if (p.action) {
       const target = this.findEntity(p.action.targetId);
       if (!target) { p.action = null; return; }
-      const range = this.actionRange(p.action) + (target.radius || 0.3);
+      const range = this.actionRange(p.action) + (target.radius || 0.3) + (p.action.type === 'talk' ? 0 : 0.2);
       if (dist(p, target) > range) {
         const r = this.navigate(p, target, speed, dt);
         p.moving = r === 'moving';
