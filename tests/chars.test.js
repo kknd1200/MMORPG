@@ -14,7 +14,7 @@ test('모든 직업 · 성별 · 용병 외형 · NPC 에 8방향 그림이 있�
 
 test('그림 파일과 동작 규격 (8프레임, 타격 프레임은 그 안)', () => {
   for (const [key, c] of Object.entries(CHARS)) {
-    for (const f of ['idle', 'normal', 'skill', 'fx-normal', 'fx-skill', 'portrait']) {
+    for (const f of ['idle', 'walk', 'normal', 'skill', 'fx-normal', 'fx-skill', 'portrait']) {
       assert.ok(existsSync(new URL(`../assets/chars/${key}/${f}.webp`, import.meta.url)), `${key}/${f}`);
     }
     for (const a of ['normal', 'skill']) {

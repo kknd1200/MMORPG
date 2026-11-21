@@ -428,7 +428,7 @@ export class Game {
       e.gx = e.x; e.gy = e.y;
       advanceGait(e, e.moving ? d : 0, dt, stride);
     };
-    for (const u of this.units()) step(u.ent, 2.4);
+    for (const u of this.units()) step(u.ent, 3.2); // 걸음 한 바퀴(두 걸음) = 3.2칸 → 보통 속도에서 프레임당 약 0.13초
     const p = this.player;
     for (const m of this.monsters) {
       if (m.dead || (m.state === 'idle' && !m.moving && Math.abs(m.x - p.x) + Math.abs(m.y - p.y) > 40)) continue;

@@ -1,7 +1,7 @@
 // 8방향 도트 캐릭터 그리기 (assets/chars, 데이터는 js/data/chars.js)
 //
 // - 대기: 바라보는 방향의 대기 그림 1장
-// - 걷기: 걷기 그림이 따로 없어서 대기 그림을 발걸음에 맞춰 살짝 들썩이고 좌우로 흔듦
+// - 걷기: walk.webp 8방향 × 8프레임 (대기 그림에서 tools/make_walk.py 로 만든 걸음). 발걸음 위상에 맞춰 넘김
 // - 일반공격 · 스킬: 8프레임을 팩에 적힌 프레임별 시간대로 재생 (몸 전체 동작)
 // - 이펙트: 팩 규격대로 캐릭터 앞 고정 위치에서 같은 프레임 번호로 재생 (날아가지 않음)
 // 도트 그림이라 배율 1, 부드럽게 하지 않음
@@ -12,7 +12,7 @@ export const CHAR_SCALE = 1;
 export const CHAR_BODY_PX = 57; // 화면에서 몸 키 (이름표 위치 등)
 
 export const hasChar = (key) => !!CHARS[key];
-export const charFiles = (key) => (CHARS[key] ? ['idle', 'normal', 'skill', 'fx-normal', 'fx-skill'].map((n) => `chars/${key}/${n}.webp`) : []);
+export const charFiles = (key) => (CHARS[key] ? ['idle', 'walk', 'normal', 'skill', 'fx-normal', 'fx-skill'].map((n) => `chars/${key}/${n}.webp`) : []);
 
 /**
  * s: { sprite, facing(화면 방향), act: { name: 'normal'|'skill', t: 경과초 } | null,
@@ -24,11 +24,16 @@ export function drawChar(ctx, x, y, s) {
   if (!CHARS[key]) return false;
   const dir = dirIndex(s.facing);
   const act = s.act && !s.dead ? s.act : null;
-  const sheet = img(`chars/${key}/${act ? act.name : 'idle'}.webp`) || img(`chars/${key}/idle.webp`);
+  const walking = !act && !s.dead && s.moving;
+  const name = act ? act.name : walking ? 'walk' : 'idle';
+  const sheet = img(`chars/${key}/${name}.webp`) || img(`chars/${key}/idle.webp`);
   if (!sheet) return false;
-  const usingAct = act && sheet.width > CHAR_CELL * 8 - 1 && sheet.height > CHAR_CELL;
-  const col = usingAct ? frameAt(key, act.name, act.t) : dir;
-  const row = usingAct ? dir : 0;
+  const full = sheet.height > CHAR_CELL; // 8방향 × 8프레임 시트가 불러와졌는지 (아니면 대기 그림)
+  const TAU = Math.PI * 2;
+  const col = !full ? dir
+    : act ? frameAt(key, act.name, act.t)
+      : Math.floor(((((s.walk || 0) % TAU) + TAU) % TAU) / TAU * 8) % 8;
+  const row = full ? dir : 0;
   const C = CHAR_CELL, [ox, oy] = CHAR_ORIGIN, sc = CHAR_SCALE;
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
@@ -38,10 +43,6 @@ export function drawChar(ctx, x, y, s) {
     ctx.translate(0, -6);
     ctx.rotate(-Math.PI / 2);
     ctx.translate(18, 0);
-  } else if (s.moving && !act) {
-    // 걸음: 디딜 때 내려가고 발을 모을 때 올라감 + 몸이 좌우로 1px 정도 흔들림
-    const w = s.walk || 0;
-    ctx.translate(Math.round(Math.sin(w) * 1.2), -Math.round(Math.abs(Math.sin(w)) * 2));
   }
   const draw = () => ctx.drawImage(sheet, col * C, row * C, C, C, -ox * sc, -oy * sc, C * sc, C * sc);
   draw();
