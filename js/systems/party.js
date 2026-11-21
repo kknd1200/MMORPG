@@ -13,11 +13,11 @@ export const MERC_CLASSES = ['knight', 'elf', 'mage', 'priest', 'warrior'];
 
 // 용병 겉모습 (assets/heroes). 같은 직업이라도 여러 그림 중 하나
 export const MERC_LOOKS = {
-  knight: ['knight', 'knight_female', 'paladin', 'paladin_female'],
+  knight: ['knight', 'knight_female'],
   elf: ['archer', 'archer_male'],
-  mage: ['mage', 'mage_male', 'spellsword', 'spellsword_female'],
+  mage: ['mage', 'mage_male'],
   priest: ['priest', 'priest_female'],
-  warrior: ['warrior', 'warrior_female', 'monk', 'monk_female'],
+  warrior: ['warrior', 'warrior_female'],
 };
 
 const NAMES = [

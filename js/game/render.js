@@ -1,4 +1,5 @@
 import { HERO_ACTION } from '../data/hero-anim.js';
+import { drawCharFx, hasChar, CHAR_BODY_PX } from './chars.js';
 // 캔버스 렌더링 — 아이소메트릭(마름모 타일) 2.5D 시점
 //   월드 좌표 (x, y) → 화면 ((x − y)·32, (x + y)·16)
 //   바닥은 terrain.js 의 청크 캐시, 벽 · 나무 · 집 · 캐릭터는 깊이(x + y) 순서로 그림
@@ -23,6 +24,10 @@ const TAU = Math.PI * 2;
 
 // 월드 방향 → 화면 방향 (캐릭터가 바라보는 쪽 그림 고르기용)
 const screenDir = (f) => ({ x: f.x - f.y, y: (f.x + f.y) * 0.5 });
+// 8방향 캐릭터의 진행 중인 동작 (공격 · 스킬 8프레임)
+const actOf = (e, time) => (e.act && time - e.act.t0 < e.act.dur ? { name: e.act.name, t: time - e.act.t0 } : null);
+// 이름표 높이: 8방향 도트 캐릭터는 몸이 조금 작음
+const tagH = (key) => (hasChar(key) ? CHAR_BODY_PX + 12 : 74);
 
 export class Renderer {
   constructor(canvas) {
@@ -301,13 +306,14 @@ export class Renderer {
       moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / HERO_ACTION.attack.dur,
       cast: (p.castAnim || 0) / HERO_ACTION.skill.dur,
+      act: actOf(p, game.time),
       weaponColor: weapon?.icon?.color,
       armorId: ch.equipment?.armor,
       hurt: !p.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0,
       dead: p.dead,
       time: game.time,
     });
-    if (!ghost) nameTag(ctx, sx, sy - 74, ch.name, '#ffffff');
+    if (!ghost) nameTag(ctx, sx, sy - tagH(game.heroKey), ch.name, '#ffffff');
   }
 
   // 용병: 도트 캐릭터 + 초록 이름표 + 작은 HP 바
@@ -321,10 +327,11 @@ export class Renderer {
       sprite: game.spriteOf(u),
       facing: screenDir(e.facing), walk: e.walkPhase, moving: e.moving,
       attack: (e.attackAnim || 0) / HERO_ACTION.attack.dur, cast: (e.castAnim || 0) / HERO_ACTION.skill.dur,
+      act: actOf(e, game.time),
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });
     if (e.dead) return;
-    const top = sy - 74;
+    const top = sy - tagH(game.spriteOf(u));
     nameTag(ctx, sx, top, ch.name, game.selectedId === u.id ? '#ffe680' : '#9effa0');
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(sx - 15, top + 3, 30, 4);
     ctx.fillStyle = '#4ad04a'; ctx.fillRect(sx - 14, top + 4, 28 * Math.max(0, ch.hp / ch.maxHp), 2);
@@ -427,6 +434,10 @@ export class Renderer {
         ctx.strokeText(fx.text, x, y);
         ctx.fillStyle = fx.color;
         ctx.fillText(fx.text, x, y);
+      } else if (fx.type === 'charfx') {
+        // 8방향 캐릭터의 공격 · 스킬 이펙트: 캐릭터 앞에 고정
+        const at = fx.follow || fx;
+        drawCharFx(ctx, this.px(at.x, at.y), this.py(at.x, at.y), fx);
       } else if (fx.type === 'sheet') {
         // 스킬 이펙트 시트 (96px 칸 4×4 = 16프레임)
         if (fx.t < 0) continue;

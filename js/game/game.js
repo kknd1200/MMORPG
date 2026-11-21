@@ -1,4 +1,6 @@
 import { HERO_ACTION, contactTime, releaseTime, FX_PART } from '../data/hero-anim.js';
+import { CHARS, actionDur, hitTimes, dirIndex } from '../data/chars.js';
+import { charFiles } from './chars.js';
 import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
@@ -94,7 +96,7 @@ export class Game {
 
     // 그림 미리 불러오기: 내 캐릭터 · NPC · 직업 스킬 이펙트 · 아이콘
     this.heroKey = heroKey(character.classId, character.gender);
-    preload([...Object.values(NPC_SPRITES).map((k) => `heroes/${k}/attack-1.webp`), 'heroes/paladin/attack-1.webp']);
+    preload(Object.values(NPC_SPRITES).map((k) => `chars/${k}/idle.webp`));
     for (const u of this.units()) this.preloadUnit(u);
     preload([
       ...Object.values(STATUS_FX).map((f) => fxSheet(f.sheet)), fxSheet(LEVELUP_FX.sheet),
@@ -120,7 +122,29 @@ export class Game {
   unitById(id) { return this.units().find((u) => u.ent.id === id || u.id === id) || null; }
   selUnit() { return this.unitById(this.selectedId) || this.leader; }
   clsOf(u) { return CLASSES[u.char.classId]; }
-  spriteOf(u) { return u.isLeader ? this.heroKey : (u.char.look || heroKey(u.char.classId, u.char.gender)); }
+  // 용병의 예전 외형(성기사 · 몽크 등)은 8방향 그림이 없어서 같은 직업 그림으로
+  spriteOf(u) {
+    if (u.isLeader) return this.heroKey;
+    const look = u.char.look;
+    return CHARS[look] ? look : heroKey(u.char.classId, u.char.gender);
+  }
+
+  // 8방향 캐릭터 동작 시작: name = 'normal' | 'skill'. 돌려주는 값 = 타격 · 발사 프레임까지 걸리는 시간(초)들
+  startAct(u, name, target = null) {
+    const e = u.ent, key = this.spriteOf(u);
+    if (!CHARS[key]) {
+      if (name === 'normal') { e.attackAnim = HERO_ACTION.attack.dur; return [contactTime()]; }
+      e.castAnim = HERO_ACTION.skill.dur; return [releaseTime()];
+    }
+    const dur = actionDur(key, name);
+    e.act = { name, t0: this.time, dur, key };
+    if (name === 'normal') { e.attackAnim = dur; e.castAnim = 0; } else { e.castAnim = dur; e.attackAnim = 0; }
+    // 팩 규격: 이펙트는 캐릭터 앞 고정 위치, 몸과 같은 프레임 번호
+    const f = target ? { x: target.x - e.x, y: target.y - e.y } : e.facing;
+    const dir = dirIndex({ x: f.x - f.y, y: (f.x + f.y) * 0.5 });
+    this.effects.push({ type: 'charfx', key, action: name, dir, follow: e, x: e.x, y: e.y, t: 0, life: dur });
+    return hitTimes(key, name);
+  }
 
   makeMercUnit(char, near, i = 0) {
     fillSlots(char);
@@ -138,7 +162,8 @@ export class Game {
   preloadUnit(u) {
     const cls = this.clsOf(u);
     const fx = [...cls.skills.map((id) => SKILLS[id]), BASIC_FX[u.char.classId]].flatMap((x) => [x?.fx?.sheet || x?.sheet, x?.proj]).filter(Boolean);
-    preload([...heroFrames(this.spriteOf(u)), ...fx.map(fxSheet), ...cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet))]);
+    const key = this.spriteOf(u);
+    preload([...(CHARS[key] ? charFiles(key) : heroFrames(key)), ...fx.map(fxSheet), ...cls.skills.map((id) => fxIcon(SKILLS[id].fx.sheet))]);
   }
 
   // 용병단장: 이 마을의 용병 목록 (1시간마다 바뀜)
@@ -619,10 +644,9 @@ export class Game {
     const stat = ch.stats[this.clsOf(u).primaryStat];
     const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
     // 원본 공격 6장: 4번째 장(타격 프레임)에 맞거나, 활 · 마법이면 그때 날아감
-    e.attackAnim = HERO_ACTION.attack.dur;
     this.face(e, m);
+    const contact = this.startAct(u, 'normal', m)[0] ?? contactTime();
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
-    const contact = contactTime();
     const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj, contact) : contact;
     if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m, u); return; }
     this.fx(bfx, m, delay, this.leftOf(e, m), 'hit');
@@ -689,11 +713,10 @@ export class Game {
     const stat = ch.stats[sk.stat];
     const atk = this.derived(u).attack;
     // 원본 시전 6장: 4번째 장에서 발사. 이펙트는 발동 · 방출(시전자) → 명중 · 소멸(대상)
-    p.attackAnim = 0;
-    p.castAnim = HERO_ACTION.skill.dur;
     this.floatText(p, sk.name, sk.color, 13);
-    const release = releaseTime();
-    this.fx(sk.fx, p, 0, this.leftOf(p, m), 'cast');
+    const release = this.startAct(u, 'skill', m)[0] ?? releaseTime();
+    // 8방향 캐릭터는 시전 이펙트가 몸 동작과 함께 나오므로, 스킬 그림은 대상 쪽(명중 · 소멸)만
+    if (!CHARS[this.spriteOf(u)]) this.fx(sk.fx, p, 0, this.leftOf(p, m), 'cast');
     if (sk.dash) {
       // 돌진: 대상 바로 앞까지 순식간에 이동
       const d = dist(p, m) || 1;
@@ -771,7 +794,7 @@ export class Game {
   castSelfSkill(sk, u = this.leader) {
     const ch = u.char;
     const p = u.ent;
-    p.castAnim = HERO_ACTION.skill.dur;
+    const release = this.startAct(u, 'skill')[0] ?? releaseTime();
     if (sk.kind === 'aoe') {
       this.spend(sk, u);
       this.floatText(p, sk.name, sk.color, 13);
@@ -779,7 +802,7 @@ export class Game {
       const atk = this.derived(u).attack;
       const stat = ch.stats[sk.stat];
       for (const m of this.monsters) {
-        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, releaseTime(), u);
+        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, release, u);
       }
     } else if (sk.kind === 'buff') {
       this.spend(sk, u);

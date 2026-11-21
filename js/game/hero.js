@@ -1,4 +1,5 @@
 import { HERO_BODY } from '../data/hero-anim.js';
+import { hasChar, drawChar } from './chars.js';
 // 사람형 캐릭터 (플레이어 · NPC) — 실제 비율(약 7등신) 다크 판타지 풍
 //
 // 좌표계: (0,0) = 발밑, 위쪽이 -y. 키 약 62px.
@@ -141,6 +142,8 @@ let tintCanvas = null;
  * s: { look, facing, walk(위상), moving, attack(1→0 공격 진행), cast(1→0), weaponColor, armorId, hurt, dead, scale, time }
  */
 export function drawHumanoid(ctx, x, y, s) {
+  // 8방향 도트 캐릭터 (assets/chars) 가 있으면 그것으로
+  if (hasChar(s.sprite) && drawChar(ctx, x, y, s)) return;
   if (!(s.hurt > 0) || typeof document === 'undefined') { drawAny(ctx, x, y, s); return; }
   const sc = ctx.getTransform().a || 1;
   const W = 140, H = 130, AX = 70, AY = 108;

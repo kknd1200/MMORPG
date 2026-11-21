@@ -7,6 +7,8 @@
 // assets/skills/flight_<arrow|bolt>_<속성>.webp         : 날아가는 화살 · 마법탄 (96px 칸 4×4, 오른쪽을 봄)
 // assets/ui/<이름>.webp                                 : 상태 아이콘 (64px)
 
+import { CHARS } from '../data/chars.js';
+
 const BASE = new URL('../../assets/', import.meta.url);
 const cache = new Map();
 
@@ -37,10 +39,11 @@ export function heroFrames(key) {
   return out;
 }
 
-export const portrait = (key) => `portraits/${key}.webp`;
+// 초상화: 8방향 도트 캐릭터가 있으면 그 그림에서 만든 초상화
+export const portrait = (key) => (CHARS[key] ? `chars/${key}/portrait.webp` : `portraits/${key}.webp`);
 
 // NPC 그림 (플레이어 직업이 아닌 「환생 루프」 캐릭터)
-export const NPC_SPRITES = { merchant: 'novice', smith: 'warrior', healer: 'priest_female', guide: 'archer_male', teleporter: 'mage_male', mercenary: 'paladin' };
+export const NPC_SPRITES = { merchant: 'priest', smith: 'warrior', healer: 'priest_female', guide: 'archer_male', teleporter: 'mage_male', mercenary: 'knight' };
 
 // ---------------------------------------------------------------- 스킬 이펙트
 export const FX = { cell: 96, cols: 4, frames: 16 };
