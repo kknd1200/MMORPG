@@ -222,8 +222,15 @@ function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   const img = sheet.src, c = sheet.cell, k = c / SHEET_CELL;
   const sx = col * c, sy = a.row * c;
   const dx = -a.centerX * s, dy = -a.footY * s;
+  const legged = LEGGED.has(family);
   if (m.attackAnim > 0 || m.dead || weight < 0.01 || floating) {
     ctx.drawImage(img, sx, sy, c, c, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
+  } else if (legged && typeof document !== 'undefined') {
+    // 다리 있는 몬스터: 대기 그림에서 만든 8프레임 걸음 (앞다리 · 뒷다리가 번갈아 디딤)
+    const wf = monsterWalk(sheet, a, family);
+    const TAU = Math.PI * 2;
+    const f = Math.floor(((((m.walkPhase || 0) % TAU) + TAU) % TAU) / TAU * 8) % 8;
+    ctx.drawImage(wf, f * c, 0, c, c, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
   } else {
     // 상체는 그대로, 하체만 띠 단위로 살짝 앞뒤로 휘어 걷는 느낌 (통째로 튀지 않음)
     const soft = ['slime', 'serpent', 'plant'].includes(family);
@@ -240,6 +247,56 @@ function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   }
   ctx.restore();
   return bodyPx + Math.max(0, float + settle);
+}
+
+// ---------------------------------------------------------------- 몬스터 걸음
+// 원본 몬스터 그림에는 걷기 프레임이 없어서, 대기 그림(4번째 칸)에서 8프레임 걸음을 만듭니다.
+//   - 하체(엉덩이 아래)를 몸 가운데에서 앞 · 뒤 두 조각으로 나눔 (옆모습 그림이라 앞다리 · 뒷다리)
+//   - 두 조각이 번갈아: 발 쪽으로 갈수록 앞뒤로 기울어 벌어졌다 모이고, 지나갈 때 정강이가 살짝 들림
+//   - 디딘 직후 상체가 1px 정도 내려앉음
+// 화면에 나온 몬스터만, 처음 걸을 때 한 번 만들어 두고 계속 씀 (시트를 해제하면 함께 사라짐)
+const LEGGED = new Set(['biped', 'quadruped', 'spider', 'construct', 'dragon', 'shell']);
+const W_LIFT = [0, 0, 0.6, 1, 0.6, 0, 0, 0];       // 들림 (최대값 대비)
+const W_STRIDE = [1, 0.6, 0, -0.6, -1, -0.6, 0, 0.6]; // 앞(+) · 뒤(−)로 벌림
+const W_BOB = [0, 1, 0, 0, 0, 1, 0, 0];
+const walkCache = new WeakMap(); // sheet → Map(row → canvas)
+
+export function monsterWalk(sheet, a, family) {
+  let rows = walkCache.get(sheet);
+  if (!rows) { rows = new Map(); walkCache.set(sheet, rows); }
+  let cv = rows.get(a.row);
+  if (cv) return cv;
+  const c = sheet.cell, k = c / SHEET_CELL;
+  cv = document.createElement('canvas');
+  cv.width = c * 8; cv.height = c;
+  const g = cv.getContext('2d');
+  const foot = Math.round(a.footY * k), bh = a.bodyHeight * k;
+  const hip = Math.round(foot - bh * (family === 'quadruped' || family === 'shell' ? 0.3 : 0.34));
+  const knee = Math.round(foot - bh * 0.16);
+  const mid = Math.round(a.centerX * k);
+  const lift = Math.max(1, Math.round(bh * 0.05));
+  const stride = Math.max(1, Math.round(bh * 0.06));
+  const sx = 3 * c, sy = a.row * c; // 대기 그림
+  for (let i = 0; i < 8; i++) {
+    const ox = i * c;
+    g.drawImage(sheet.src, sx, sy, c, hip, ox, W_BOB[i] * Math.max(1, Math.round(k * 2)), c, hip);
+    // 뒤쪽 조각(왼쪽 = 등 쪽) 먼저, 앞쪽 조각을 나중에
+    // 뒤쪽 조각은 벌어지는 폭만큼 가운데를 넘겨 그려서 두 조각 사이에 틈이 생기지 않게
+    const ov = stride * 2 + 1;
+    for (const [x0, w, ph] of [[0, Math.min(c, mid + ov), 4], [mid, c - mid, 0]]) {
+      const f = (i + ph) % 8;
+      const st = W_STRIDE[f] * stride, up = Math.round(W_LIFT[f] * lift);
+      for (let y = hip; y < c; y++) {
+        const t = (y - hip + 1) / Math.max(1, foot - hip);
+        const shift = Math.round(st * Math.min(1, t));
+        const dy = y >= knee ? -up : 0;
+        g.drawImage(sheet.src, sx + x0, sy + y, w, 1, ox + x0 + shift, y + dy, w, 1);
+      }
+    }
+  }
+  if (rows.size > 8) rows.delete(rows.keys().next().value);
+  rows.set(a.row, cv);
+  return cv;
 }
 
 // 시트를 불러오기 전 잠깐 보이는 도형 그림
