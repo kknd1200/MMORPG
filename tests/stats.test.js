@@ -189,3 +189,11 @@ test('밸런스: 같은 레벨 일반 몬스터는 2~5초에 처치, 레벨이 �
     prev = m;
   }
 });
+
+test('레벨업하면 HP · MP 모두 회복', () => {
+  const c = make('knight', six('knight'));
+  c.hp = 3; c.mp = 1;
+  S.levelUp(c, fixed(0.5));
+  assert.equal(c.hp, c.maxHp);
+  assert.equal(c.mp, c.maxMp);
+});

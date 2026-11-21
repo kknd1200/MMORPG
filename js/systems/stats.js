@@ -110,8 +110,9 @@ export function levelUp(char, rng = Math.random) {
   char.level += 1;
   char.maxHp += hpGain;
   char.maxMp += mpGain;
-  char.hp = Math.min(char.maxHp, char.hp + hpGain);
-  char.mp = Math.min(char.maxMp, char.mp + mpGain);
+  // 레벨업하면 HP · MP 모두 회복
+  char.hp = char.maxHp;
+  char.mp = char.maxMp;
   const bonus = bonusPointsForLevel(char.level);
   char.bonusPoints += bonus;
 

@@ -648,7 +648,7 @@ export class Game {
     const contact = this.startAct(u, 'normal', m)[0] ?? contactTime();
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
     const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj, contact) : contact;
-    if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m, u); return; }
+    if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.later(delay, () => this.aggro(m, u)); return; }
     this.fx(bfx, m, delay, this.leftOf(e, m), 'hit');
     this.damageMonster(m, S.normalDamage(this.derived(u).attack, m.armor), u.isLeader ? '#ffffff' : '#d8e8ff', delay, u);
   }
@@ -763,6 +763,12 @@ export class Game {
 
   // 이펙트 시트 재생 (at = 몬스터/플레이어/좌표)
   // flip: 이펙트 그림은 오른쪽을 향해 그려져 있음 → 화면 왼쪽을 향하면 좌우 반전
+  // delay 초 뒤에 실행 (맵을 옮기면 버려짐)
+  later(delay, fn) {
+    if (delay <= 0.03) { fn(); return; }
+    this.pending.push({ at: this.time + delay, fn });
+  }
+
   // part: 생략하면 16장 전체, 'cast' = 발동 · 방출(1~8장, 시전자), 'hit' = 명중 · 소멸(9~16장, 대상)
   fx(spec, at, delay = 0, flip = false, part = null) {
     if (!spec?.sheet) return;
@@ -783,7 +789,7 @@ export class Game {
     const ch = u.char;
     const magic = sk.element === 'magic';
     const chance = magic ? S.magicHitChance(stat, ch.level, m) : S.physicalHitChance(stat, ch.level, m);
-    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
+    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.later(delay + i * 0.12, () => this.aggro(m, u)); return; }
     const raw = S.skillDamage(stat, atk, sk.coef);
     const dmg = magic ? S.magicMitigate(raw, m.mr) : S.physicalMitigate(raw, m.armor);
     if (sk.slow) m.slowUntil = this.time + sk.slow;
@@ -983,6 +989,8 @@ export class Game {
     if (m.dead || m.state === 'return') return;
     const was = m.state;
     m.state = 'chase';
+    // 가만히 있다가 맞은 몬스터는 정신 차리는 데 잠깐 걸림 (맞자마자 반격하지 않음)
+    if (was !== 'chase') m.attackTimer = Math.max(m.attackTimer || 0, 0.6);
     // 때린 파티원을 노림 (이미 노리는 대상이 있으면 가끔만 바꿈)
     if (u && (!m.targetId || Math.random() < 0.2)) m.targetId = u.ent.id;
     // 무리 생활: 처음 싸움에 휘말리면 주변의 같은 종류가 함께 덤빔
@@ -1106,12 +1114,14 @@ export class Game {
   monsterAttack(m, def, u = this.leader) {
     m.animKind = 'attack'; m.animDur = 0.4; m.attackAnim = 0.4;
     const e = u.ent;
+    // 피해는 휘두른 공격이 닿는 순간(동작 중간) · 화살 · 마법탄이 도착하는 순간에
+    let delay = 0.2;
     if (def.projectile) {
-      this.addProjectile(m, e, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
+      delay = this.addProjectile(m, e, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0', null, 0.15);
     } else {
-      this.effects.push({ type: 'slash', x: e.x, y: e.y, t: 0, life: 0.2, color: '#ff6060' });
+      this.effects.push({ type: 'slash', x: e.x, y: e.y, t: -delay, life: 0.2, color: '#ff6060' });
     }
-    this.monsterHit(m, def, 1, 0, u);
+    this.monsterHit(m, def, 1, delay, u);
   }
 
   // 몬스터 한 번의 타격: 명중 판정 → 피해. 맞으면 true
@@ -1140,14 +1150,15 @@ export class Game {
     const p = u.ent;
     const color = EFFECT_COLOR[sk.effect] || def.color;
     this.floatText(m, sk.name, color, 13);
-    if (def.projectile) this.addProjectile(m, p, def.projectile, color);
-    this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, def.projectile ? 0.25 : 0.12);
+    // 스킬도 이펙트가 닿는 순간 피해 (원거리는 날아가 도착할 때)
+    const hitAt = def.projectile ? this.addProjectile(m, p, def.projectile, color, null, 0.2) : 0.3;
+    this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, hitAt - 0.05);
     let landed = false;
     for (let i = 0; i < (sk.pulses || 1); i++) {
       if (p.dead) break;
-      if (this.monsterHit(m, def, sk.mult, i * 0.15, u)) landed = true;
+      if (this.monsterHit(m, def, sk.mult, hitAt + i * 0.15, u)) landed = true;
     }
-    if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def, u);
+    if (landed && Math.random() < 0.6) this.later(hitAt, () => { if (!p.dead) this.applyStatus(sk.effect, def, u); });
   }
 
   applyStatus(effect, def, u = this.leader) {
@@ -1177,6 +1188,7 @@ export class Game {
   hurtUnit(u, dmg, def, delay = 0, color = '#ff5050') {
     const ch = u.char, e = u.ent;
     if (e.dead) return;
+    if (delay > 0.03) { this.later(delay, () => this.hurtUnit(u, dmg, def, 0, color)); return; }
     ch.hp -= dmg;
     e.lastHurt = this.time;
     this.floatText(e, `-${dmg}`, u.isLeader ? color : '#ff9a7a', u.isLeader ? 15 : 13, delay);
@@ -1209,9 +1221,9 @@ export class Game {
 
   damageMonster(m, dmg, color, delay = 0, u = null) {
     // 화살 · 마법이 날아가는 동안은 피해를 미뤘다가 맞는 순간에 적용
+    // 몬스터는 맞는 순간에야 알아챔 (휘두르기 시작할 때 미리 반격하지 않게)
     if (delay > 0.03) {
-      this.aggro(m, u);
-      this.pending.push({ at: this.time + delay, fn: () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0, u); } });
+      this.later(delay, () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0, u); });
       return;
     }
     const hide = passive(MONSTERS[m.type], 'hide');
@@ -1272,7 +1284,7 @@ export class Game {
     this.fx(LEVELUP_FX, p);
     this.floatText(p, `LEVEL UP!`, '#ffe066', 20);
     const con = r.conBonus ? ` + 체력보너스 ${r.conBonus}` : '';
-    this.log(`레벨 업! Lv.${r.level} — HP +${r.hpGain} (주사위 ${r.hpRoll}${con}), MP +${r.mpGain}`, 'level');
+    this.log(`레벨 업! Lv.${r.level} — HP +${r.hpGain} (주사위 ${r.hpRoll}${con}), MP +${r.mpGain} · HP/MP 모두 회복`, 'level');
     if (r.bonus) this.log(`보너스 포인트 +${r.bonus}! 캐릭터 창(C)에서 스탯을 올리세요.`, 'level');
     for (const sk of this.cls.skills.map((id) => SKILLS[id])) {
       if (sk.level === r.level) this.log(`새 스킬 습득: ${sk.name} — 스킬 창(K)에서 단축칸에 등록하세요.`, 'level');
@@ -1284,7 +1296,7 @@ export class Game {
   onMercLevelUp(u, r) {
     this.fx(LEVELUP_FX, u.ent);
     this.floatText(u.ent, 'LEVEL UP!', '#ffe066', 16);
-    this.log(`[파티] ${u.char.name} 레벨 업! Lv.${r.level} — HP +${r.hpGain}, MP +${r.mpGain}`, 'level');
+    this.log(`[파티] ${u.char.name} 레벨 업! Lv.${r.level} — HP +${r.hpGain}, MP +${r.mpGain} · 모두 회복`, 'level');
     // 용병 보너스 포인트는 주스탯에 자동으로
     while (u.char.bonusPoints > 0 && S.allocatePoint(u.char, this.clsOf(u).primaryStat));
     fillSlots(u.char);
