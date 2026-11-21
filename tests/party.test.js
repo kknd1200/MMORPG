@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CLASSES } from '../js/data/classes.js';
+import { CLASSES, CLASS_ORDER } from '../js/data/classes.js';
 import { SKILLS } from '../js/data/skills.js';
 import { mercOffers, createMerc, mercPrice, fillSlots, learnedSkills, condOk, shareExp, MERC_CLASSES, MERC_LOOKS, SKILL_SLOTS } from '../js/systems/party.js';
 import * as S from '../js/systems/stats.js';
@@ -36,9 +36,9 @@ test('용병 고용: 레벨까지 성장, 스킬 칸 채움, 보너스 포인트
   }
 });
 
-test('전사(용병) 스킬 8개 · 그림 파일', () => {
+test('전사 스킬 8개 · 그림 파일, 캐릭터 생성 가능', () => {
   assert.equal(CLASSES.warrior.skills.length, 8);
-  assert.ok(CLASSES.warrior.hireOnly);
+  assert.ok(!CLASSES.warrior.hireOnly && CLASS_ORDER.includes('warrior'));
   for (const id of CLASSES.warrior.skills) {
     assert.ok(asset(`skills/${SKILLS[id].fx.sheet}.webp`), id);
     assert.ok(asset(`skills/${SKILLS[id].fx.sheet}-icon.webp`), id);

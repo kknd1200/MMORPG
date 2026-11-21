@@ -13,11 +13,13 @@ const alloc = (classId, extra) => {
 const make = (classId = 'knight', extra = { str: 4, con: 2 }) =>
   S.createCharacter({ id: 't', name: '테스트', classId, stats: alloc(classId, extra) });
 const fixed = (v) => () => v; // rng 고정
+// 보너스 6점을 체력 위주로 (생성 최대 18을 넘지 않게, 남으면 힘)
+const six = (id) => { const c = CLASSES[id].baseStats.con; const k = Math.min(6, 18 - c); return k === 6 ? { con: 6 } : { con: k, str: 6 - k }; };
 
 test('직업별 시작 HP/MP', () => {
-  const expected = { knight: [40, 20], elf: [35, 25], mage: [25, 35], priest: [30, 30] };
+  const expected = { knight: [40, 20], elf: [35, 25], mage: [25, 35], priest: [30, 30], warrior: [45, 15] };
   for (const id of CLASS_ORDER) {
-    const c = make(id, { con: 6 });
+    const c = make(id, six(id));
     assert.deepEqual([c.maxHp, c.maxMp], expected[id], id);
   }
 });
@@ -36,7 +38,7 @@ test('기사 레벨업: HP 8~12(+체력보너스), MP 3~5', () => {
 
 test('모든 직업 레벨업 주사위가 범위 안', () => {
   for (const id of CLASS_ORDER) {
-    const c = make(id, { con: 6 });
+    const c = make(id, six(id));
     for (let i = 0; i < 200; i++) {
       const r = S.levelUp(c);
       const { hp, mp } = CLASSES[id].growth;
@@ -63,9 +65,9 @@ test('캐릭터 생성 포인트 검증', () => {
   assert.equal(S.validateAllocation('knight', { ...alloc('knight', { str: 6, dex: 1 }), con: 11 }).ok, false); // 기본값 이하
 });
 
-test('기본 일반공격: 기사 10 / 요정 8 / 법사 3 / 사제 5, 무기·버프로 변동', () => {
-  const expected = { knight: 10, elf: 8, mage: 3, priest: 5 };
-  for (const id of CLASS_ORDER) assert.equal(S.attackPower(make(id, { con: 6 })), expected[id]);
+test('기본 일반공격: 기사 10 / 요정 8 / 법사 3 / 사제 5 / 전사 11, 무기·버프로 변동', () => {
+  const expected = { knight: 10, elf: 8, mage: 3, priest: 5, warrior: 11 };
+  for (const id of CLASS_ORDER) assert.equal(S.attackPower(make(id, six(id))), expected[id]);
   const k = make();
   k.equipment.weapon = 'long_sword';
   assert.equal(S.attackPower(k), 10 + ITEMS.long_sword.atk);

@@ -93,18 +93,19 @@ export const CLASSES = {
     startEquipment: { weapon: 'training_mace', armor: 'cloth_armor' },
     color: '#d8b43c',
   },
-  // 용병 전용 직업 (캐릭터 생성에는 없음)
+  // 전사: 캐릭터 생성 · 용병 모두 가능
   warrior: {
     id: 'warrior',
     name: '전사',
-    role: '근접 광전사 (용병)',
-    description: '거대한 도끼를 휘두르는 용병 전사. HP 성장이 높고 공격력이 강합니다.',
+    role: '근접 광전사',
+    description: '거대한 대검을 휘두르는 전사. HP 성장이 높고 공격력이 강하지만 마나가 적습니다.',
     primaryStat: 'str',
     attackType: 'melee',
     attackRange: 1.3,
     attackInterval: 1.05,
     projectile: null,
     baseAttack: 11,
+    attackGrowth: 0.55,
     baseStats: { str: 15, dex: 8, int: 7, con: 13 },
     start: { hp: 45, mp: 15 },
     growth: { hp: [9, 13], mp: [2, 4] },
@@ -112,7 +113,6 @@ export const CLASSES = {
     sprites: { m: 'warrior', f: 'warrior_female' }, defaultGender: 'm', fx: 'warrior',
     startEquipment: { weapon: 'training_axe', armor: 'cloth_armor' },
     color: '#c8642c',
-    hireOnly: true,
   },
 };
 
@@ -126,7 +126,7 @@ export function heroKey(classId, gender) {
 
 export const GENDER_NAMES = { m: '남', f: '여' };
 
-export const CLASS_ORDER = ['knight', 'elf', 'mage', 'priest'];
+export const CLASS_ORDER = ['knight', 'elf', 'mage', 'priest', 'warrior'];
 
 // 캐릭터 생성 규칙: 직업 기본 스탯 위에 보너스 포인트를 배분
 export const CREATION = { bonusPoints: 6, maxStat: 18 };

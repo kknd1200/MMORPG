@@ -52,14 +52,14 @@ export const ITEMS = {
   holy_mace: { name: '성스러운 철퇴', type: 'weapon', atk: 4, classes: ['priest'], price: 1500, icon: { color: '#ffe38a', text: '퇴' }, desc: '일반공격 +4' },
 
   // ---- 무기: 전사 (용병) ----
-  training_axe: { name: '수련용 도끼', type: 'weapon', atk: 0, classes: ['warrior'], price: 10, icon: { color: '#9a8a7a', text: '도' }, desc: '초보 전사의 연습용 도끼.' },
-  battle_axe: { name: '전투 도끼', type: 'weapon', atk: 5, classes: ['warrior'], price: 320, icon: { color: '#b8a898', text: '도' }, desc: '일반공격 +5' },
-  war_axe: { name: '대형 전투 도끼', type: 'weapon', atk: 9, classes: ['warrior'], price: 1600, icon: { color: '#e0c8a0', text: '도' }, desc: '일반공격 +9' },
+  training_axe: { name: '수련용 대검', type: 'weapon', atk: 0, classes: ['warrior'], price: 10, icon: { color: '#9a8a7a', text: '대' }, desc: '초보 전사의 연습용 대검.' },
+  battle_axe: { name: '전투 대검', type: 'weapon', atk: 5, classes: ['warrior'], price: 320, icon: { color: '#b8a898', text: '대' }, desc: '일반공격 +5' },
+  war_axe: { name: '사자왕의 대검', type: 'weapon', atk: 9, classes: ['warrior'], price: 1600, icon: { color: '#e0c8a0', text: '대' }, desc: '일반공격 +9' },
 
   // ---- 방어구 ----
   cloth_armor: { name: '천 옷', type: 'armor', def: 1, price: 20, icon: { color: '#b8a98a', text: '옷' }, desc: '방어력 +1' },
   leather_armor: { name: '가죽 갑옷', type: 'armor', def: 3, price: 250, icon: { color: '#8a5a32', text: '갑' }, desc: '방어력 +3' },
-  chain_mail: { name: '사슬 갑옷', type: 'armor', def: 6, classes: ['knight', 'priest', 'warrior'], price: 1000, icon: { color: '#a3abb8', text: '갑' }, desc: '방어력 +6 (기사/사제)' },
+  chain_mail: { name: '사슬 갑옷', type: 'armor', def: 6, classes: ['knight', 'priest', 'warrior'], price: 1000, icon: { color: '#a3abb8', text: '갑' }, desc: '방어력 +6 (기사/사제/전사)' },
 };
 
 export const INVENTORY_SIZE = 24;

@@ -82,17 +82,18 @@ export function playerEhp(classId, level) {
   return { hp: ch.maxHp, def: S.defense(ch) };
 }
 
-// 레벨별 기준값 (직업 평균). 몬스터 레벨은 최대 110 까지 미리 계산
+// 레벨별 기준값 (처음 네 직업의 평균 — 직업이 늘어도 몬스터 수치가 흔들리지 않게 고정). 몬스터 레벨은 최대 110 까지 미리 계산
+const BALANCE_CLASSES = ['knight', 'elf', 'mage', 'priest'];
 const CURVE = [];
 for (let lv = 1; lv <= 110; lv++) {
   const pl = Math.min(lv, 99);
   let dps = 0, hp = 0, def = 0;
-  for (const id of CLASS_ORDER) {
+  for (const id of BALANCE_CLASSES) {
     dps += playerDps(id, pl);
     const e = playerEhp(id, pl);
     hp += e.hp; def += e.def;
   }
-  const n = CLASS_ORDER.length;
+  const n = BALANCE_CLASSES.length;
   CURVE[lv] = { dps: dps / n, hp: hp / n, def: def / n };
 }
 export const curve = (lv) => CURVE[Math.max(1, Math.min(110, Math.round(lv)))];

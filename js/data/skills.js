@@ -250,7 +250,7 @@ export const SKILLS = {
     kind: 'damage', element: 'physical', stat: 'str', coef: 0.16,
     mp: 3, cooldown: 2, range: null, color: '#ffc86a',
     fx: { sheet: 'warrior_a1', at: 'target', scale: 1.2, z: 14 },
-    desc: '도끼로 땅째 내려찍습니다.',
+    desc: '대검으로 땅째 내려찍습니다.',
   },
   crush: {
     id: 'crush', classId: 'warrior', name: '분쇄', level: 5,
@@ -281,18 +281,18 @@ export const SKILLS = {
     desc: '파티 전원 60초 동안 일반공격력 +3, 방어력 +2.',
   },
   venom_axe: {
-    id: 'venom_axe', classId: 'warrior', name: '독도끼', level: 30,
+    id: 'venom_axe', classId: 'warrior', name: '독날 베기', level: 30,
     kind: 'aoe_target', element: 'physical', stat: 'str', coef: 0.18, radius: 2, dot: 0.03, dotTime: 5,
     mp: 14, cooldown: 8, range: null, color: '#8aff5a',
     fx: { sheet: 'warrior_a6', at: 'target', scale: 1.8, z: 18 },
-    desc: '독을 머금은 도끼로 대상 주변 2칸을 휩씁니다.',
+    desc: '독을 머금은 대검으로 대상 주변 2칸을 휩씁니다.',
   },
   spin_cleave: {
     id: 'spin_cleave', classId: 'warrior', name: '회전 베기', level: 40,
     kind: 'aoe', element: 'physical', stat: 'str', coef: 0.2, radius: 2.5,
     mp: 16, cooldown: 7, color: '#ffe8a0',
     fx: { sheet: 'warrior_a7', at: 'self', scale: 2.2, z: 12 },
-    desc: '도끼를 휘돌려 주변 2.5칸의 적을 벱니다.',
+    desc: '대검을 휘돌려 주변 2.5칸의 적을 벱니다.',
   },
   quake: {
     id: 'quake', classId: 'warrior', name: '대지 진동', level: 50,
