@@ -8,7 +8,6 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-echo Game server: http://localhost:8080  (close this window to stop)
-start "" http://localhost:8080
+set OPEN_BROWSER=1
 node server.js
 pause
