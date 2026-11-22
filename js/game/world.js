@@ -275,7 +275,7 @@ export class World {
       const ey = ry > cy ? 8 : H - 10;
       this.roadLine(ex, ry, ex, ey + 4);
       this.clearing(ex, ey + 3, 5);
-      this.rect(ex - 4, ey - 3, ex + 4, ey - 1, T.ROCK);
+      this.rect(ex - 2, ey - 2, ex + 2, ey - 1, T.ROCK);
       this.rect(ex - 1, ey - 1, ex + 1, ey + 1, T.DIRT);
       const dun = MAPS[`${did}-1`];
       this.portal('cave', ex + 0.5, ey + 0.5, 3, 2, { map: dun.id, spot: 'up' }, `${dun.name.replace(' 지하 1층', '')} 입구`);

@@ -1,5 +1,5 @@
 import { drawHeroSheet } from './hero-sheets.js';
-import { footPose } from './locomotion.js';
+import { footPose, monsterLimbPose } from './locomotion.js';
 // 캐릭터 · NPC · 몬스터 그림 (캔버스 도형으로 그리는 클래식 다크 판타지 풍 스프라이트)
 //
 // 좌표계: (0,0) = 발밑. 위쪽이 -y. 그리기 전에 바라보는 방향에 따라 좌우 반전하므로
@@ -680,18 +680,35 @@ function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
   if (m.attackAnim > 0 || m.dead || weight < 0.01 || floating) {
     ctx.drawImage(img, sx, sy, c, c, dx, dy, SHEET_CELL * s, SHEET_CELL * s);
   } else {
-    // 상체는 그대로, 하체만 띠 단위로 살짝 앞뒤로 휘어 걷는 느낌 (통째로 튀지 않음)
     const soft = ['slime', 'serpent', 'plant'].includes(family);
-    const cut = Math.max(0, Math.floor(a.footY - a.bodyHeight * (soft ? 0.38 : family === 'quadruped' ? 0.25 : 0.3)));
+    const legRatio = soft ? 0.38 : family === 'quadruped' || family === 'spider' ? 0.28 : 0.34;
+    const cut = Math.max(0, Math.floor(a.footY - a.bodyHeight * legRatio));
     const cutK = Math.floor(cut * k);
-    ctx.drawImage(img, sx, sy, c, cutK, dx, dy, SHEET_CELL * s, cutK / k * s);
-    const stride = Math.min(soft ? 1.3 : 2, bodyPx * (soft ? 0.025 : 0.035)) * weight;
-    const band = Math.max(1, Math.round(3 * k));
-    for (let row = cutK; row < c; row += band) {
-      const h = Math.min(band, c - row), t = Math.max(0, Math.min(1, (row / k - cut) / Math.max(1, a.footY - cut)));
-      const offset = Math.sin((m.walkPhase || 0) + (soft ? t * 2 : 0)) * Math.sin(t * Math.PI * (soft ? 1 : 0.85)) * stride;
-      ctx.drawImage(img, sx, sy + row, c, h, dx + offset, dy + row / k * s, SHEET_CELL * s, h / k * s + 0.3);
+    // Keep the torso anchored; each leg has its own swing and grounded stance.
+    // Partition existing artwork, preserving every monster's palette and silhouette.
+    const groups = soft ? 6 : family === 'quadruped' || family === 'spider' ? 4 : 2;
+    const left = Math.max(0, Math.floor((a.centerX - a.bodyWidth * 0.55) * k));
+    const right = Math.min(c, Math.ceil((a.centerX + a.bodyWidth * 0.55) * k));
+    // Preserve accessories outside the body envelope.
+    if (left > 0) ctx.drawImage(img, sx, sy + cutK, left, c - cutK, dx, dy + cutK / k * s, left / k * s, (c - cutK) / k * s);
+    if (right < c) ctx.drawImage(img, sx + right, sy + cutK, c - right, c - cutK, dx + right / k * s, dy + cutK / k * s, (c - right) / k * s, (c - cutK) / k * s);
+    for (let leg = 0; leg < groups; leg++) {
+      const x0 = Math.round(left + (right - left) * leg / groups);
+      const x1 = Math.round(left + (right - left) * (leg + 1) / groups);
+      const pose = monsterLimbPose(m.walkPhase || 0, leg, family, weight);
+      const band = Math.max(1, Math.round(4 * k));
+      for (let row = cutK; row < c; row += band) {
+        const h = Math.min(band, c - row);
+        const t = Math.max(0, Math.min(1, (row / k - cut) / Math.max(1, a.footY - cut)));
+        const reach = t * t;
+        ctx.drawImage(img, sx + x0, sy + row, x1 - x0, h,
+          dx + x0 / k * s + pose.stride * bodyPx * reach,
+          dy + row / k * s - pose.lift * bodyPx * reach,
+          (x1 - x0) / k * s, h / k * s + 0.35);
+      }
     }
+    // Draw the torso last to conceal the hip joints during a raised step.
+    ctx.drawImage(img, sx, sy, c, cutK + 1, dx, dy, SHEET_CELL * s, (cutK + 1) / k * s);
   }
   ctx.restore();
   return bodyPx + Math.max(0, float + settle);

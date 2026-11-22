@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advanceGait, footPose, monsterStride } from '../js/game/locomotion.js';
+import { advanceGait, footPose, monsterStride, monsterLimbPose } from '../js/game/locomotion.js';
 
 const entity = () => ({ walkPhase: 0, facing: { x: 1, y: 0 } });
 test('equal travel distance produces the same stride at different frame rates', () => {
@@ -42,4 +42,21 @@ test('body size and family determine stride length rather than the chase speed',
   assert.ok(monsterStride('quadruped') > monsterStride('biped'));
   assert.ok(monsterStride('spider') < monsterStride('biped'));
   assert.ok(monsterStride('biped', 2) > monsterStride('biped', 1));
+});
+
+test('monster legs alternate support and freeze at rest through all eight steps', () => {
+  for (const family of ['biped', 'quadruped', 'spider', 'construct', 'dragon']) {
+    const poses = new Set();
+    for (let frame = 0; frame < 8; frame++) {
+      const phase = (frame + 0.1) / 8 * Math.PI * 2;
+      const left = monsterLimbPose(phase, 0, family);
+      const right = monsterLimbPose(phase, 1, family);
+      assert.ok(Math.min(left.lift, right.lift) < 1e-10);
+      assert.ok(Math.abs(left.stride + right.stride) < 1e-10);
+      const rest = monsterLimbPose(phase, 0, family, 0);
+      assert.equal(Math.abs(rest.stride), 0); assert.equal(rest.lift, 0);
+      poses.add(JSON.stringify(left));
+    }
+    assert.ok(poses.size >= 6);
+  }
 });

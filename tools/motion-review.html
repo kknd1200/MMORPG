@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>동굴 · 몬스터 보행 확인</title><style>body{margin:0;background:#222c1e;color:#eee;font:16px sans-serif}canvas{display:block;margin:auto}h3{text-align:center}</style><h3>몬스터 보행 · 동굴 입구</h3><canvas width="1000" height="700"></canvas><script type="module">
+import {drawMonsterSprite,loadSheet,MONSTER_UNIT_PX} from '../js/game/sprites.js';
+import '../js/data/maps.js';
+import {MONSTERS} from '../js/data/monsters.js';
+const defs=Object.values(MONSTERS).filter(d=>['gear-01','gear-02','gear-03'].includes(d.art?.sheet)).slice(0,18);
+for(const d of defs)loadSheet(d.art.sheet);
+const ctx=document.querySelector('canvas').getContext('2d'),im=new Image();im.src='../assets/environment/cave-entrance.webp';
+function frame(t){ctx.fillStyle='#465238';ctx.fillRect(0,0,1000,700);if(im.complete&&im.naturalWidth)ctx.drawImage(im,300,15,400,400*im.height/im.width);defs.forEach((d,i)=>{const x=90+(i%6)*162,y=340+Math.floor(i/6)*120;ctx.fillStyle='#eee';ctx.textAlign='center';ctx.fillText(d.name,x,y+25);drawMonsterSprite(ctx,x,y,{id:i,facing:{x:-1,y:0},moving:true,walkWeight:1,walkPhase:t/600*Math.PI*2,attackAnim:0},d,d.size*32,t/1000);});requestAnimationFrame(frame)}requestAnimationFrame(frame);
+</script>

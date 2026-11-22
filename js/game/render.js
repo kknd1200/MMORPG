@@ -188,7 +188,7 @@ export class Renderer {
     // 이름표는 맨 위에
     for (const q of portals) {
       const lx = this.px(q.cx, q.cy), ly = this.py(q.cx, q.cy);
-      nameTag(ctx, lx, ly - (q.kind === 'cave' ? 58 : 26), q.label, q.kind === 'exit' ? '#9eeaff' : '#e0b8ff');
+      nameTag(ctx, lx, ly - (q.kind === 'cave' ? 130 : 26), q.label, q.kind === 'exit' ? '#9eeaff' : '#e0b8ff');
     }
 
     // 던전은 어둡게: 캐릭터 주변만 밝음
@@ -261,21 +261,15 @@ export class Renderer {
   drawCave(q, time) {
     const { ctx } = this;
     const cx = this.px(q.cx, q.cy), cy = this.py(q.cx, q.cy);
-    const pulse = 0.5 + 0.5 * Math.sin(time * 3);
-    const gr = ctx.createLinearGradient(cx - 70, cy - 70, cx + 70, cy + 10);
-    gr.addColorStop(0, '#8c8478'); gr.addColorStop(0.55, '#5e574e'); gr.addColorStop(1, '#2e2a26');
-    ctx.fillStyle = gr;
-    ctx.beginPath();
-    ctx.moveTo(cx - 78, cy + 8);
-    ctx.quadraticCurveTo(cx - 84, cy - 40, cx - 40, cy - 62);
-    ctx.quadraticCurveTo(cx, cy - 84, cx + 42, cy - 60);
-    ctx.quadraticCurveTo(cx + 86, cy - 38, cx + 76, cy + 10);
-    ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(20,18,16,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#0c0a08';
-    ctx.beginPath();
-    ctx.moveTo(cx - 26, cy + 8); ctx.quadraticCurveTo(cx - 28, cy - 34, cx, cy - 38); ctx.quadraticCurveTo(cx + 28, cy - 34, cx + 26, cy + 8); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = `rgba(200,122,255,${0.35 + pulse * 0.45})`; ctx.lineWidth = 2; ctx.stroke();
+    const cave = img('environment/cave-entrance.webp');
+    if (!cave) return;
+    const width = 290, height = width * cave.height / cave.width;
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    // The opening is left of the prop centre; align its threshold to the portal.
+    ctx.drawImage(cave, cx - width * 0.39, cy + 12 - height, width, height);
+    ctx.restore();
   }
 
   drawShadow(sx, sy, r) {
@@ -375,7 +369,7 @@ export class Renderer {
       ctx.beginPath(); ctx.ellipse(sx, sy + 2, r + 5, (r + 5) * 0.45, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.setLineDash([]);
     }
-    const height = drawMonsterSprite(ctx, sx, sy, { ...m, facing: screenDir(m.facing) }, def, r, time);
+    const height = drawMonsterSprite(ctx, sx, sy, { ...m, facing: screenDir(m.facing), visualFacing: screenDir(m.visualFacing || m.facing) }, def, r, time);
     ctx.globalAlpha = 1;
     if (m.dead) return;
 

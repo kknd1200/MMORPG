@@ -29,3 +29,15 @@ export function monsterStride(family, size = 1) {
   const base = family === 'spider' ? 1.15 : family === 'quadruped' ? 2.2 : 1.8;
   return base * Math.max(0.65, Math.sqrt(size));
 }
+
+// Eight distinct poses per stride, with alternating contact and swing phases.
+export function monsterLimbPose(phase, limb, family, weight = 1) {
+  const frame = Math.floor(((phase % TAU + TAU) % TAU) / TAU * 8);
+  const soft = ['slime', 'serpent', 'plant'].includes(family);
+  const offset = soft ? limb * 0.8 : (limb % 2) * Math.PI;
+  const swing = Math.sin(frame / 8 * TAU + offset);
+  return {
+    stride: swing * (soft ? 0.025 : 0.065) * weight,
+    lift: Math.max(0, swing) * (soft ? 0.012 : 0.045) * weight,
+  };
+}

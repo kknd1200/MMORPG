@@ -5,7 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const port = Number(process.env.PORT) || 8080;
+const portArg = process.argv.indexOf('--port');
+const port = Number(process.env.PORT) || (portArg >= 0 ? Number(process.argv[portArg + 1]) : 0) || 8080;
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
