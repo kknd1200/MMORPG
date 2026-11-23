@@ -303,3 +303,12 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .item-requirement { color:#ef9a8c; font-size:12px; }.item-dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }.item-dialog-actions .primary { background:#6e5325; border-color:#c59e50; color:#fff0c7; }
 .equipment-choices { display:grid; gap:8px; }.equipment-choices button { display:flex; align-items:center; gap:10px; text-align:left; }
 @media(max-width:600px) { .inventory-columns { grid-template-columns:1fr; }.equipment-board { width:232px; max-width:100%; margin:auto; }.inventory-bag .grid { grid-template-columns:repeat(6,minmax(0,1fr)); }.panel[data-panel="inv"] { right:12px; top:35px; max-height:calc(100% - 100px); } }
+
+.travel-overlay { position:absolute; inset:0; background:rgba(5,8,6,.72); display:grid; place-items:center; z-index:100010; padding:18px; }
+.travel-overlay[hidden] { display:none; }
+.travel-dialog { text-align:center; border-color:#a88a50; background:linear-gradient(155deg,#30352c,#201f1b); padding:26px; }
+.travel-emblem { color:#daba78; font-size:36px; }
+.travel-dialog h2 { font-size:21px; color:#e4c580; margin:10px 0 20px; }
+.travel-destination { border-block:1px solid #5d5744; padding:16px 4px; color:#f1e5c9; font-size:17px; }
+.travel-dialog p { line-height:1.6; }.travel-dialog small { color:#9caa96; font-size:11px; }.travel-level { color:#c6b790; font-size:12px; }
+.travel-dialog .item-dialog-actions { justify-content:center; margin-top:24px; }.travel-dialog button { min-width:110px; padding:10px; }

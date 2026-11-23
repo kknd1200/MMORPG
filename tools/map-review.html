@@ -1,0 +1,16 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>맵 세부 묘사 · 던전 이동 확인</title><link rel="stylesheet" href="../css/style.css"><style>#scene{position:fixed;inset:0;width:100%;height:100%}.review-controls{position:fixed;top:10px;left:320px;z-index:20;background:#20251fed;padding:8px;border:1px solid #86734a;border-radius:6px;display:flex;gap:8px}.review-controls select{max-width:200px}#review-status{color:#e1cf9f;font-size:12px;align-self:center}.travel-overlay{z-index:100010}</style><canvas id="scene"></canvas><div id="hud"></div><div class="review-controls"><select id="map" aria-label="확인할 맵"></select><button id="portal">입구·계단 이동 확인</button><span id="review-status">맵 세부 묘사 확인</span></div><script type="module">
+import {Game} from '../js/game/game.js';
+import {createCharacter} from '../js/systems/stats.js';
+import {CLASSES} from '../js/data/classes.js';
+import {MAPS} from '../js/data/maps.js';
+const char=createCharacter({id:'map-review',name:'검은바위',classId:'knight',stats:{...CLASSES.knight.baseStats,str:CLASSES.knight.baseStats.str+4,con:CLASSES.knight.baseStats.con+2}});
+const g=new Game({canvas:document.querySelector('#scene'),hudRoot:document.querySelector('#hud'),character:char});
+// 시각 검수 중 전투로 이동 위치가 바뀌지 않게 한다.
+g.updateMonsters=()=>{};
+const maps=Object.values(MAPS).filter(m=>m.type==='village'||m.type==='field'||m.floor<=2),select=document.querySelector('#map');
+select.innerHTML=maps.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+const first=maps.find(m=>m.type==='field'&&m.entrances.length);
+function visit(id){g.resolveTravel(false);const def=MAPS[id];g.changeMap(id,def.entrances?.length?`entrance:${def.entrances[0]}`:'center',true);document.querySelector('#review-status').textContent=def.name}
+select.value=first.id;visit(first.id);select.onchange=()=>visit(select.value);
+document.querySelector('#portal').onclick=()=>{const q=g.world.portals.find(p=>p.kind==='cave'||p.kind==='down')||g.world.portals[0];if(!q)return;g.player.x=q.cx;g.player.y=q.cy;g.camera.x=q.cx;g.camera.y=q.cy;g.dismissedPortal=null;g.portalReadyAt=0;g.checkPortal()};g.start();
+</script></html>

@@ -89,6 +89,7 @@ export class Hud {
         </div>
       </section>
       <div class="item-overlay" hidden><section class="item-dialog" role="dialog" aria-modal="true" aria-labelledby="item-detail-title" tabindex="-1"></section></div>
+      <div class="travel-overlay" hidden><section class="item-dialog travel-dialog" role="dialog" aria-modal="true" aria-labelledby="travel-title" aria-describedby="travel-description" tabindex="-1"></section></div>
       <div class="levelup-banner"></div>
       <div class="map-banner"></div>
       <div class="death-overlay"><div>쓰러졌습니다</div><small></small></div>
@@ -410,6 +411,7 @@ export class Hud {
   }
 
   escape() {
+    if (this.game.pendingTravel) { this.game.resolveTravel(false); return; }
     if (this.itemContext) { this.closeItem(); return; }
     const order = ['npc', 'party', 'skills', 'inv', 'char'];
     const top = order.find((n) => this.open.has(n));
@@ -684,6 +686,24 @@ export class Hud {
       ${group('village', '마을')}${group('field', `필드 <small>(필드 보스는 매시 정해진 분에 ${BOSS_SCHEDULE.stay}분간 출현)</small>`)}${group('dungeon', '던전 입구')}`;
   }
 
+  showTravelPrompt(destination, kind) {
+    this.closeItem();
+    const overlay = this.root.querySelector('.travel-overlay');
+    this.travelReturnFocus = document.activeElement;
+    const entering = destination.type === 'dungeon';
+    const title = entering ? (this.game.world.type === 'dungeon' ? '다른 층으로 이동' : '던전 입장') : '던전 나가기';
+    overlay.querySelector('.travel-dialog').innerHTML = `<div class="travel-emblem" aria-hidden="true">${entering ? '◇' : '↗'}</div><h2 id="travel-title">${title}</h2><p class="travel-destination">${esc(destination.name)}</p><p id="travel-description">${entering ? (kind === 'up' ? '위층으로 올라가시겠습니까?' : kind === 'down' ? '다음 층으로 내려가시겠습니까?' : '이 던전에 입장하시겠습니까?') : '던전을 나와 입구로 돌아가시겠습니까?'}</p>${entering ? `<p class="travel-level">권장 레벨 ${destination.level[0]}~${destination.level[1] + 2}</p>` : ''}<small>확인하는 동안 게임이 잠시 멈춥니다.</small><div class="item-dialog-actions"><button data-travel="cancel">취소</button><button class="primary" data-travel="enter">${entering ? '입장하기' : '이동하기'}</button></div>`;
+    overlay.hidden = false;
+    overlay.querySelector('[data-travel="cancel"]').focus();
+  }
+
+  closeTravelPrompt() {
+    const overlay = this.root.querySelector('.travel-overlay');
+    if (overlay) overlay.hidden = true;
+    if (this.travelReturnFocus?.isConnected) this.travelReturnFocus.focus();
+    this.travelReturnFocus = null;
+  }
+
   showItem(id, source = 'bag', slot = null) {
     if (!ITEMS[id]) return;
     const unit = this.game.selUnit();
@@ -775,6 +795,20 @@ export class Hud {
     this.root.addEventListener('contextmenu', (e) => {
       const slot = e.target.closest('.pslot');
       if (slot) { e.preventDefault(); g.setSkillSlot(g.selectedId, Number(slot.dataset.pslot), null); }
+    });
+    const travelOverlay = this.root.querySelector('.travel-overlay');
+    travelOverlay?.addEventListener('click', e => {
+      const button = e.target.closest('[data-travel]');
+      if (button || e.target === travelOverlay) g.resolveTravel(button?.dataset.travel === 'enter');
+    });
+    travelOverlay?.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Escape') { e.preventDefault(); g.resolveTravel(false); }
+      else if (e.key === 'Tab') {
+        const buttons = [...travelOverlay.querySelectorAll('button')];
+        const target = e.shiftKey ? buttons.at(-1) : buttons[0];
+        if (document.activeElement === (e.shiftKey ? buttons[0] : buttons.at(-1))) { e.preventDefault(); target.focus(); }
+      }
     });
     const inspect = (e) => {
       if (e.target.closest('.item-overlay')) return;

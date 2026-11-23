@@ -456,6 +456,7 @@ export class Game {
   }
 
   update(dt) {
+    if (this.pendingTravel) { this.hud.update(); return; }
     this.time += dt;
     for (const u of this.units()) {
       const before = u.buffs.length;
@@ -470,6 +471,7 @@ export class Game {
     this.updatePlayer(dt);
     this.updateParty(dt);
     this.checkPortal();
+    if (this.pendingTravel) return;
     if (this.pending.length) {
       const due = this.pending.filter((h) => h.at <= this.time);
       if (due.length) { this.pending = this.pending.filter((h) => h.at > this.time); for (const h of due) h.fn(); }
@@ -1486,6 +1488,9 @@ export class Game {
   }
 
   enterMap(world, pos, first = false) {
+    this.pendingTravel = null;
+    this.dismissedPortal = null;
+    this.hud?.closeTravelPrompt();
     // 이전 맵의 몬스터 · 그림 정리
     if (!first) {
       for (const z of this.world.zones) {
@@ -1529,12 +1534,36 @@ export class Game {
     this.save();
   }
 
-  checkPortal() {
+  portalUnderPlayer() {
     const p = this.player;
-    if (p.dead || this.time < this.portalReadyAt) return;
-    const portal = this.world.portalAt(p.x, p.y)
-      || this.tempPortals.find((q) => p.x >= q.rect.x0 && p.x <= q.rect.x1 && p.y >= q.rect.y0 && p.y <= q.rect.y1);
-    if (portal) this.changeMap(portal.to.map, portal.to.spot);
+    return this.world.portalAt(p.x, p.y)
+      || this.tempPortals.find(q => p.x >= q.rect.x0 && p.x <= q.rect.x1 && p.y >= q.rect.y0 && p.y <= q.rect.y1);
+  }
+
+  checkPortal() {
+    const p = this.player, portal = this.portalUnderPlayer();
+    if (this.dismissedPortal && portal !== this.dismissedPortal) this.dismissedPortal = null;
+    if (!portal || p.dead || this.time < this.portalReadyAt || this.pendingTravel || portal === this.dismissedPortal) return;
+    const destination = MAPS[portal.to.map];
+    if (this.world.type !== 'dungeon' && destination?.type !== 'dungeon') {
+      this.changeMap(portal.to.map, portal.to.spot);
+      return;
+    }
+    this.pendingTravel = { portal, from: this.world.id };
+    p.action = null; p.moveTarget = null; this.clearPath(p);
+    this.mouse.left = false; this.mouse.mode = null;
+    this.hud.showTravelPrompt(destination, portal.kind);
+  }
+
+  resolveTravel(enter) {
+    const pending = this.pendingTravel;
+    if (!pending) return;
+    this.pendingTravel = null;
+    this.hud.closeTravelPrompt();
+    // 취소한 자리에서는 다시 묻지 않고, 포탈 밖으로 나갔다 돌아오면 재확인.
+    this.dismissedPortal = pending.portal;
+    if (!enter || this.player.dead || this.world.id !== pending.from || this.portalUnderPlayer() !== pending.portal) return;
+    this.changeMap(pending.portal.to.map, pending.portal.to.spot);
   }
 
   // 던전 최종 보스를 잡으면 보스 방에 입구로 돌아가는 포탈이 열림
@@ -1662,6 +1691,10 @@ export class Game {
   }
 
   onKey(e) {
+    if (this.pendingTravel) {
+      if (e.key === 'Escape') { e.preventDefault(); this.resolveTravel(false); }
+      return;
+    }
     const slot = HOTBAR_KEYS.indexOf(e.key);
     if (slot >= 0) {
       e.preventDefault();

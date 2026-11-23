@@ -5,6 +5,7 @@
 //  - 바닥은 16×16 타일 묶음(청크)으로 미리 그려 두고 매 프레임 이미지 몇 장만 붙임
 //  - 벽 · 나무 · 바위 · 집 같은 솟은 물체는 스프라이트로 만들어 두고, 캐릭터와 함께 깊이 순서로 그림
 import { T } from './world.js';
+import { drawGroundDetail } from './scenery.js';
 
 export const TW = 64, TH = 32; // 타일 마름모 폭/높이(px)
 export const HW = TW / 2, HH = TH / 2;
@@ -844,6 +845,7 @@ export class Ground {
       if (tx >= w.w || ty >= w.h) continue;
       if (w.interior && w.interior[w.idx(tx, ty)]) continue;
       this.decorate(ctx, tx, ty, rc);
+      drawGroundDetail(ctx, w, tx, ty, isoX(tx, ty) - rc.X0, isoY(tx, ty) - rc.Y0 + HH);
     }
     return { canvas: cv, ...rc };
   }
