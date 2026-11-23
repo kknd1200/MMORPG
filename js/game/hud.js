@@ -1,3 +1,5 @@
+import { equipmentMarkup, itemDetailsMarkup, availableInSlot, escapeHtml } from '../ui/equipment.js';
+import { EQUIPMENT_SLOTS } from '../data/equipment.js';
 import { itemIcon } from '../ui/item-icons.js';
 // DOM 기반 HUD: 상태바, 단축칸(F5~F12), 캐릭터/인벤토리/스킬 창, NPC 대화
 import { CLASSES, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, STAT_CAP } from '../data/classes.js';
@@ -86,6 +88,7 @@ export class Hud {
           <button data-menu="logout">로그아웃</button>
         </div>
       </section>
+      <div class="item-overlay" hidden><section class="item-dialog" role="dialog" aria-modal="true" aria-labelledby="item-detail-title" tabindex="-1"></section></div>
       <div class="levelup-banner"></div>
       <div class="map-banner"></div>
       <div class="death-overlay"><div>쓰러졌습니다</div><small></small></div>
@@ -235,8 +238,8 @@ export class Hud {
       el.className = 'slot';
       el.innerHTML = `<div class="content"></div><div class="cd"></div><span class="key">${key}</span>`;
       el.draggable = true;
-      el.addEventListener('click', () => g.selectSlot(i));
-      el.addEventListener('dblclick', () => g.useSlot(i));
+      el.addEventListener('click', () => { g.selectSlot(i); const entry = g.char.hotbar[i]; if (entry?.type === 'item') this.showItem(entry.id, 'bag'); });
+      el.addEventListener('dblclick', () => { if (g.char.hotbar[i]?.type === 'skill') g.useSlot(i); });
       el.addEventListener('mousedown', (e) => { if (e.button === 1) { e.preventDefault(); g.selectSlot(i); g.useSlot(i); } });
       el.addEventListener('contextmenu', (e) => { e.preventDefault(); g.setHotbar(i, null); });
       el.addEventListener('dragstart', (e) => {
@@ -407,6 +410,7 @@ export class Hud {
   }
 
   escape() {
+    if (this.itemContext) { this.closeItem(); return; }
     const order = ['npc', 'party', 'skills', 'inv', 'char'];
     const top = order.find((n) => this.open.has(n));
     if (top) this.closePanel(top);
@@ -422,6 +426,7 @@ export class Hud {
   }
 
   selectUnit(id) {
+    this.closeItem();
     this.game.selectedId = id;
     this.markDirty('party', 'char', 'inv');
     this.lastPartyHtml = null;
@@ -558,27 +563,22 @@ export class Hud {
   invHtml() {
     const g = this.game, ch = g.char, su = g.selUnit();
     const shopOpen = !!(this.game.openNpc && SHOPS[this.game.openNpc.kind]);
-    const eq = (slot, label) => {
-      const id = su.char.equipment[slot];
-      return `<div class="equip-slot">${label}: ${id ? `${itemIcon(id)} ${esc(ITEMS[id].name)} <button data-unequip="${slot}">해제</button>` : '<i>없음</i>'}</div>`;
-    };
     const cells = [];
     for (let i = 0; i < INVENTORY_SIZE; i++) {
       const e = ch.inventory[i];
       if (!e) { cells.push('<div class="cell empty"></div>'); continue; }
       const it = ITEMS[e.id];
       const usable = it.type === 'consumable' || canEquip(e.id, su.char.classId);
-      const tip = `${it.name}\n${it.desc}${it.type !== 'consumable' && !usable ? '\n(장착 불가)' : ''}\n더블클릭: ${it.type === 'consumable' ? '사용' : '장착'}${shopOpen ? `\n판매가 ${sellPrice(e.id)} 골드` : ''}`;
-      cells.push(`<div class="cell ${usable ? '' : 'nouse'}" draggable="true" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}' title="${esc(tip)}">
+      const tip = `${it.name}\n${it.desc}${it.type !== 'consumable' && !usable ? '\n(장착 불가)' : ''}\n클릭하여 설명 확인: ${it.type === 'consumable' ? '사용' : '장착'}${shopOpen ? `\n판매가 ${sellPrice(e.id)} 골드` : ''}`;
+      cells.push(`<div class="cell ${usable ? '' : 'nouse'}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기" draggable="true" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}' title="${esc(tip)}">
         ${itemIcon(e.id)}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
         ${shopOpen && sellPrice(e.id) > 0 ? `<button class="sell" data-sell="${i}">판매</button>` : ''}</div>`);
     }
     return `
       <div class="gold">골드 ${ch.gold.toLocaleString()}</div>
-      <div class="equip-who">장비: <b>${esc(su.char.name)}</b> <small>(${CLASSES[su.char.classId].name} · 파티 창에서 다른 파티원 선택)</small></div>
-      ${eq('weapon', '무기')}${eq('armor', '갑옷')}
+      ${equipmentMarkup(g)}
       <div class="grid">${cells.join('')}</div>
-      <small class="hint">더블클릭: 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 상점에 판매' : ''}</small>`;
+      <small class="hint">클릭: 아이템 정보 · 설명창에서 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 판매' : ''}</small></section></div>`;
   }
 
   skillsHtml() {
@@ -642,7 +642,7 @@ export class Hud {
       const it = ITEMS[id];
       const usable = it.type === 'consumable' || canEquip(id, g.char.classId);
       const afford = g.char.gold >= it.price;
-      return `<div class="shop-row ${usable ? '' : 'nouse'}">
+      return `<div class="shop-row ${usable ? '' : 'nouse'}" data-shop-item="${id}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기">
         ${itemIcon(id)}
         <div class="info"><b>${esc(it.name)}</b> <small>${esc(it.desc)}</small></div>
         <span class="price">${it.price}G</span>
@@ -682,6 +682,55 @@ export class Hud {
     return `<p>어디로 보내드릴까요? 던전은 입구 앞까지만 보내드려요.</p>
       <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>
       ${group('village', '마을')}${group('field', `필드 <small>(필드 보스는 매시 정해진 분에 ${BOSS_SCHEDULE.stay}분간 출현)</small>`)}${group('dungeon', '던전 입구')}`;
+  }
+
+  showItem(id, source = 'bag', slot = null) {
+    if (!ITEMS[id]) return;
+    const unit = this.game.selUnit();
+    this.itemContext = { id, source, slot, unitId: unit.id };
+    this.showItemDialog(itemDetailsMarkup(this.game, this.itemContext));
+  }
+
+  showItemDialog(html) {
+    const overlay = this.root.querySelector('.item-overlay');
+    if (overlay.hidden) this.itemReturnFocus = document.activeElement;
+    overlay.hidden = false;
+    const dialog = overlay.querySelector('.item-dialog');
+    dialog.innerHTML = html;
+    dialog.focus();
+  }
+
+  closeItem() {
+    const overlay = this.root.querySelector('.item-overlay');
+    if (overlay) overlay.hidden = true;
+    this.itemContext = null;
+    if (this.itemReturnFocus?.isConnected) this.itemReturnFocus.focus();
+    this.itemReturnFocus = null;
+  }
+
+  showEquipmentSlot(slot) {
+    const unit = this.game.selUnit(), id = unit.char.equipment[slot];
+    if (id) { this.showItem(id, 'equipped', slot); return; }
+    const def = EQUIPMENT_SLOTS.find(s => s.id === slot);
+    if (!def) return;
+    this.itemContext = { slot, unitId: unit.id };
+    const choices = availableInSlot(this.game, unit.char, slot);
+    this.showItemDialog(`<header class="item-dialog-header"><h3 id="item-detail-title">${def.label} 선택</h3><button data-item-close aria-label="닫기">×</button></header><p>${escapeHtml(unit.char.name)} · 가방에서 선택</p><div class="equipment-choices">${choices.map(e => `<button data-item-choice="${e.id}">${itemIcon(e.id)}<span>${escapeHtml(ITEMS[e.id].name)}</span></button>`).join('') || '<p>가방에 이 부위에 장착할 수 있는 장비가 없습니다.</p>'}</div><div class="item-dialog-actions"><button data-item-close>닫기</button></div>`);
+  }
+
+  itemAction(action) {
+    const context = this.itemContext;
+    if (!context?.id) return;
+    const g = this.game, unit = g.unitById(context.unitId);
+    if (!unit || unit !== g.selUnit()) { this.closeItem(); return; }
+    const idx = g.char.inventory.findIndex(e => e.id === context.id);
+    if (action === 'equip' && idx >= 0) g.equip(idx, unit);
+    else if (action === 'unequip' && unit.char.equipment[context.slot] === context.id) g.unequip(context.slot, unit);
+    else if (action === 'use' && idx >= 0) g.useItem(context.id);
+    else if (action === 'buy' && SHOPS[g.openNpc?.kind]?.includes(context.id)) g.buy(context.id, 1);
+    this.closeItem();
+    if (this.open.has('inv')) this.renderPanel('inv');
+    if (this.open.has('npc')) this.renderPanel('npc');
   }
 
   bindPanelEvents() {
@@ -727,11 +776,35 @@ export class Hud {
       const slot = e.target.closest('.pslot');
       if (slot) { e.preventDefault(); g.setSkillSlot(g.selectedId, Number(slot.dataset.pslot), null); }
     });
-    this.root.addEventListener('dblclick', (e) => {
+    const inspect = (e) => {
+      if (e.target.closest('.item-overlay')) return;
+      if (e.target.closest('[data-sell], [data-buy]')) return;
       const cell = e.target.closest('[data-inv]');
-      if (!cell) return;
-      const entry = g.char.inventory[Number(cell.dataset.inv)];
-      if (entry) g.useItem(entry.id);
+      const slot = e.target.closest('[data-equipment-slot]');
+      const shop = e.target.closest('[data-shop-item]');
+      if (cell) { const item = g.char.inventory[Number(cell.dataset.inv)]; if (item) this.showItem(item.id, 'bag'); }
+      else if (slot) this.showEquipmentSlot(slot.dataset.equipmentSlot);
+      else if (shop) this.showItem(shop.dataset.shopItem, 'shop');
+    };
+    this.root.addEventListener('click', inspect);
+    this.root.addEventListener('keydown', e => {
+      if (this.itemContext) {
+        e.stopPropagation();
+        if (e.key === 'Escape') { e.preventDefault(); this.closeItem(); }
+        if (e.key === 'Tab') {
+          const buttons = [...this.root.querySelectorAll('.item-dialog button:not(:disabled)')];
+          const first = buttons[0], last = buttons.at(-1);
+          if (e.shiftKey && (document.activeElement === first || document.activeElement.classList.contains('item-dialog'))) { e.preventDefault(); last?.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        }
+        return;
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-inv], [data-shop-item]')) { e.preventDefault(); inspect(e); }
+    });
+    this.root.querySelector('.item-overlay').addEventListener('click', e => {
+      if (e.target.classList.contains('item-overlay') || e.target.closest('[data-item-close]')) this.closeItem();
+      else if (e.target.closest('[data-item-action]')) this.itemAction(e.target.closest('[data-item-action]').dataset.itemAction);
+      else if (e.target.closest('[data-item-choice]')) this.showItem(e.target.closest('[data-item-choice]').dataset.itemChoice, 'bag');
     });
     this.root.addEventListener('dragstart', (e) => {
       const src = e.target.closest?.('[data-drag]');

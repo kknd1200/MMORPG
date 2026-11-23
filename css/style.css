@@ -262,3 +262,44 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 
 /* The same atlas crop is used at inventory, equipment, shop and hotbar sizes. */
 .icon.item-art { background-size: 800% 300%; background-repeat: no-repeat; background-color: #17150f; image-rendering: auto; }
+
+/* 캐릭터별 장착창과 클릭형 아이템 설명 */
+.panel[data-panel="inv"] { width: 650px; max-width: calc(100vw - 24px); right: 20px; top: 65px; max-height: calc(100% - 145px); }
+.equipment-character-tabs { display:flex; gap:6px; overflow-x:auto; margin:8px 0 14px; }
+.equipment-character { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.equipment-character.selected { border-color:#d5b45f; background:#4a412b; color:#ffe29b; }
+.inventory-columns { display:grid; grid-template-columns:232px minmax(0,1fr); gap:20px; }
+.equipment-board { background:#373737; border:1px solid #525252; border-radius:5px; padding:12px; }
+.equipment-heading { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; border-bottom:1px solid #555; padding-bottom:10px; margin-bottom:12px; }
+.equipment-heading span { color:#b9c7d5; font-size:11px; }
+.equipment-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(5,72px); gap:9px; }
+.equipment-tile { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px 2px; border:2px solid #292929; background:#3f3f3f; color:#bac5d2; border-radius:4px; min-width:0; }
+.equipment-tile:hover,.equipment-tile:focus-visible { background:#494949; border-color:#bca56c; }
+.equipment-tile .icon { width:39px; height:39px; flex-shrink:0; }
+.equipment-empty-icon { width:31px; height:31px; fill:#4e4a58; stroke:#25232b; stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round; }
+.equipment-slot-label { font-size:11px; line-height:13px; margin-top:3px; }
+.equipment-upgrade { position:absolute; right:4px; bottom:4px; font-size:10px; color:#71bd78; }
+.equipment-totals { display:grid; gap:8px; border-top:1px solid #555; padding-top:12px; margin-top:14px; font-size:12px; }
+.equipment-totals>span { display:flex; justify-content:space-between; color:#bec5cc; }
+.inventory-bag h3 { margin:0 0 12px; font-size:14px; }
+.inventory-bag h3 small { font-size:11px; color:#a6a395; margin-left:5px; }
+.inventory-bag .grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.cell[role="button"],.shop-row[data-shop-item] { cursor:pointer; }
+.cell:focus-visible { outline:2px solid #e2bd63; }
+.item-overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); display:grid; place-items:center; z-index:100000; padding:16px; }
+.item-overlay[hidden] { display:none; }
+.item-dialog { width:380px; max-width:100%; max-height:calc(100vh - 32px); overflow:auto; padding:18px; border:1px solid #a78b51; border-radius:8px; background:#25231f; box-shadow:0 12px 48px #000a; color:#ddd9cd; }
+.item-dialog-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #524a38; padding-bottom:12px; }
+.item-dialog-header h3 { margin:0; font-size:14px; color:#c2b99f; }
+.item-detail-heading { display:flex; gap:14px; align-items:center; margin:20px 0 14px; }
+.item-detail-heading .icon { width:64px; height:64px; flex-shrink:0; border:1px solid #665b43; border-radius:5px; background-color:#34312a; }
+.item-detail-heading h2 { margin:0 0 5px; font-size:20px; color:#edcc7f; }
+.item-detail-heading div>span { color:#aaa99f; font-size:12px; }
+.item-description { line-height:1.7; font-size:14px; }
+.item-detail-stats>div { display:flex; align-items:center; gap:10px; background:#302e28; padding:10px; margin:5px 0; }
+.item-detail-stats small { margin-left:auto; font-size:11px; }
+.item-detail-stats .positive { color:#8acb88; }.item-detail-stats .negative { color:#ef9a8c; }
+.item-detail-meta { margin:18px 0; font-size:12px; }.item-detail-meta>div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; }.item-detail-meta dt { color:#a9a79c; }.item-detail-meta dd { margin:0; text-align:right; }
+.item-requirement { color:#ef9a8c; font-size:12px; }.item-dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }.item-dialog-actions .primary { background:#6e5325; border-color:#c59e50; color:#fff0c7; }
+.equipment-choices { display:grid; gap:8px; }.equipment-choices button { display:flex; align-items:center; gap:10px; text-align:left; }
+@media(max-width:600px) { .inventory-columns { grid-template-columns:1fr; }.equipment-board { width:232px; max-width:100%; margin:auto; }.inventory-bag .grid { grid-template-columns:repeat(6,minmax(0,1fr)); }.panel[data-panel="inv"] { right:12px; top:35px; max-height:calc(100% - 100px); } }
