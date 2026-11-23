@@ -1,3 +1,4 @@
+import { preloadHeroArt, preloadHeroActions } from './game/hero-sheets.js';
 // 화면 흐름: 로그인 → 캐릭터 선택 → (캐릭터 생성) → 게임
 import * as Store from './systems/storage.js';
 import {
@@ -66,7 +67,7 @@ function renderSlots() {
     const cls = CLASSES[c.classId];
     const grade = S.luckGrade(c);
     html.push(`<button class="slot-card ${c.id === state.selectedId ? 'selected' : ''}" data-id="${c.id}">
-      <canvas class="avatar" data-class="${c.classId}" data-weapon="${c.equipment?.weapon || ''}" data-armor="${c.equipment?.armor || ''}"></canvas>
+      <canvas class="avatar" data-class="${c.classId}" data-gender="${c.gender || 'male'}" data-weapon="${c.equipment?.weapon || ''}" data-armor="${c.equipment?.armor || ''}"></canvas>
       <div class="slot-name">${esc(c.name)}</div>
       <div class="slot-class" style="color:${cls.color}">${cls.name}</div>
       <div>Lv.${c.level}</div>
@@ -192,9 +193,10 @@ function initCreate() {
 }
 
 // ---------------------------------------------------------------- 게임
-function startGame(id) {
+async function startGame(id) {
   const char = Store.listCharacters(state.user).find((c) => c.id === id);
   if (!char) return;
+  await preloadHeroActions(char);
   show('screen-game');
   const user = state.user;
   state.game = new Game({
@@ -214,6 +216,7 @@ function startGame(id) {
 
 window.addEventListener('beforeunload', () => state.game?.save());
 
+await preloadHeroArt();
 initLogin();
 initSelect();
 initCreate();

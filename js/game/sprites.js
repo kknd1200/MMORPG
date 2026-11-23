@@ -121,7 +121,7 @@ const ARMOR_TINT = {
  *      dead, scale, time }
  */
 export function drawHumanoid(ctx, x, y, s) {
-  if (s.classId && drawHeroSheet(ctx, x, y, s, drawOriginalHumanoid)) return;
+  if (s.classId && drawHeroSheet(ctx, x, y, s)) return;
   drawOriginalHumanoid(ctx, x, y, s);
 }
 

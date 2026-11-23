@@ -15,7 +15,7 @@ export const PORTRAIT_LAYOUT = Object.freeze({
 /** 캐릭터 한 명의 초상화 캔버스 (그리기는 paintAvatars) */
 export function avatarMarkup(ch, layout = 'card', cls = '') {
   const eq = ch.equipment || {};
-  return `<canvas class="avatar ${cls}" data-portrait="${layout}" data-class="${ch.classId}" data-weapon="${eq.weapon || ''}" data-armor="${eq.armor || ''}" role="img" aria-label=""></canvas>`;
+  return `<canvas class="avatar ${cls}" data-portrait="${layout}" data-class="${ch.classId}" data-gender="${ch.gender || 'male'}" data-weapon="${eq.weapon || ''}" data-armor="${eq.armor || ''}" role="img" aria-label=""></canvas>`;
 }
 
 export function loginRosterMarkup() {
@@ -43,7 +43,7 @@ export function paintAvatars(root) {
     ctx.ellipse(layout.width / 2, layout.footY, 12 * layout.scale, 4 * layout.scale, 0, 0, Math.PI * 2);
     ctx.fill();
     drawHumanoid(ctx, layout.width / 2, layout.footY, {
-      classId: cv.dataset.class, look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
+      classId: cv.dataset.class, gender: cv.dataset.gender, look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
       scale: layout.scale,
       weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color,
       armorId: cv.dataset.armor || null,

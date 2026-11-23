@@ -288,7 +288,7 @@ export class Renderer {
     if (!ghost) this.drawShadow(sx, sy, 14);
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
-      classId: ch.classId, look: LOOKS[ch.classId] || LOOKS.knight,
+      classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
       facing: screenDir(p.visualFacing || p.facing),
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
@@ -300,7 +300,7 @@ export class Renderer {
       dead: p.dead,
       time: game.time,
     });
-    if (!ghost) nameTag(ctx, sx, sy - 52, ch.name, '#ffffff');
+    if (!ghost) nameTag(ctx, sx, sy - 66, ch.name, '#ffffff');
   }
 
   // 용병: 도트 캐릭터 + 초록 이름표 + 작은 HP 바
@@ -310,14 +310,14 @@ export class Renderer {
     this.drawShadow(sx, sy, 13);
     const hurtT = game.time - e.lastHurt;
     drawHumanoid(ctx, sx, sy, {
-      classId: ch.classId, look: LOOKS[ch.classId] || LOOKS.knight,
+      classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
       facing: screenDir(e.visualFacing || e.facing), walk: e.walkPhase, moving: e.moving, motion: e.walkWeight,
       attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / 0.4,
       weaponColor: ITEMS[ch.equipment?.weapon]?.icon?.color, armorId: ch.equipment?.armor,
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });
     if (e.dead) return;
-    const top = sy - 52;
+    const top = sy - 66;
     nameTag(ctx, sx, top, ch.name, game.selectedId === u.id ? '#ffe680' : '#9effa0');
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(sx - 15, top + 3, 30, 4);
     ctx.fillStyle = '#4ad04a'; ctx.fillRect(sx - 14, top + 4, 28 * Math.max(0, ch.hp / ch.maxHp), 2);
