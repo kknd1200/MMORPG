@@ -1,3 +1,4 @@
+import { formatVital, refreshPartyVitals } from '../ui/party-vitals.js';
 import { ItemTooltip } from '../ui/item-tooltip.js';
 import { equipmentMarkup, itemDetailsMarkup, availableInSlot, escapeHtml } from '../ui/equipment.js';
 import { EQUIPMENT_SLOTS } from '../data/equipment.js';
@@ -201,6 +202,7 @@ export class Hud {
       }
       this.dirty.clear();
     }
+    refreshPartyVitals(this.root, g);
     // 열린 캐릭터 창의 HP/MP 등 실시간 반영 (1초마다)
     if (this.open.has('char') && Math.floor(g.time) !== this.lastCharSecond) {
       this.lastCharSecond = Math.floor(g.time);
@@ -463,7 +465,8 @@ export class Hud {
         ${avatarMarkup(ch, 'frame')}
         <div class="pinfo"><div class="pname"><b>Lv.${ch.level}</b> ${esc(ch.name)} <span style="color:${cls.color}">${cls.name}</span></div>
           <div class="pbar hp"><i style="width:${Math.max(0, ch.hp / ch.maxHp) * 100}%"></i></div>
-          <div class="pbar mp"><i style="width:${Math.max(0, ch.mp / ch.maxMp) * 100}%"></i></div></div>
+          <div class="pbar mp"><i style="width:${Math.max(0, ch.mp / ch.maxMp) * 100}%"></i></div>
+          <div class="party-vital-numbers"><span data-unit-id="${esc(u.id)}" data-unit-vital="hp">${formatVital(ch,'hp')}</span><span data-unit-id="${esc(u.id)}" data-unit-vital="mp">${formatVital(ch,'mp')}</span></div></div>
       </div>`;
     }).join('');
     if (html !== this.lastPartyHtml) { this.el.party.innerHTML = html; this.lastPartyHtml = html; paintAvatars(this.el.party); }
@@ -494,7 +497,7 @@ export class Hud {
       <div class="pdetail">
         ${avatarMarkup(ch, 'hud', 'portrait')}
         <div><b>${esc(ch.name)}</b> <span style="color:${cls.color}">${cls.name}</span> · Lv.${ch.level} ${u.isLeader ? '<small>(대표 캐릭터)</small>' : '<small>(용병)</small>'}<br>
-          HP ${Math.ceil(ch.hp)} / ${ch.maxHp} · MP ${Math.floor(ch.mp)} / ${ch.maxMp} · 공격 ${d.attack} · 방어 ${d.defense}<br>
+          <span data-unit-id="${esc(u.id)}" data-unit-vital="hp">${formatVital(ch,'hp')}</span> · <span data-unit-id="${esc(u.id)}" data-unit-vital="mp">${formatVital(ch,'mp')}</span> · 공격 ${d.attack} · 방어 ${d.defense}<br>
           <button data-open="char">캐릭터 정보</button> <button data-open="inv">장비 바꾸기</button>
           ${u.isLeader ? '' : `<button class="danger" data-dismiss="${u.id}">내보내기</button>`}</div>
       </div>

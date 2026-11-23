@@ -8,9 +8,9 @@ function fixture(classId) {
  return {g,unit,target,times};
 }
 for(const mode of ['leader','mercenary'])test(`${mode}: normal attack cooldown follows class order and persists across target switches`,()=>{
- for(const [id,seconds] of [['knight',4],['mage',5],['priest',5],['warrior',6],['elf',6]]) {
+ for(const [id,seconds] of [['knight',8],['mage',10],['priest',10],['warrior',12],['elf',12]]) {
   const {g,unit,target,times}=fixture(id);
-  for(let n=0;n<500;n++){
+  for(let n=0;n<1000;n++){
    g.time+=.05;target.id=n%2+1;g.player.action.targetId=target.id;
    if(mode==='leader')g.updatePlayer(.05);else g.mercAI(unit,0,.05);
   }
