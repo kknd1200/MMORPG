@@ -1,5 +1,6 @@
 import { drawHeroSheet } from './hero-sheets.js';
 import { footPose, monsterLimbPose } from './locomotion.js';
+import { drawQuadrupedFrame } from './quadruped-motion.js';
 // 캐릭터 · NPC · 몬스터 그림 (캔버스 도형으로 그리는 클래식 다크 판타지 풍 스프라이트)
 //
 // 좌표계: (0,0) = 발밑. 위쪽이 -y. 그리기 전에 바라보는 방향에 따라 좌우 반전하므로
@@ -532,7 +533,7 @@ function drawShield(ctx, color, x, y, back, turn) {
 export function drawMonsterSprite(ctx, x, y, m, def, r, time) {
   const dur = m.animDur || 0.3;
   const prog = m.attackAnim > 0 ? 1 - m.attackAnim / dur : 0; // 공격 동작 진행 0→1
-  const atk = m.attackAnim > 0 ? Math.sin(prog * Math.PI) : 0; // 0→1→0
+  const atk = m.attackAnim > 0 && def.family !== 'quadruped' ? Math.sin(prog * Math.PI) : 0; // quadrupeds use their own anticipation / strike
   const weight = m.walkWeight ?? (m.moving ? 1 : 0);
   const walk = Math.sin(m.walkPhase || 0) * weight;
   const sheet = def.art && sheetImage(def.art.sheet);
@@ -658,6 +659,7 @@ export function sheetCellPx(def) {
 export function preloadSheets(names) { for (const n of names) sheetEntry(n); }
 
 function drawSheetFrame(ctx, sheet, def, m, prog, walk, time) {
+  if (def.family === 'quadruped') return drawQuadrupedFrame(ctx, sheet, def, m, prog, MONSTER_UNIT_PX * def.size);
   const a = def.art;
   let col = 3; // 대기
   if (m.attackAnim > 0) col = (m.animKind === 'skill' ? 4 : 0) + Math.min(3, Math.floor(prog * 4));

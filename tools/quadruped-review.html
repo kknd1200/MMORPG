@@ -1,0 +1,14 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>네 발 몬스터 동작 확인</title>
+<style>body{background:#26312b;color:#eee;font:15px sans-serif;margin:20px}header{display:flex;align-items:center;gap:20px;flex-wrap:wrap}img{width:120px;image-rendering:pixelated}button,select,input{font:inherit}canvas{display:block}label{white-space:nowrap}</style>
+<h2>네 발 몬스터 55종 · 걷기 / 공격</h2><header><label>첨부 보행 <img src="references/quadruped-walk-south.gif"></label><label>첨부 공격 <img src="references/quadruped-attack-south.gif"></label><select id="mode"><option value="walk">걷기 8단계</option><option value="attack">일반공격 9단계</option><option value="skill">스킬공격 9단계</option></select><button id="pause">일시정지</button><label>단계 <input id="frame" type="range" min="0" max="7" value="0"><span id="number">0</span></label><label><input id="flip" type="checkbox">반대 방향</label><span id="status">그림 불러오는 중</span></header><canvas width="1120" height="1320"></canvas>
+<script type="module">
+import {ROSTER} from '../js/data/rebirth-roster.js';
+import {drawMonsterSprite,loadSheet,sheetStats} from '../js/game/sprites.js';
+import {QUADRUPED_ATTACK_SECONDS,QUADRUPED_SKILL_SECONDS} from '../js/game/quadruped-motion.js';
+const defs=ROSTER.filter(d=>d.family==='quadruped'),sheets=[...new Set(defs.map(d=>d.art.sheet))];sheets.forEach(s=>loadSheet(s,192));
+const ctx=document.querySelector('canvas').getContext('2d'),mode=document.querySelector('#mode'),slider=document.querySelector('#frame'),pause=document.querySelector('#pause');let playing=true;
+pause.onclick=()=>{playing=!playing;pause.textContent=playing?'일시정지':'재생'};
+mode.onchange=()=>{slider.max=mode.value==='walk'?7:8;slider.value=0};slider.oninput=()=>{playing=false;pause.textContent='재생'};
+function draw(t){const attack=mode.value!=='walk',count=attack?9:8,frame=playing?Math.floor(t/180)%count:Number(slider.value);if(playing)slider.value=frame;document.querySelector('#number').textContent=frame+1;const stats=sheetStats();document.querySelector('#status').textContent=`${stats.loaded}/${sheets.length} 시트`;
+ctx.fillStyle='#26312b';ctx.fillRect(0,0,1120,1320);ctx.textAlign='center';defs.forEach((d,i)=>{const x=80+i%8*140,y=115+Math.floor(i/8)*180;ctx.fillStyle='#465548';ctx.beginPath();ctx.ellipse(x,y,44,8,0,0,Math.PI*2);ctx.fill();const dur=mode.value==='skill'?QUADRUPED_SKILL_SECONDS:QUADRUPED_ATTACK_SECONDS;const m={id:i,facing:{x:document.querySelector('#flip').checked?1:-1,y:0},walkWeight:attack?0:1,walkPhase:(frame+.1)/8*Math.PI*2,moving:!attack,attackAnim:attack?dur*(1-(frame+.1)/9):0,animDur:dur,animKind:mode.value};drawMonsterSprite(ctx,x,y,m,{...d,size:1},32,t/1000);ctx.fillStyle='#eee';ctx.fillText(d.name,x,y+26);ctx.fillStyle='#abbbaa';ctx.font='10px sans-serif';ctx.fillText(d.id,x,y+42);ctx.font='12px sans-serif'});requestAnimationFrame(draw)}requestAnimationFrame(draw);
+</script></html>

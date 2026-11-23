@@ -1,6 +1,7 @@
 import { heroSprite } from './hero-sheets.js';
 import { actionDur, hitTimes } from '../data/chars.js';
 import { advanceGait, monsterStride } from './locomotion.js';
+import { QUADRUPED_ATTACK_SECONDS, QUADRUPED_SKILL_SECONDS, QUADRUPED_IMPACT } from './quadruped-motion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
@@ -1038,6 +1039,8 @@ export class Game {
   }
 
   monsterBrain(m, def, p, pd, playerSafe, dt, tu) {
+    // Finish a planted quadruped strike before chasing or starting another one.
+    if (def.family === 'quadruped' && m.attackAnim > 0) return;
     {
       // 보스 내려찍기: 예고가 끝나면 그 자리에 범위 피해
       if (m.slamTarget && this.time >= m.slamAt) this.resolveSlam(m, def);
@@ -1110,7 +1113,16 @@ export class Game {
 
   monsterAttack(m, def, u = this.leader) {
     if (!this.hasAttackLine(m, u.ent)) return;
-    m.animKind = 'attack'; m.animDur = 0.4; m.attackAnim = 0.4;
+    m.animKind = 'attack'; m.animDur = def.family === 'quadruped' ? QUADRUPED_ATTACK_SECONDS : 0.4; m.attackAnim = m.animDur;
+    if (def.family === 'quadruped') {
+      this.pending.push({ at: this.time + m.animDur * QUADRUPED_IMPACT, fn: () => {
+        if (m.dead || u.ent.dead || !this.monsters.includes(m) || !this.hasAttackLine(m, u.ent)) return;
+        this.monsterAttackImpact(m, def, u);
+      } });
+    } else this.monsterAttackImpact(m, def, u);
+  }
+
+  monsterAttackImpact(m, def, u) {
     const e = u.ent;
     if (def.projectile) {
       this.addProjectile(m, e, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
@@ -1144,18 +1156,25 @@ export class Game {
     if (!this.hasAttackLine(m, u.ent)) return;
     const sk = def.active[Math.floor(Math.random() * def.active.length)];
     m.nextSkill = this.time + def.skillCooldown * (0.8 + Math.random() * 0.4);
-    m.animKind = 'skill'; m.animDur = 0.6; m.attackAnim = 0.6;
+    m.animKind = 'skill'; m.animDur = def.family === 'quadruped' ? QUADRUPED_SKILL_SECONDS : 0.6; m.attackAnim = m.animDur;
     const p = u.ent;
     const color = EFFECT_COLOR[sk.effect] || def.color;
     this.floatText(m, sk.name, color, 13);
-    if (def.projectile) this.addProjectile(m, p, def.projectile, color);
-    this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, def.projectile ? 0.25 : 0.12);
-    let landed = false;
-    for (let i = 0; i < (sk.pulses || 1); i++) {
-      if (p.dead) break;
-      if (this.monsterHit(m, def, sk.mult, i * 0.15, u)) landed = true;
-    }
-    if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def, u);
+    const impact = () => {
+      if (m.dead || p.dead || !this.hasAttackLine(m, p)) return;
+      if (def.projectile) this.addProjectile(m, p, def.projectile, color);
+      this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, def.projectile ? 0.25 : 0.12);
+      let landed = false;
+      for (let i = 0; i < (sk.pulses || 1); i++) {
+        if (p.dead) break;
+        if (this.monsterHit(m, def, sk.mult, i * 0.15, u)) landed = true;
+      }
+      if (landed && Math.random() < 0.6) this.applyStatus(sk.effect, def, u);
+    };
+    if (def.family === 'quadruped') this.pending.push({ at: this.time + m.animDur * QUADRUPED_IMPACT, fn: () => {
+      if (this.monsters.includes(m)) impact();
+    } });
+    else impact();
   }
 
   applyStatus(effect, def, u = this.leader) {
