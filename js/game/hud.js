@@ -1,3 +1,4 @@
+import { ItemTooltip } from '../ui/item-tooltip.js';
 import { equipmentMarkup, itemDetailsMarkup, availableInSlot, escapeHtml } from '../ui/equipment.js';
 import { EQUIPMENT_SLOTS } from '../data/equipment.js';
 import { itemIcon } from '../ui/item-icons.js';
@@ -405,6 +406,7 @@ export class Hud {
   }
 
   closePanel(name) {
+    this.itemTooltip?.hide();
     this.open.delete(name);
     this.panels[name].classList.remove('show');
     if (name === 'npc') this.game.openNpc = null;
@@ -442,6 +444,7 @@ export class Hud {
   }
 
   renderPanel(name) {
+    this.itemTooltip?.hide();
     const body = this.panels[name].querySelector('.body');
     if (name === 'char') body.innerHTML = this.charHtml();
     else if (name === 'inv') body.innerHTML = this.invHtml();
@@ -571,8 +574,8 @@ export class Hud {
       if (!e) { cells.push('<div class="cell empty"></div>'); continue; }
       const it = ITEMS[e.id];
       const usable = it.type === 'consumable' || canEquip(e.id, su.char.classId);
-      const tip = `${it.name}\n${it.desc}${it.type !== 'consumable' && !usable ? '\n(장착 불가)' : ''}\n클릭하여 설명 확인: ${it.type === 'consumable' ? '사용' : '장착'}${shopOpen ? `\n판매가 ${sellPrice(e.id)} 골드` : ''}`;
-      cells.push(`<div class="cell ${usable ? '' : 'nouse'}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기" draggable="true" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}' title="${esc(tip)}">
+
+      cells.push(`<div class="cell ${usable ? '' : 'nouse'}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기" draggable="true" data-item-hover="${e.id}" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}'>
         ${itemIcon(e.id)}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
         ${shopOpen && sellPrice(e.id) > 0 ? `<button class="sell" data-sell="${i}">판매</button>` : ''}</div>`);
     }
@@ -580,7 +583,7 @@ export class Hud {
       <div class="gold">골드 ${ch.gold.toLocaleString()}</div>
       ${equipmentMarkup(g)}
       <div class="grid">${cells.join('')}</div>
-      <small class="hint">클릭: 아이템 정보 · 설명창에서 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 판매' : ''}</small></section></div>`;
+      <small class="hint">마우스 올리기: 정보·장비 비교 · 클릭: 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 판매' : ''}</small></section></div>`;
   }
 
   skillsHtml() {
@@ -687,6 +690,7 @@ export class Hud {
   }
 
   showTravelPrompt(destination, kind) {
+    this.itemTooltip?.hide();
     this.closeItem();
     const overlay = this.root.querySelector('.travel-overlay');
     this.travelReturnFocus = document.activeElement;
@@ -705,6 +709,7 @@ export class Hud {
   }
 
   showItem(id, source = 'bag', slot = null) {
+    this.itemTooltip?.hide();
     if (!ITEMS[id]) return;
     const unit = this.game.selUnit();
     this.itemContext = { id, source, slot, unitId: unit.id };
@@ -755,6 +760,7 @@ export class Hud {
 
   bindPanelEvents() {
     const g = this.game;
+    this.itemTooltip = new ItemTooltip(this.root, g, () => !!this.itemContext || !!g.pendingTravel || this.dragging);
     this.root.addEventListener('click', (e) => {
       const t = e.target.closest('button');
       if (!t) return;

@@ -283,7 +283,8 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .equipment-totals>span { display:flex; justify-content:space-between; color:#bec5cc; }
 .inventory-bag h3 { margin:0 0 12px; font-size:14px; }
 .inventory-bag h3 small { font-size:11px; color:#a6a395; margin-left:5px; }
-.inventory-bag .grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.inventory-bag .grid { grid-template-columns:repeat(auto-fill,42px); gap:4px; align-content:start; }
+.inventory-bag .cell { width:42px; height:42px; }
 .cell[role="button"],.shop-row[data-shop-item] { cursor:pointer; }
 .cell:focus-visible { outline:2px solid #e2bd63; }
 .item-overlay { position:absolute; inset:0; background:rgba(0,0,0,.6); display:grid; place-items:center; z-index:100000; padding:16px; }
@@ -302,7 +303,7 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .item-detail-meta { margin:18px 0; font-size:12px; }.item-detail-meta>div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; }.item-detail-meta dt { color:#a9a79c; }.item-detail-meta dd { margin:0; text-align:right; }
 .item-requirement { color:#ef9a8c; font-size:12px; }.item-dialog-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }.item-dialog-actions .primary { background:#6e5325; border-color:#c59e50; color:#fff0c7; }
 .equipment-choices { display:grid; gap:8px; }.equipment-choices button { display:flex; align-items:center; gap:10px; text-align:left; }
-@media(max-width:600px) { .inventory-columns { grid-template-columns:1fr; }.equipment-board { width:232px; max-width:100%; margin:auto; }.inventory-bag .grid { grid-template-columns:repeat(6,minmax(0,1fr)); }.panel[data-panel="inv"] { right:12px; top:35px; max-height:calc(100% - 100px); } }
+@media(max-width:600px) { .inventory-columns { grid-template-columns:1fr; }.equipment-board { width:232px; max-width:100%; margin:auto; }.panel[data-panel="inv"] { right:12px; top:35px; max-height:calc(100% - 100px); } }
 
 .travel-overlay { position:absolute; inset:0; background:rgba(5,8,6,.72); display:grid; place-items:center; z-index:100010; padding:18px; }
 .travel-overlay[hidden] { display:none; }
@@ -312,3 +313,7 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .travel-destination { border-block:1px solid #5d5744; padding:16px 4px; color:#f1e5c9; font-size:17px; }
 .travel-dialog p { line-height:1.6; }.travel-dialog small { color:#9caa96; font-size:11px; }.travel-level { color:#c6b790; font-size:12px; }
 .travel-dialog .item-dialog-actions { justify-content:center; margin-top:24px; }.travel-dialog button { min-width:110px; padding:10px; }
+
+.item-tooltip { position:fixed; width:310px; max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); overflow:hidden; box-sizing:border-box; z-index:99999; pointer-events:none; background:linear-gradient(145deg,#2c2b25,#181a17); color:#e0ddd1; border:1px solid #aa915b; border-radius:6px; padding:14px; box-shadow:0 6px 26px #000b; font-size:12px; text-align:left; }
+.item-tooltip[hidden] { display:none; }.tooltip-heading { display:flex; align-items:center; gap:10px; color:#edcc7f; font-size:15px; }.tooltip-heading .icon { width:32px; height:32px; flex-shrink:0; }
+.tooltip-description { line-height:1.6; margin:12px 0; }.tooltip-classes { font-size:11px; color:#abae9d; }.item-comparison { border-top:1px solid #514b3b; margin-top:12px; padding-top:8px; }.item-comparison p { margin:5px 0; }.comparison-current { font-size:11px; color:#bcb49f; }.item-comparison table { width:100%; border-collapse:collapse; margin-top:10px; font-size:11px; }.item-comparison th,.item-comparison td { padding:7px 3px; text-align:right; border-bottom:1px solid #454436; }.item-comparison th:first-child { text-align:left; }.item-comparison thead { color:#b9b7a6; }.item-comparison .positive { color:#8ed594; }.item-comparison .negative { color:#f09b8f; }.item-comparison .neutral { color:#bcbcaf; }.tooltip-footer { display:flex; justify-content:space-between; gap:8px; margin-top:12px; font-size:10px; color:#b0a488; }

@@ -37,7 +37,7 @@ export function equipmentMarkup(game) {
       const currentScore = (item?.atk || 0) + (item?.def || 0);
       const upgrade = availableInSlot(game, char, slot.id).some(e => ((ITEMS[e.id].atk || 0) + (ITEMS[e.id].def || 0)) > currentScore);
       const label = `${slot.label}: ${item ? item.name : '미장착'}`;
-      return `<button class="equipment-tile ${item ? 'occupied' : 'empty'}" style="grid-row:${slot.row};grid-column:${slot.col}" data-equipment-slot="${slot.id}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${item ? itemIcon(id) : emptySlotIcon(slot.shape)}<span class="equipment-slot-label">${slot.label}</span>${upgrade ? '<span class="equipment-upgrade" aria-label="더 좋은 장비 있음">▲</span>' : ''}</button>`;
+      return `<button class="equipment-tile ${item ? 'occupied' : 'empty'}" style="grid-row:${slot.row};grid-column:${slot.col}" ${item ? `data-item-hover="${id}"` : ''} data-equipment-slot="${slot.id}" aria-label="${escapeHtml(label)}" ${item ? '' : `title="${escapeHtml(label)}"`}>${item ? itemIcon(id) : emptySlotIcon(slot.shape)}<span class="equipment-slot-label">${slot.label}</span>${upgrade ? '<span class="equipment-upgrade" aria-label="더 좋은 장비 있음">▲</span>' : ''}</button>`;
     }).join('')}</div>
     <div class="equipment-totals"><b>장비 효과 합계</b><span>일반공격 <strong>${signed(totals.atk)}</strong></span><span>방어력 <strong>${signed(totals.def)}</strong></span></div></section><section class="inventory-bag"><h3>가방 <small>파티 공용</small></h3>`;
 }
