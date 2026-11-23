@@ -8,13 +8,14 @@ import { SKILLS } from '../data/skills.js';
 import * as S from './stats.js';
 
 export const MAX_MERCS = 3;
+export const MERC_REFRESH_COST = 100;
 export const SKILL_SLOTS = 4;
 export const MERC_CLASSES = ['knight', 'elf', 'mage', 'priest', 'warrior'];
 
-const NAMES = [
-  '카일', '리안', '세린', '도윤', '하람', '로웬', '미르', '테오', '아린', '바렌', '엘라', '가론', '시엘', '루카', '네아',
-  '다린', '페이', '오른', '유나', '케인', '라헬', '보른', '이솔', '한결', '제나', '마르', '솔린', '타냐', '휴고', '벨라',
-];
+const NAMES = {
+  male: ['카일', '리안', '도윤', '하람', '로웬', '미르', '테오', '바렌', '가론', '루카', '다린', '오른', '케인', '보른', '한결', '마르', '휴고'],
+  female: ['세린', '아린', '엘라', '시엘', '네아', '페이', '유나', '라헬', '이솔', '제나', '솔린', '타냐', '벨라', '리아', '에린', '유리', '레나'],
+};
 
 // 스킬 칸 조건
 export const CONDITIONS = {
@@ -48,17 +49,21 @@ function hashStr(s) {
  * 용병단장이 보여줄 용병 목록 (마을 · 시간대마다 고정 → 1시간마다 새 얼굴)
  * level: 마을 레벨과 내 레벨 중 낮은 쪽
  */
-export function mercOffers(villageId, level, hourKey, count = 4, takenNames = []) {
-  const r = seeded(hashStr(`${villageId}:${hourKey}`));
+export function mercOffers(villageId, level, hourKey, count = 4, takenNames = [], refresh = 0) {
+  const key = `${villageId}:${hourKey}${refresh ? `:r${refresh}` : ''}`;
+  const r = seeded(hashStr(key));
+  const firstFemale = seeded(hashStr(`${key}:gender`))() < 0.5;
   const out = [];
   const used = new Set(takenNames);
   for (let i = 0; i < count; i++) {
     const classId = MERC_CLASSES[Math.floor(r() * MERC_CLASSES.length)];
     const lv = Math.max(1, level + Math.floor(r() * 3) - 1);
+    const gender = (i % 2 === 0 ? firstFemale : !firstFemale) ? 'female' : 'male';
     out.push({
-      offerId: `${villageId}:${hourKey}:${i}`,
+      offerId: `${key}:${i}`,
       classId,
-      name: pickName(r, used),
+      gender,
+      name: pickName(r, used, gender),
       level: lv,
       price: mercPrice(lv),
     });
@@ -67,9 +72,10 @@ export function mercOffers(villageId, level, hourKey, count = 4, takenNames = []
 }
 
 // 겹치지 않는 이름 (이미 파티에 있는 이름 · 같은 목록 안의 이름 제외)
-function pickName(r, used) {
-  let name = NAMES[Math.floor(r() * NAMES.length)];
-  for (let k = 0; used.has(name) && k < NAMES.length; k++) name = NAMES[(NAMES.indexOf(name) + 1) % NAMES.length];
+function pickName(r, used, gender) {
+  const names = NAMES[gender];
+  let name = names[Math.floor(r() * names.length)];
+  for (let k = 0; used.has(name) && k < names.length; k++) name = names[(names.indexOf(name) + 1) % names.length];
   used.add(name);
   return name;
 }
@@ -118,6 +124,7 @@ export function fillSlots(char) {
 export function createMerc(offer, id, rng = Math.random) {
   const cls = CLASSES[offer.classId];
   const char = S.createCharacter({ id, name: offer.name, classId: offer.classId, stats: autoAllocate(offer.classId) });
+  char.gender = offer.gender === 'female' ? 'female' : 'male';
   char.isMerc = true;
   char.inventory = [];
   char.gold = 0;

@@ -6,7 +6,7 @@ import { QUADRUPED_ATTACK_SECONDS, QUADRUPED_SKILL_SECONDS, QUADRUPED_IMPACT } f
 import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
 import { preload, fxSheet, fxIcon, statusIcon } from './art.js';
-import { MAX_MERCS, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp } from '../systems/party.js';
+import { MAX_MERCS, MERC_REFRESH_COST, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp } from '../systems/party.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS } from '../data/monsters.js';
 import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
@@ -140,11 +140,39 @@ export class Game {
   }
 
   // 용병단장: 이 마을의 용병 목록 (1시간마다 바뀜)
+  mercRecruitment() {
+    const village = this.world.def.id;
+    const hour = Math.floor(this.now() / 3600000);
+    const saved = this.char.mercRecruitment?.[village];
+    const refresh = saved?.hour === hour && Number.isSafeInteger(saved.refresh) && saved.refresh > 0 ? saved.refresh : 0;
+    return { village, hour, refresh };
+  }
+
+  mercOfferKey() {
+    const { village, hour, refresh } = this.mercRecruitment();
+    return `${village}:${hour}:${refresh}`;
+  }
+
   mercOffers() {
     const def = this.world.def;
-    const hour = Math.floor(this.now() / 3600000);
-    return mercOffers(def.id, Math.max(1, Math.min(def.level[0], this.char.level)), hour, 4, this.units().map((u) => u.char.name))
+    const { hour, refresh } = this.mercRecruitment();
+    return mercOffers(def.id, Math.max(1, Math.min(def.level[0], this.char.level)), hour, 4, this.units().map((u) => u.char.name), refresh)
       .filter((o) => !(this.char.hiredOffers || []).includes(o.offerId));
+  }
+
+  refreshMercOffers() {
+    if (this.openNpc?.kind !== 'mercenary' || this.world.def.type !== 'village' || this.player.dead) return false;
+    if (this.char.gold < MERC_REFRESH_COST) {
+      this.log(`용병 목록 새로고침에는 ${MERC_REFRESH_COST} 골드가 필요합니다.`, 'warn');
+      return false;
+    }
+    const { village, hour, refresh } = this.mercRecruitment();
+    this.char.gold -= MERC_REFRESH_COST;
+    (this.char.mercRecruitment ??= {})[village] = { hour, refresh: refresh + 1 };
+    this.hud.markDirty('npc', 'inv', 'char');
+    this.log(`${MERC_REFRESH_COST} 골드를 지불하고 용병 목록을 새로고침했습니다.`, 'system');
+    this.save();
+    return true;
   }
 
   hireMerc(offerId) {

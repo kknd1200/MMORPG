@@ -13,7 +13,7 @@ import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestina
 import { MONSTERS } from '../data/monsters.js';
 import { url as artUrl, fxIcon, statusIcon } from './art.js';
 import { avatarMarkup, paintAvatars } from '../ui/portraits.js';
-import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, learnedSkills } from '../systems/party.js';
+import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, MERC_REFRESH_COST, learnedSkills } from '../systems/party.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -195,6 +195,10 @@ export class Hud {
     this.el.death.classList.toggle('show', p.dead);
     if (p.dead) this.el.death.querySelector('small').textContent = `${Math.max(0, Math.ceil(p.respawnAt - g.time))}초 후 마을에서 부활합니다`;
 
+    if (this.open.has('npc') && g.openNpc?.kind === 'mercenary') {
+      const key = `${g.mercOfferKey()}:${g.char.gold}:${g.party.length}`;
+      if (key !== this.lastMercKey) { this.lastMercKey = key; this.dirty.add('npc'); }
+    }
     if (!this.dragging) {
       if (this.dirty.has('hotbar')) this.renderHotbar();
       for (const name of ['char', 'inv', 'skills', 'npc', 'party']) {
@@ -515,15 +519,16 @@ export class Hud {
     const rows = offers.map((o) => {
       const cls = CLASSES[o.classId];
       return `<div class="merc-row">
-        ${avatarMarkup({ classId: o.classId }, 'hud', 'portrait')}
-        <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small></div>
+        ${avatarMarkup({ classId: o.classId, gender: o.gender }, 'hud', 'portrait')}
+        <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level} · ${o.gender === 'female' ? '여성' : '남성'}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small></div>
         <span class="price">${o.price.toLocaleString()}G</span>
         <button data-hire="${o.offerId}" ${full || g.char.gold < o.price ? 'disabled' : ''}>고용</button>
       </div>`;
     }).join('') || '<p>지금은 고용할 용병이 없습니다. 잠시 뒤 다시 오세요.</p>';
     return `<p>함께 싸울 용병을 찾나? 실력은 내가 보증하지. (파티 ${g.party.length} / ${MAX_MERCS}명)</p>
-      <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>${rows}
-      <small class="hint">용병 목록은 1시간마다 바뀝니다. 고용한 용병은 따로 레벨업하며, 성장 주사위에 따라 축캐 · 저주캐가 될 수 있습니다.</small>`;
+      <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>
+      <button class="wide" data-refresh-merc ${g.char.gold < MERC_REFRESH_COST ? 'disabled' : ''}>용병 목록 새로고침 · ${MERC_REFRESH_COST.toLocaleString()}G</button>${rows}
+      <small class="hint">용병 목록은 매시 정각에 무료로 바뀝니다. ${MERC_REFRESH_COST.toLocaleString()}골드를 지불하면 지금 새 목록을 볼 수 있습니다. 새 목록은 남녀 각 2명으로 구성됩니다. 고용한 용병은 그대로 유지되며 따로 성장합니다.</small>`;
   }
 
   charHtml() {
@@ -774,6 +779,7 @@ export class Hud {
       else if (t.dataset.npc === 'heal') g.healAtHealer();
       else if (t.dataset.tp) g.teleport(t.dataset.tp);
       else if (t.dataset.hire) g.hireMerc(t.dataset.hire);
+      else if (t.hasAttribute('data-refresh-merc')) g.refreshMercOffers();
       else if (t.dataset.dismiss) { if (confirm('이 용병을 파티에서 내보낼까요? (장비는 인벤토리로 돌아옵니다)')) g.dismissMerc(t.dataset.dismiss); }
       else if (t.dataset.sel) this.selectUnit(t.dataset.sel);
       else if (t.dataset.open) this.openPanel(t.dataset.open);
