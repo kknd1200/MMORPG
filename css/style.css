@@ -259,3 +259,6 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .equip-who { margin: 4px 0; font-size: 12px; }
 .hud-portrait { overflow: hidden; }
 .hud-portrait .avatar { display: block; width: 62px; height: 62px; margin: 0; image-rendering: pixelated; }
+
+/* The same atlas crop is used at inventory, equipment, shop and hotbar sizes. */
+.icon.item-art { background-size: 800% 300%; background-repeat: no-repeat; background-color: #17150f; image-rendering: auto; }

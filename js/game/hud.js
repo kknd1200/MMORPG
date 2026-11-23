@@ -1,3 +1,4 @@
+import { itemIcon } from '../ui/item-icons.js';
 // DOM 기반 HUD: 상태바, 단축칸(F5~F12), 캐릭터/인벤토리/스킬 창, NPC 대화
 import { CLASSES, STAT_KEYS, STAT_NAMES, STAT_DESCRIPTIONS, STAT_CAP } from '../data/classes.js';
 import { SKILLS } from '../data/skills.js';
@@ -31,7 +32,6 @@ function skillIcon(sk) {
   if (sk.fx?.sheet) return `<img class="icon img" src="${artUrl(fxIcon(sk.fx.sheet))}" alt="${esc(sk.name)}" draggable="false">`;
   return iconHtml(sk.color, sk.name.slice(0, 2));
 }
-function itemIcon(id) { const it = ITEMS[id]; return iconHtml(it.icon.color, it.icon.text); }
 
 export class Hud {
   constructor(root, game) {

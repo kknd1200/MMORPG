@@ -1,0 +1,123 @@
+{
+  "source": "환생루프_아이템매칭_완성.xlsx",
+  "items": {
+    "red_potion": {
+      "cell": 0,
+      "source_name": "하급 회복 물약",
+      "source_id": "rloop:base_0522",
+      "variant": "Bottle liquid hue adapted to red"
+    },
+    "orange_potion": {
+      "cell": 1,
+      "source_name": "중급 회복 물약",
+      "source_id": "rloop:base_0527",
+      "variant": "Bottle liquid hue adapted to orange"
+    },
+    "blue_potion": {
+      "cell": 2,
+      "source_name": "하급 비전 물약",
+      "source_id": "rloop:base_0524",
+      "variant": "Bottle liquid hue adapted to blue"
+    },
+    "courage_potion": {
+      "cell": 3,
+      "source_name": "하급 격노 물약",
+      "source_id": "rloop:base_0525"
+    },
+    "return_scroll": {
+      "cell": 4,
+      "source_name": "바랜 주문서",
+      "source_id": "rloop:base_0445"
+    },
+    "training_sword": {
+      "cell": 5,
+      "source_name": "구리 장검",
+      "source_id": "rloop:base_0019"
+    },
+    "long_sword": {
+      "cell": 6,
+      "source_name": "철 장검",
+      "source_id": "rloop:base_0020"
+    },
+    "steel_blade": {
+      "cell": 7,
+      "source_name": "강철 대검",
+      "source_id": "rloop:base_0030"
+    },
+    "training_bow": {
+      "cell": 8,
+      "source_name": "참나무 단궁",
+      "source_id": "rloop:base_0073"
+    },
+    "long_bow": {
+      "cell": 9,
+      "source_name": "참나무 장궁",
+      "source_id": "rloop:base_0080"
+    },
+    "elven_bow": {
+      "cell": 10,
+      "source_name": "세계수 장궁",
+      "source_id": "rloop:base_0085"
+    },
+    "training_staff": {
+      "cell": 11,
+      "source_name": "참나무 지팡이",
+      "source_id": "rloop:base_0094"
+    },
+    "oak_staff": {
+      "cell": 12,
+      "source_name": "참나무 지팡이",
+      "source_id": "rloop:base_0094"
+    },
+    "arcane_staff": {
+      "cell": 13,
+      "source_name": "별빛나무 지팡이",
+      "source_id": "rloop:base_0098"
+    },
+    "training_mace": {
+      "cell": 14,
+      "source_name": "구리 철퇴",
+      "source_id": "rloop:base_0064"
+    },
+    "iron_mace": {
+      "cell": 15,
+      "source_name": "철 철퇴",
+      "source_id": "rloop:base_0065"
+    },
+    "holy_mace": {
+      "cell": 16,
+      "source_name": "룬 철퇴",
+      "source_id": "rloop:base_0070"
+    },
+    "training_axe": {
+      "cell": 17,
+      "source_name": "구리 도끼",
+      "source_id": "rloop:base_0037"
+    },
+    "battle_axe": {
+      "cell": 18,
+      "source_name": "철 전투도끼",
+      "source_id": "rloop:base_0047"
+    },
+    "war_axe": {
+      "cell": 19,
+      "source_name": "강철 전투도끼",
+      "source_id": "rloop:base_0048"
+    },
+    "cloth_armor": {
+      "cell": 20,
+      "source_name": "삼베 로브",
+      "source_id": "rloop:base_0203"
+    },
+    "leather_armor": {
+      "cell": 21,
+      "source_name": "거친 가죽 조끼",
+      "source_id": "rloop:base_0168"
+    },
+    "chain_mail": {
+      "cell": 22,
+      "source_name": "철 흉갑",
+      "source_id": "rloop:base_0126"
+    }
+  }
+}

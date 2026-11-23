@@ -1,0 +1,11 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>아이템 이미지 확인</title><link rel="stylesheet" href="../css/style.css"><style>body{overflow:auto;padding:24px}main{display:grid;grid-template-columns:380px 430px;gap:24px;align-items:start}section{background:#191710;border:1px solid #6b5a3a;padding:18px;border-radius:6px}.hotbar-review{display:flex;gap:4px;margin:16px 0}.catalog{display:flex;flex-wrap:wrap;gap:12px}.catalog>div{display:flex;align-items:center;gap:6px;min-width:210px}.catalog .item-art{width:52px;height:52px}.info{flex:1}@media(max-width:880px){main{grid-template-columns:1fr}}</style><h2>아이템 이미지 확인</h2><main><section><h3>가방 · 장비</h3><div id="inventory"></div><h3>단축칸</h3><div id="hotbar" class="hotbar-review"></div></section><section><h3>잡화 상점</h3><div id="merchant"></div><h3>대장간</h3><div id="smith"></div></section></main><script type="module">
+import { Hud } from '../js/game/hud.js';
+import { ITEMS } from '../js/data/items.js';
+import { itemIcon } from '../js/ui/item-icons.js';
+const char={name:'이미지 확인',classId:'knight',gold:10000,equipment:{weapon:'long_sword',armor:'chain_mail'},inventory:Object.keys(ITEMS).map(id=>({id,qty:1}))};
+const game={char,selUnit:()=>({char}),openNpc:{kind:'merchant'}};
+const hud=Object.create(Hud.prototype);hud.game=game;
+document.querySelector('#inventory').innerHTML=hud.invHtml();
+for(const kind of ['merchant','smith']){game.openNpc={kind};document.getElementById(kind).innerHTML=hud.npcHtml();}
+document.querySelector('#hotbar').innerHTML=['red_potion','orange_potion','blue_potion','courage_potion','return_scroll'].map(id=>`<div class="slot"><div class="content">${itemIcon(id)}</div></div>`).join('');
+</script></html>
