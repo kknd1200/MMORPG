@@ -273,9 +273,9 @@ export class Game {
       }
       if (sk.kind === 'heal' && !alive.some((t) => t.char.hp < t.char.maxHp * 0.8)) continue;
       if (sk.kind === 'restore' && u.char.mp > u.char.maxMp * 0.5) continue;
-      if (sk.kind === 'aoe' && !this.monsters.some((m) => !m.dead && dist(m, u.ent) <= sk.radius + m.radius)) continue;
+      if (sk.kind === 'aoe' && !this.monsters.some((m) => !m.dead && dist(m, u.ent) <= sk.radius + m.radius && this.hasAttackLine(u.ent, m))) continue;
       if (TARGETED.has(sk.kind)) {
-        if (!target || dist(u.ent, target) > this.skillRange(sk, u) + target.radius) continue;
+        if (!target || dist(u.ent, target) > this.skillRange(sk, u) + target.radius || !this.hasAttackLine(u.ent, target)) continue;
         this.castTargetSkill(sk, target, u);
       } else {
         this.castSelfSkill(sk, u);
@@ -334,7 +334,7 @@ export class Game {
         u.gcd = 0.3;
       }
       const range = cls.attackRange + t.radius;
-      if (dist(e, t) > range) {
+      if (dist(e, t) > range || !this.hasAttackLine(e, t)) {
         const r = this.navigate(e, t, speed, dt);
         e.moving = r === 'moving';
       } else {
@@ -542,6 +542,10 @@ export class Game {
     e.facing = { x: dx / d, y: dy / d };
   }
 
+  hasAttackLine(from, to) {
+    return this.world.hasLineOfSight(from.x, from.y, to.x, to.y);
+  }
+
   actionRange(action) {
     if (action.type === 'talk') return 1.8;
     if (action.type === 'skill') return this.skillRange(SKILLS[action.skillId]);
@@ -576,7 +580,7 @@ export class Game {
       const target = this.findEntity(p.action.targetId);
       if (!target) { p.action = null; return; }
       const range = this.actionRange(p.action) + (target.radius || 0.3);
-      if (dist(p, target) > range) {
+      if (dist(p, target) > range || p.action.type !== 'talk' && !this.hasAttackLine(p, target)) {
         const r = this.navigate(p, target, speed, dt);
         p.moving = r === 'moving';
       } else {
@@ -614,6 +618,7 @@ export class Game {
 
   // 일반공격 (리더 · 용병 공통)
   unitAttack(u, m) {
+    if (!this.hasAttackLine(u.ent, m)) return;
     const ch = u.char, e = u.ent;
     const stat = ch.stats[this.clsOf(u).primaryStat];
     const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
@@ -622,8 +627,9 @@ export class Game {
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
     const delay = bfx.proj ? this.addProjectile(e, m, 'sheet', '#f5e6c8', bfx.proj) : 0.08;
     if (!hit) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay); this.aggro(m, u); return; }
-    this.fx(bfx, m, delay, this.leftOf(e, m));
-    this.damageMonster(m, S.normalDamage(this.derived(u).attack, m.armor), u.isLeader ? '#ffffff' : '#d8e8ff', delay, u);
+    const origin = { x:e.x, y:e.y };
+    this.fx(bfx, m, delay, this.leftOf(e, m), origin);
+    this.damageMonster(m, S.normalDamage(this.derived(u).attack, m.armor), u.isLeader ? '#ffffff' : '#d8e8ff', delay, u, origin);
   }
 
   // ------------------------------------------------------------ skills
@@ -648,7 +654,7 @@ export class Game {
       const target = this.skillTarget(sk);
       if (!target) { this.log('대상이 없습니다. 몬스터에 마우스를 올리고 사용하세요.', 'warn'); return; }
       const resume = p.action?.type === 'attack' ? p.action.targetId : null;
-      if (dist(p, target) > this.skillRange(sk) + target.radius) {
+      if (dist(p, target) > this.skillRange(sk) + target.radius || !this.hasAttackLine(p, target)) {
         p.action = { type: 'skill', skillId: id, targetId: target.id, resume };
         p.moveTarget = null;
         return;
@@ -681,6 +687,7 @@ export class Game {
 
   // 대상을 정하는 스킬: 단일 · 대상 주변 범위 · 연쇄
   castTargetSkill(sk, m, u = this.leader) {
+    if (!this.hasAttackLine(u.ent, m)) return;
     const ch = u.char, p = u.ent;
     this.spend(sk, u);
     this.face(p, m);
@@ -712,7 +719,7 @@ export class Game {
     const effectDelay = shieldBash ? Math.max(0, delay - (sk.fx.impactFrame / 16) * (sk.fx.life || 0.6)) : delay;
     let targets = [m];
     if (sk.kind === 'aoe_target') {
-      targets = this.monsters.filter((o) => !o.dead && dist(o, m) <= sk.radius + o.radius);
+      targets = this.monsters.filter((o) => !o.dead && dist(o, m) <= sk.radius + o.radius && this.hasAttackLine(m, o));
     } else if (sk.kind === 'chain') {
       // 가장 가까운 다음 적으로 튕김
       let cur = m;
@@ -721,7 +728,7 @@ export class Game {
         for (const o of this.monsters) {
           if (o.dead || targets.includes(o)) continue;
           const d2 = dist(o, cur);
-          if (d2 < bd) { bd = d2; next = o; }
+          if (d2 < bd && this.hasAttackLine(cur, o)) { bd = d2; next = o; }
         }
         if (!next) break;
         targets.push(next);
@@ -729,26 +736,28 @@ export class Game {
       }
     }
     const flip = this.leftOf(p, m);
-    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay, flip);
+    if (sk.kind === 'aoe_target') this.fx(sk.fx, m, delay, flip, {x:p.x,y:p.y});
     targets.forEach((t, k) => {
+      const from = sk.kind === 'chain' && k > 0 ? targets[k-1] : sk.kind === 'aoe_target' ? m : p;
+      const origin = {x:from.x,y:from.y};
       let dl = delay;
       if (sk.kind === 'chain' && k > 0) {
         dl = delay + k * 0.12;
         this.addProjectile(targets[k - 1], t, 'sheet', sk.color, sk.proj, dl - 0.12);
       }
-      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, shieldBash ? effectDelay : dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
+      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, shieldBash ? effectDelay : dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip, origin);
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
         if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
-        this.skillHit(sk, t, stat, atk, i, dl, u);
+        this.skillHit(sk, t, stat, atk, i, dl, u, origin);
       }
     });
   }
 
   // 이펙트 시트 재생 (at = 몬스터/플레이어/좌표)
   // flip: 이펙트 그림은 오른쪽을 향해 그려져 있음 → 화면 왼쪽을 향하면 좌우 반전
-  fx(spec, at, delay = 0, flip = false) {
+  fx(spec, at, delay = 0, flip = false, attackOrigin = null) {
     if (!spec?.sheet) return;
-    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip });
+    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip, attackOrigin });
   }
 
   // a 에서 b 가 화면 왼쪽인지 (아이소메트릭: 화면 x = 월드 x − y)
@@ -757,7 +766,8 @@ export class Game {
 
   mSpeed(m, def) { return def.speed * (m.slowUntil > this.time ? 0.6 : 1); }
 
-  skillHit(sk, m, stat, atk, i = 0, delay = 0, u = this.leader) {
+  skillHit(sk, m, stat, atk, i = 0, delay = 0, u = this.leader, origin = u.ent) {
+    if (!this.hasAttackLine(origin, m)) return;
     const ch = u.char;
     const magic = sk.element === 'magic';
     const chance = magic ? S.magicHitChance(stat, ch.level, m) : S.physicalHitChance(stat, ch.level, m);
@@ -766,7 +776,7 @@ export class Game {
     const dmg = magic ? S.magicMitigate(raw, m.mr) : S.physicalMitigate(raw, m.armor);
     if (sk.slow) m.slowUntil = this.time + sk.slow;
     if (sk.dot) m.dot = { dmg: Math.max(1, Math.round(stat * atk * sk.dot)), until: this.time + sk.dotTime, next: this.time + 1, color: sk.color };
-    this.damageMonster(m, dmg, sk.color, delay + i * 0.12, u);
+    this.damageMonster(m, dmg, sk.color, delay + i * 0.12, u, {x:origin.x,y:origin.y});
   }
 
   castSelfSkill(sk, u = this.leader) {
@@ -781,7 +791,7 @@ export class Game {
       const atk = this.derived(u).attack;
       const stat = ch.stats[sk.stat];
       for (const m of this.monsters) {
-        if (!m.dead && dist(p, m) <= sk.radius + m.radius) this.skillHit(sk, m, stat, atk, 0, 0.12, u);
+        if (!m.dead && dist(p, m) <= sk.radius + m.radius && this.hasAttackLine(p, m)) this.skillHit(sk, m, stat, atk, 0, 0.12, u);
       }
     } else if (sk.kind === 'buff') {
       this.spend(sk, u);
@@ -1037,7 +1047,7 @@ export class Game {
           this.startSlam(m, slam, p);
           return;
         }
-        if (pd <= def.attackRange + p.radius) {
+        if (pd <= def.attackRange + p.radius && this.hasAttackLine(m, p)) {
           this.face(m, p);
           if (m.attackTimer <= 0) {
             m.attackTimer = def.attackInterval * (1 - passive(def, 'haste'));
@@ -1083,6 +1093,7 @@ export class Game {
   }
 
   monsterAttack(m, def, u = this.leader) {
+    if (!this.hasAttackLine(m, u.ent)) return;
     m.animKind = 'attack'; m.animDur = 0.4; m.attackAnim = 0.4;
     const e = u.ent;
     if (def.projectile) {
@@ -1095,6 +1106,7 @@ export class Game {
 
   // 몬스터 한 번의 타격: 명중 판정 → 피해. 맞으면 true
   monsterHit(m, def, mult, delay = 0, u = this.leader) {
+    if (!this.hasAttackLine(m, u.ent)) return false;
     const ch = u.char;
     const d = this.derived(u);
     // 마법 공격은 방어력을 절반만 적용
@@ -1113,6 +1125,7 @@ export class Game {
 
   // 몬스터 스킬 (원본 「환생 루프」 액티브): 배율 피해 × 타수 + 상태이상
   monsterSkill(m, def, u = this.leader) {
+    if (!this.hasAttackLine(m, u.ent)) return;
     const sk = def.active[Math.floor(Math.random() * def.active.length)];
     m.nextSkill = this.time + def.skillCooldown * (0.8 + Math.random() * 0.4);
     m.animKind = 'skill'; m.animDur = 0.6; m.attackAnim = 0.6;
@@ -1186,11 +1199,12 @@ export class Game {
     this.hud.markDirty('party');
   }
 
-  damageMonster(m, dmg, color, delay = 0, u = null) {
+  damageMonster(m, dmg, color, delay = 0, u = null, origin = null) {
+    if (origin && !this.hasAttackLine(origin, m)) return;
     // 화살 · 마법이 날아가는 동안은 피해를 미뤘다가 맞는 순간에 적용
     if (delay > 0.03) {
       this.aggro(m, u);
-      this.pending.push({ at: this.time + delay, fn: () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0, u); } });
+      this.pending.push({ at: this.time + delay, fn: () => { if (!m.dead && this.monsters.includes(m)) this.damageMonster(m, dmg, color, 0, u, origin); } });
       return;
     }
     const hide = passive(MONSTERS[m.type], 'hide');
@@ -1486,7 +1500,7 @@ export class Game {
 
   updateEffects(dt) {
     for (const fx of this.effects) fx.t += dt;
-    this.effects = this.effects.filter((fx) => fx.t < fx.life);
+    this.effects = this.effects.filter((fx) => fx.t < fx.life && (!fx.attackOrigin || this.hasAttackLine(fx.attackOrigin, fx.follow || fx)));
   }
 
   log(msg, type = 'info') { this.hud?.log(msg, type); }

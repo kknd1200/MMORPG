@@ -8,7 +8,7 @@ function fixture(classId,mode='normal') {
  const cls=CLASSES[classId],target={id:'enemy',x:5,y:0,radius:.4,armor:0},char={classId,level:1,mp:0,stats:{...cls.baseStats}},ent={id:'player',x:0,y:0,attackTimer:0,facing:{x:1,y:0},action:{type:'attack',targetId:target.id},dead:false};
  const u={id:'player',char,ent,isLeader:true,gcd:0},g=Object.create(Game.prototype);
  const calls={navigate:0,attacks:0,casts:0,projectiles:[]};
- Object.assign(g,{cls,char,player:ent,leader:u,autoMode:mode,mouse:{left:false},time:1,findEntity:()=>target,derived:()=>({speed:3,attack:cls.baseAttack}),navigate(){calls.navigate++;return 'moving'},clearPath(){},autoSkill(){calls.casts++;return false},pickTarget:()=>target,unitAttack(){calls.attacks++}});
+ Object.assign(g,{world:{hasLineOfSight:()=>true},cls,char,player:ent,leader:u,autoMode:mode,mouse:{left:false},time:1,findEntity:()=>target,derived:()=>({speed:3,attack:cls.baseAttack}),navigate(){calls.navigate++;return 'moving'},clearPath(){},autoSkill(){calls.casts++;return false},pickTarget:()=>target,unitAttack(){calls.attacks++}});
  return {g,u,target,calls};
 }
 for(const id of ['elf','mage','priest']) {

@@ -20,6 +20,9 @@ export const T = {
 
 const SOLID = new Set([T.TREE, T.WATER, T.WALL, T.ROCK, T.LAVA, T.GRAVE, T.DEADTREE, T.ICE, T.CRYSTAL, T.CORAL, T.SHELF, T.CACTUS, T.HOUSE]);
 
+// 물·용암 같은 낮은 지형 위로는 발사할 수 있고, 솟은 장애물은 공격을 막는다.
+const OPAQUE = new Set([T.TREE,T.WALL,T.ROCK,T.GRAVE,T.DEADTREE,T.ICE,T.CRYSTAL,T.CORAL,T.SHELF,T.CACTUS,T.HOUSE]);
+
 function mulberry32(seed) {
   return () => {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -429,6 +432,32 @@ export class World {
   inVillage() { return this.safe; }
 
   // 반지름 r 인 원(사각 근사)이 막혀있는지
+  hasLineOfSight(x0, y0, x1, y1) {
+    if (![x0,y0,x1,y1].every(Number.isFinite)) return false;
+    if (Math.min(x0,x1,y0,y1) < 0 || x0 >= this.w || x1 >= this.w || y0 >= this.h || y1 >= this.h) return false;
+    let x = Math.floor(x0), y = Math.floor(y0);
+    const endX = Math.floor(x1), endY = Math.floor(y1), dx = x1-x0, dy = y1-y0;
+    const sx = Math.sign(dx), sy = Math.sign(dy);
+    const stepX = dx ? 1/Math.abs(dx) : Infinity, stepY = dy ? 1/Math.abs(dy) : Infinity;
+    let nextX = dx ? ((sx > 0 ? x+1 : x)-x0)/dx : Infinity;
+    let nextY = dy ? ((sy > 0 ? y+1 : y)-y0)/dy : Infinity;
+    const blocked = (a,b) => OPAQUE.has(this.get(a,b));
+    for (let n = 0; n <= this.w+this.h+2; n++) {
+      if (blocked(x,y)) return false;
+      // 타일 경계와 나란히 지나가는 선도 장애물의 테두리를 통과하지 못한다.
+      if (!dx && Number.isInteger(x0) && blocked(x-1,y)) return false;
+      if (!dy && Number.isInteger(y0) && blocked(x,y-1)) return false;
+      if (x === endX && y === endY) return true;
+      if (Math.abs(nextX-nextY) < 1e-10) {
+        // 모서리를 동시에 지날 때 양옆 타일까지 검사 (대각선 벽 관통 방지).
+        if (blocked(x+sx,y) || blocked(x,y+sy)) return false;
+        x += sx; y += sy; nextX += stepX; nextY += stepY;
+      } else if (nextX < nextY) { x += sx; nextX += stepX; }
+      else { y += sy; nextY += stepY; }
+    }
+    return false;
+  }
+
   blocked(x, y, r = 0.3, forMonster = false) {
     const pts = [[x - r, y - r], [x + r, y - r], [x - r, y + r], [x + r, y + r]];
     for (const [px, py] of pts) {
