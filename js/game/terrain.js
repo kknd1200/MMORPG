@@ -657,6 +657,7 @@ export function objectSprite(world, t, v, i = -1) {
 
 // ---- 집 (마을)
 const ROOFS = {
+  capital: { roof: [48, 86, 142], wall: [226, 220, 197], timber: [154, 121, 62] },
   v1: { roof: [150, 74, 52], wall: [214, 196, 160], timber: [92, 64, 40] },
   v2: { roof: [92, 96, 110], wall: [206, 194, 168], timber: [84, 66, 50] },
   v3: { roof: [60, 92, 130], wall: [222, 214, 194], timber: [70, 60, 52] },

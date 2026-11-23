@@ -7,6 +7,7 @@ import { ITEMS } from '../data/items.js';
 import { LOOKS, drawHumanoid, drawMonsterSprite, MONSTER_UNIT_PX } from './sprites.js';
 import { TW, TH, HW, HH, ISO_RX, ISO_RY, Ground, objectSprite, propSprite, drawSprite } from './terrain.js';
 import { img, fxSheet, FX } from './art.js';
+import { NPC_ART } from '../data/npcs.js';
 
 // NPC 외형 (사람형 스프라이트 재사용)
 const NPC_LOOKS = {
@@ -330,18 +331,20 @@ export class Renderer {
       ctx.strokeStyle = '#ffe680'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.ellipse(sx, sy + 2, 15, 7, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    drawHumanoid(ctx, sx, sy, {
-      look: NPC_LOOKS[n.kind] || NPC_LOOKS.guide,
-      facing: { x: n.x > 30 ? -1 : 1, y: 1 }, walk: 0, moving: false, time,
-    });
+    const art=NPC_ART[n.art], atlas=img('npcs/townsfolk.webp');
+    if (art && atlas) {
+      const scale=60/art.height, k=atlas.naturalWidth/1024;
+      ctx.save();ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(atlas,art.col*256*k,art.row*384*k,256*k,384*k,sx-art.centerX*scale,sy-art.footY*scale,256*scale,384*scale);
+      ctx.restore();
+    }
     const bounce = Math.sin(time * 3) * 2;
     ctx.fillStyle = '#ffd84a';
     ctx.font = `bold 15px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.strokeText('!', sx, sy - 54 + bounce);
-    ctx.fillText('!', sx, sy - 54 + bounce);
-    nameTag(ctx, sx, sy - 66, n.name, '#ffe680');
+    if (n.kind !== 'resident') {ctx.strokeText('!', sx, sy - 70 + bounce);ctx.fillText('!', sx, sy - 70 + bounce);}
+    nameTag(ctx, sx, sy - 82, n.name, '#ffe680');
   }
 
   drawMonster(m, sx, sy, targeted, hovered, time) {

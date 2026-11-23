@@ -28,7 +28,7 @@ export const ITEMS = {
   return_scroll: {
     name: '귀환 주문서', type: 'consumable', price: 30,
     effect: { teleport: 'village' }, icon: { color: '#c9b37a', text: '귀' },
-    desc: '새싹 마을로 즉시 돌아갑니다.',
+    desc: '현재 지역에서 가장 가까운 마을로 즉시 돌아갑니다.',
   },
 
   // ---- 무기: 기사 ----

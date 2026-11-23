@@ -44,9 +44,9 @@ export class Game {
     this.renderer = new Renderer(canvas);
     this.worlds = new Map(); // 한 번 만든 맵은 다시 쓰기 (지형만, 몬스터는 들어갈 때마다 새로)
 
-    // 맵 구조가 바뀐 뒤 처음 접속하면 예전 위치 대신 시작 마을에서
+    // 지형 변경 시 현재 지역의 안전한 시작 지점으로 배치하고 성장·장비·파티는 유지
     const valid = character.worldVersion === WORLD_VERSION && MAPS[character.mapId];
-    const mapId = valid ? character.mapId : START_MAP;
+    const mapId = MAPS[character.mapId] ? character.mapId : START_MAP;
     let start = valid ? character.pos : null;
     character.worldVersion = WORLD_VERSION;
     character.fieldBossKills ??= {};
@@ -1801,6 +1801,7 @@ export class Game {
       case 'KeyI': this.hud.togglePanel('inv'); break;
       case 'KeyK': this.hud.togglePanel('skills'); break;
       case 'KeyP': this.hud.togglePanel('party'); break;
+      case 'KeyM': this.hud.togglePanel('atlas'); break;
       case 'KeyA': this.cycleAutoMode(); break;
       case 'Escape': this.hud.escape(); break;
       default: return;

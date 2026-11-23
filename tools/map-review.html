@@ -9,7 +9,7 @@ const g=new Game({canvas:document.querySelector('#scene'),hudRoot:document.query
 g.updateMonsters=()=>{};
 const maps=Object.values(MAPS).filter(m=>m.type==='village'||m.type==='field'||m.floor<=2),select=document.querySelector('#map');
 select.innerHTML=maps.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-const first=maps.find(m=>m.type==='field'&&m.entrances.length);
+const first=maps.find(m=>m.capital);
 function visit(id){g.resolveTravel(false);const def=MAPS[id];g.changeMap(id,def.entrances?.length?`entrance:${def.entrances[0]}`:'center',true);document.querySelector('#review-status').textContent=def.name}
 select.value=first.id;visit(first.id);select.onchange=()=>visit(select.value);
 document.querySelector('#portal').onclick=()=>{const q=g.world.portals.find(p=>p.kind==='cave'||p.kind==='down')||g.world.portals[0];if(!q)return;g.player.x=q.cx;g.player.y=q.cy;g.camera.x=q.cx;g.camera.y=q.cy;g.dismissedPortal=null;g.portalReadyAt=0;g.checkPortal()};g.start();

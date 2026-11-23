@@ -6,9 +6,10 @@
 //   dungeon : 방과 통로. 올라가는 계단(1층은 필드 입구로), 내려가는 계단, 마지막 층은 보스 방
 // 포탈(portals)에 들어서면 다른 맵으로 이동, spots 는 도착 지점 이름표 (west/east/center/up/down/entrance:d1 ...)
 import { MAPS } from '../data/maps.js';
+import { npcAppearance, NPC_RESIDENTS } from '../data/npcs.js';
 
 export const TILE_SIZE = 32;
-export const WORLD_VERSION = 6; // 맵 구조가 바뀌면 올림 → 예전 저장 위치는 시작 마을로 초기화
+export const WORLD_VERSION = 7; // changed paths: keep progress, place old saves at the map's safe spawn
 
 export const T = {
   GRASS: 0, DIRT: 1, TREE: 2, WATER: 3, WALL: 4, FLOOR: 5,
@@ -190,6 +191,17 @@ export class World {
   // 동/서 출구: 맵 끝의 길 + 포탈 + 도착 지점
   edgeExits(cy) {
     const ex = this.def.exits;
+    const cx = Math.floor(this.w / 2);
+    if (ex.north) {
+      this.road(cx - 1, 0, cx + 1, cy + 1);
+      this.portal('exit', cx + .5, 1, 3, 2, ex.north, `↑ ${MAPS[ex.north.map].name}`);
+      this.spots.north = {x:cx+.5,y:4.5};
+    }
+    if (ex.south) {
+      this.road(cx - 1, cy - 1, cx + 1, this.h - 1);
+      this.portal('exit', cx + .5, this.h - 1, 3, 2, ex.south, `${MAPS[ex.south.map].name} ↓`);
+      this.spots.south = {x:cx+.5,y:this.h-4.5};
+    }
     if (ex.west) {
       this.road(0, cy - 1, 6, cy + 1);
       this.portal('exit', 1, cy + 0.5, 2, 3, ex.west, `← ${MAPS[ex.west.map].name}`);
@@ -214,6 +226,13 @@ export class World {
     this.rect(town.x0, town.y0, town.x1, town.y1, (x, y) =>
       (x === town.x0 || x === town.x1 || y === town.y0 || y === town.y1 ? T.WALL : T.FLOOR));
     this.border(this.fillTile === T.WATER ? T.TREE : this.fillTile);
+    if (d.capital) {
+      // Four bridges cross the moat; exit roads below cut through each bank.
+      this.rect(town.x0-2,town.y0-2,town.x0-1,town.y1+2,T.WATER);
+      this.rect(town.x1+1,town.y0-2,town.x1+2,town.y1+2,T.WATER);
+      this.rect(town.x0-2,town.y0-2,town.x1+2,town.y0-1,T.WATER);
+      this.rect(town.x0-2,town.y1+1,town.x1+2,town.y1+2,T.WATER);
+    }
     if (d.exits.west) this.road(0, cy - 1, town.x0 + 2, cy + 1);
     if (d.exits.east) this.road(town.x1 - 2, cy - 1, this.w - 1, cy + 1);
     this.edgeExits(cy);
@@ -242,7 +261,7 @@ export class World {
     bed(ox + 29, oy + 19, ox + 33, oy + 21);
     for (const [x, y] of [[town.x0 + 2, town.y0 + 2], [town.x1 - 2, town.y0 + 2], [town.x0 + 2, town.y1 - 2], [town.x1 - 2, town.y1 - 2]]) this.set(x, y, T.TREE);
 
-    const npc = (kind, name, x, y, color) => this.npcs.push({ id: `npc_${kind}`, kind, name, x: x + 0.5, y: y + 0.5, color });
+    const npc = (kind, name, x, y, color) => this.npcs.push({ id: `npc_${kind}`, kind, name, x: x + 0.5, y: y + 0.5, color, art:npcAppearance(kind,d.id) });
     const names = VILLAGE_NPC_NAMES[d.id] || VILLAGE_NPC_NAMES.v1;
     npc('merchant', names[0], town.x0 + 6, town.y0 + 6, '#c98a3a');
     npc('smith', names[1], town.x1 - 6, town.y0 + 6, '#7a5a48');
@@ -250,7 +269,8 @@ export class World {
     npc('teleporter', names[3], cx + 5, cy - 4, '#9a6ad8');
     npc('guide', names[4], cx - 5, cy + 4, '#5aa0c8');
     npc('mercenary', names[5] || '용병단장 가렌', cx - 5, cy - 4, '#c8642c');
-    this.spots.center = { x: cx + 0.5, y: cy + 4.5 };
+    for (const [art,name,x,y,dialogue] of NPC_RESIDENTS[d.id] || []) this.npcs.push({id:`npc_resident_${art}`,kind:'resident',art,name,x:x+.5,y:y+.5,dialogue,color:'#c9b37a'});
+    this.spots.center = { x: cx + 0.5, y: cy + (d.capital ? 0.5 : 4.5) };
   }
 
   // ------------------------------------------------------------ 필드
@@ -554,6 +574,7 @@ export class World {
 
 // 마을별 NPC 이름: 잡화상, 대장장이, 치유사, 이동술사, 안내원
 const VILLAGE_NPC_NAMES = {
+  capital: ['왕실 상인 브론', '대장장이 루나', '대사제 루멘', '대마법사 아르곤', '성도 안내인 리오', '왕실 용병단장 레온'],
   v1: ['잡화상 브론', '대장장이 고른', '치유사 엘린', '이동술사 세라', '안내원 토마', '용병단장 가렌'],
   v2: ['잡화상 미나', '대장장이 하겔', '치유사 로웬', '이동술사 키아', '안내원 바르', '용병단장 브리아'],
   v3: ['잡화상 페드로', '대장장이 오스카', '치유사 마리스', '이동술사 니엘', '안내원 해린', '용병단장 도르크'],

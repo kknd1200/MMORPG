@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, VILLAGES, FIELDS, DUNGEONS, CHAIN } from '../js/data/maps.js';
+import { MAPS, VILLAGES, FIELDS, DUNGEONS, WORLD_ROUTES } from '../js/data/maps.js';
 import { World } from '../js/game/world.js';
 import { STREAM, planZones, planArt, viewRect, rectsOverlap } from '../js/game/zones.js';
 
@@ -64,8 +64,8 @@ test('그림은 몬스터보다 먼저 불러오고, 더 멀어져야 해제', (
 });
 
 // ---------------------------------------------------------------- 월드 구성
-test('마을 6 · 필드 10 · 던전 7개 × 7층, 마지막 층은 보스', () => {
-  assert.equal(VILLAGES.length, 6);
+test('성도와 마을 7 · 필드 10 · 던전 7개 × 7층, 마지막 층은 보스', () => {
+  assert.equal(VILLAGES.length, 7);
   assert.equal(FIELDS.length, 10);
   assert.equal(DUNGEONS.length, 7);
   for (const d of DUNGEONS) {
@@ -90,18 +90,21 @@ test('필드마다 필드 보스가 있고, 출현 시각이 서로 다름', () 
   assert.equal(offsets.size, FIELDS.length);
 });
 
-test('동/서 출구가 서로 짝이 맞고, 모든 맵이 한 줄로 이어짐', () => {
-  CHAIN.forEach((id, i) => {
-    const m = MAPS[id];
-    if (i > 0) assert.deepEqual(m.exits.west, { map: CHAIN[i - 1], spot: 'east' });
-    if (i < CHAIN.length - 1) assert.deepEqual(m.exits.east, { map: CHAIN[i + 1], spot: 'west' });
-  });
-  assert.equal(CHAIN.length, VILLAGES.length + FIELDS.length);
+test('성도의 네 방향 출구와 모든 지역의 왕복 연결', () => {
+  const opposite={north:'south',south:'north',east:'west',west:'east'};
+  assert.equal(Object.keys(MAPS.capital.exits).length,4);
+  for(const [a,dir,b] of WORLD_ROUTES){
+    assert.deepEqual(MAPS[a].exits[dir],{map:b,spot:opposite[dir]});
+    assert.deepEqual(MAPS[b].exits[opposite[dir]],{map:a,spot:dir});
+  }
+  const queue=['capital'],seen=new Set(queue);
+  for(let i=0;i<queue.length;i++)for(const ex of Object.values(MAPS[queue[i]].exits))if(!seen.has(ex.map)){seen.add(ex.map);queue.push(ex.map)}
+  assert.equal(seen.size,VILLAGES.length+FIELDS.length);
 });
 
-test('맵 65개 전부: 도착 지점 · 포탈 · 사냥 구역에 걸어서 닿고, 포탈 목적지가 존재', () => {
+test('맵 66개 전부: 도착 지점 · 포탈 · 사냥 구역에 걸어서 닿고, 포탈 목적지가 존재', () => {
   const worlds = Object.fromEntries(Object.values(MAPS).map((d) => [d.id, new World(d)]));
-  assert.equal(Object.keys(worlds).length, 6 + 10 + 49);
+  assert.equal(Object.keys(worlds).length, 7 + 10 + 49);
   for (const w of Object.values(worlds)) {
     for (const [k, p] of Object.entries(w.spots)) assert.ok(w.reachable(p), `${w.id} 도착 지점 ${k}`);
     for (const p of w.portals) {
@@ -129,9 +132,9 @@ test('필드 보스 시간표: 매시 offset 분에 나타나 stay 분 머묾', 
   assert.equal(w.next, base + 66 * min);
 });
 
-test('이동술사: 마을 6 · 필드 10 · 던전 입구 7, 던전은 입구 앞까지만', () => {
+test('이동술사: 성도와 마을 7 · 필드 10 · 던전 입구 7, 던전은 입구 앞까지만', () => {
   const d = teleportDestinations();
-  assert.equal(d.filter((x) => x.kind === 'village').length, 6);
+  assert.equal(d.filter((x) => x.kind === 'village').length, 7);
   assert.equal(d.filter((x) => x.kind === 'field').length, 10);
   const dun = d.filter((x) => x.kind === 'dungeon');
   assert.equal(dun.length, 7);

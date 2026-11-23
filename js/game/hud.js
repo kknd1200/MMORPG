@@ -15,6 +15,7 @@ import { url as artUrl, fxIcon, statusIcon } from './art.js';
 import { avatarMarkup, paintAvatars } from '../ui/portraits.js';
 import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, MERC_REFRESH_COST, learnedSkills, skillBook } from '../systems/party.js';
 import { HOTBAR_KEYS } from './game.js';
+import { worldMapMarkup } from '../ui/world-map.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pct = (v) => `${Math.round(v * 100)}%`;
@@ -24,6 +25,8 @@ function exitsText(def) {
   const parts = [];
   if (def.exits.west) parts.push(`서쪽 출구 → ${esc(mapTitle(MAPS[def.exits.west.map]))}`);
   if (def.exits.east) parts.push(`동쪽 출구 → ${esc(mapTitle(MAPS[def.exits.east.map]))}`);
+  if (def.exits.north) parts.push(`북쪽 출구 → ${esc(mapTitle(MAPS[def.exits.north.map]))}`);
+  if (def.exits.south) parts.push(`남쪽 출구 → ${esc(mapTitle(MAPS[def.exits.south.map]))}`);
   return parts.join(' · ');
 }
 
@@ -75,6 +78,7 @@ export class Hud {
         <button data-toggle="char">캐릭터 (C)</button>
         <button data-toggle="inv">인벤토리 (I)</button>
         <button data-toggle="skills">스킬 (K)</button>
+        <button data-toggle="atlas">세계지도 (M)</button>
         <button data-toggle="menu">메뉴 (Esc)</button>
       </div>
       <section class="panel" data-panel="char"><header><span>캐릭터 정보</span><button class="close">×</button></header><div class="body"></div></section>
@@ -82,6 +86,7 @@ export class Hud {
       <section class="panel" data-panel="party"><header><span>파티 · 스킬 배치</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel" data-panel="skills"><header><span>스킬</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel" data-panel="npc"><header><span class="npc-title"></span><button class="close">×</button></header><div class="body"></div></section>
+      <section class="panel atlas-panel" data-panel="atlas"><header><span>세계지도 · 새벽 대륙</span><button class="close">×</button></header><div class="body"></div></section>
       <section class="panel small" data-panel="menu"><header><span>메뉴</span><button class="close">×</button></header>
         <div class="body menu-body">
           <button data-menu="resume">게임으로 돌아가기</button>
@@ -201,7 +206,7 @@ export class Hud {
     }
     if (!this.dragging) {
       if (this.dirty.has('hotbar')) this.renderHotbar();
-      for (const name of ['char', 'inv', 'skills', 'npc', 'party']) {
+      for (const name of ['char', 'inv', 'skills', 'npc', 'party', 'atlas']) {
         if (this.dirty.has(name) && this.open.has(name)) this.renderPanel(name);
       }
       this.dirty.clear();
@@ -381,6 +386,7 @@ export class Hud {
 
   // 맵이 바뀌면: 미니맵 다시 만들기, NPC 창 닫기
   onMapChange(first) {
+    this.dirty.add('atlas');
     this.buildMinimap();
     if (!first) this.closePanel('npc');
     const cv = this.el.minimap, w = this.game.world;
@@ -421,7 +427,7 @@ export class Hud {
   escape() {
     if (this.game.pendingTravel) { this.game.resolveTravel(false); return; }
     if (this.itemContext) { this.closeItem(); return; }
-    const order = ['npc', 'party', 'skills', 'inv', 'char'];
+    const order = ['atlas', 'npc', 'party', 'skills', 'inv', 'char'];
     const top = order.find((n) => this.open.has(n));
     if (top) this.closePanel(top);
     else this.togglePanel('menu');
@@ -457,6 +463,7 @@ export class Hud {
     else if (name === 'skills') body.innerHTML = this.skillsHtml();
     else if (name === 'npc') body.innerHTML = this.npcHtml();
     else if (name === 'party') body.innerHTML = this.partyHtml();
+    else if (name === 'atlas') body.innerHTML = worldMapMarkup(this.game.world.id, this.atlasSelection);
     paintAvatars(body);
   }
 
@@ -627,6 +634,7 @@ export class Hud {
   npcHtml() {
     const g = this.game, npc = g.openNpc;
     if (!npc) return '';
+    if (npc.kind === 'resident') return `<p>${esc(npc.dialogue || '즐거운 여행 되세요.')}</p><button class="wide" data-open="atlas">세계지도 보기</button>`;
     if (npc.kind === 'healer') {
       return `<p>여행은 힘들죠? 제가 상처를 치료해 드릴게요. 초보자에게는 무료랍니다.</p>
         <button class="wide" data-npc="heal">HP/MP 모두 회복</button>`;
@@ -784,6 +792,7 @@ export class Hud {
       else if (t.dataset.tp) g.teleport(t.dataset.tp);
       else if (t.dataset.hire) g.hireMerc(t.dataset.hire);
       else if (t.hasAttribute('data-refresh-merc')) g.refreshMercOffers();
+      else if (t.dataset.atlasMap) { this.atlasSelection = t.dataset.atlasMap; this.renderPanel('atlas'); }
       else if (t.dataset.dismiss) { if (confirm('이 용병을 파티에서 내보낼까요? (장비는 인벤토리로 돌아옵니다)')) g.dismissMerc(t.dataset.dismiss); }
       else if (t.dataset.sel) this.selectUnit(t.dataset.sel);
       else if (t.dataset.open) this.openPanel(t.dataset.open);

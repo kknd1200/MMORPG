@@ -1,10 +1,5 @@
-// 월드 구성: 마을 6 · 필드 10 · 던전 7 (각 7층, 마지막 층 보스)
-//
-// 맵은 서쪽 → 동쪽으로 한 줄로 이어집니다 (각 맵의 동/서 출구로 걸어서 이동).
-//   새싹 마을 ─ 필드1 ─ 필드2 ─ 바람골 마을 ─ 필드3 ─ 필드4 ─ 은물결 항구 ─ 필드5 ─ 필드6
-//   ─ 붉은바위 요새 ─ 필드7 ─ 필드8 ─ 서리꽃 마을 ─ 필드9 ─ 별무리 성채 ─ 필드10
-// 던전 입구는 필드 안에 있고, 입구로 들어가면 지하 1층 → … → 지하 7층(보스).
-// 몬스터는 「환생 루프」 원본 50개 지역(지역마다 일반 5 + 네임드 1)에서 골라 씁니다.
+// 월드 구성: 중앙 성도 + 마을 6 · 필드 10 · 던전 7개 × 7층.
+// 성도에서 동서남북의 마을과 사냥터로 갈라지는 대륙. 기존 지역 ID와 전투 진행은 유지.
 import { ROSTER } from './rebirth-roster.js';
 import { defineMonster, THEME_BIOME, RANK } from './monsters.js';
 
@@ -17,12 +12,13 @@ const region = (key) => {
 
 // ---------------------------------------------------------------- 마을
 export const VILLAGES = [
+  { id: 'capital', name: '새벽 성도', level: 1, biome: 'meadow', capital: true, desc: '네 지역으로 향하는 길이 만나는 왕국의 중심 도시' },
   { id: 'v1', name: '새싹 마을', level: 1, biome: 'meadow', desc: '모험이 시작되는 초보자의 마을' },
   { id: 'v2', name: '바람골 마을', level: 10, biome: 'highland', desc: '언덕 위 풍차 마을' },
   { id: 'v3', name: '은물결 항구', level: 26, biome: 'springs', desc: '배와 상인이 모이는 항구 도시' },
   { id: 'v4', name: '붉은바위 요새', level: 43, biome: 'quarry', desc: '협곡을 지키는 요새 마을' },
   { id: 'v5', name: '서리꽃 마을', level: 61, biome: 'snow', desc: '눈 덮인 북방의 마을' },
-  { id: 'v6', name: '별무리 성채', level: 71, biome: 'crater', desc: '세상 끝을 지키는 마지막 성채' },
+  { id: 'v6', name: '별무리 성채', level: 71, biome: 'snow', desc: '북쪽 설원의 끝을 지키는 성채' },
 ];
 
 // ---------------------------------------------------------------- 필드
@@ -32,13 +28,13 @@ export const FIELDS = [
   { id: 'f1', region: 'gear-01', level: 1, bossOffset: 0 },
   { id: 'f2', region: 'agi-01', level: 5, bossOffset: 6 },
   { id: 'f3', region: 'agi-02', level: 12, bossOffset: 12 },
-  { id: 'f4', region: 'vit-03', level: 20, bossOffset: 18 },
+  { id: 'f4', region: 'vit-03', level: 20, bossOffset: 18, name: '붉은 협곡', biome: 'quarry' },
   { id: 'f5', region: 'agi-04', level: 28, bossOffset: 24 },
   { id: 'f6', region: 'gear-06', level: 36, bossOffset: 30 },
   { id: 'f7', region: 'str-07', level: 45, bossOffset: 36 },
-  { id: 'f8', region: 'gear-08', level: 54, bossOffset: 42 },
-  { id: 'f9', region: 'agi-09', level: 63, bossOffset: 48 },
-  { id: 'f10', region: 'agi-10', level: 72, bossOffset: 54 },
+  { id: 'f8', region: 'gear-08', level: 54, bossOffset: 42, name: '그림자 화산림', biome: 'volcano' },
+  { id: 'f9', region: 'agi-09', level: 63, bossOffset: 48, name: '서리바람 고개', biome: 'snow' },
+  { id: 'f10', region: 'agi-10', level: 72, bossOffset: 54, name: '별빛 얼음벌판', biome: 'snow' },
 ];
 
 export const BOSS_SCHEDULE = { every: 60, stay: 20 }; // 분
@@ -58,8 +54,13 @@ export const DUNGEONS = [
 export const DUNGEON_BOSS_RESPAWN = 600; // 초 (던전 최종 보스)
 export const FLOOR_NAMED_RESPAWN = RANK.guard.respawn;
 
-// 서쪽 → 동쪽으로 이어지는 순서
-export const CHAIN = ['v1', 'f1', 'f2', 'v2', 'f3', 'f4', 'v3', 'f5', 'f6', 'v4', 'f7', 'f8', 'v5', 'f9', 'v6', 'f10'];
+// 실제 왕복 출구: [출발, 출발 지점 방향, 도착]
+export const WORLD_ROUTES = [
+  ['capital', 'west', 'f1'], ['f1', 'west', 'v1'], ['v1', 'north', 'f2'], ['f2', 'north', 'v2'], ['v1', 'south', 'f4'],
+  ['capital', 'south', 'f3'], ['f3', 'south', 'v3'], ['v3', 'east', 'f5'], ['f5', 'south', 'f6'],
+  ['capital', 'east', 'f7'], ['f7', 'east', 'v4'], ['v4', 'north', 'f8'],
+  ['capital', 'north', 'f9'], ['f9', 'north', 'v5'], ['v5', 'east', 'v6'], ['v6', 'east', 'f10'],
+];
 export const START_MAP = 'v1';
 
 export const MAPS = {};
@@ -74,7 +75,7 @@ function base(id, type, name, extra) {
   return MAPS[id];
 }
 
-for (const v of VILLAGES) base(v.id, 'village', v.name, { level: [v.level, v.level], biome: v.biome, desc: v.desc, village: v.id });
+for (const v of VILLAGES) base(v.id, 'village', v.name, { level: [v.level, v.level], biome: v.biome, desc: v.desc, village: v.id, capital: !!v.capital });
 
 FIELDS.forEach((f, i) => {
   const r = region(f.region);
@@ -82,8 +83,8 @@ FIELDS.forEach((f, i) => {
   const id = f.id;
   const mobs = r.normals.map((m, k) => [defineMonster(id, m, lv + (k % 4)), 1 / r.normals.length]);
   const boss = defineMonster(id, r.named, lv + 6, 'boss');
-  base(id, 'field', r.theme, {
-    index: i + 1, level: [lv, lv + 3], biome: THEME_BIOME[r.theme] || 'forest',
+  base(id, 'field', f.name || r.theme, {
+    index: i + 1, level: [lv, lv + 3], biome: f.biome || THEME_BIOME[r.theme] || 'forest',
     monsters: mobs, fieldBoss: { type: boss, offset: f.bossOffset },
   });
 });
@@ -115,11 +116,12 @@ for (const d of DUNGEONS) {
   }
 }
 
-// 출구 연결 (서 ↔ 동)
-CHAIN.forEach((id, i) => {
-  if (i > 0) MAPS[id].exits.west = { map: CHAIN[i - 1], spot: 'east' };
-  if (i < CHAIN.length - 1) MAPS[id].exits.east = { map: CHAIN[i + 1], spot: 'west' };
-});
+const OPPOSITE = {north:'south',south:'north',east:'west',west:'east'};
+for (const [from, direction, to] of WORLD_ROUTES) {
+  if (MAPS[from].exits[direction] || MAPS[to].exits[OPPOSITE[direction]]) throw new Error(`Duplicate exit ${from}:${direction} / ${to}`);
+  MAPS[from].exits[direction] = {map:to,spot:OPPOSITE[direction]};
+  MAPS[to].exits[OPPOSITE[direction]] = {map:from,spot:direction};
+}
 
 // 던전 계단 / 입구
 for (const d of DUNGEONS) {
@@ -132,16 +134,15 @@ for (const d of DUNGEONS) {
   });
 }
 
-// 가장 가까운 마을 (귀환 주문서 · 사망 시 부활 위치). 거리가 같으면 서쪽(이전) 마을
-const chainIndex = (id) => CHAIN.indexOf(id);
+// 실제 출구 그래프에서 가장 가까운 마을 (귀환 주문서 · 사망 시 부활 위치).
 function nearestVillage(id) {
-  const i = chainIndex(id);
-  let best = null, bd = Infinity;
-  for (const v of VILLAGES) {
-    const d = Math.abs(chainIndex(v.id) - i);
-    if (d < bd) { bd = d; best = v.id; }
+  const queue = [id], seen = new Set(queue);
+  for (let i=0;i<queue.length;i++) {
+    const m = MAPS[queue[i]];
+    if (m.type === 'village') return m.id;
+    for (const e of Object.values(m.exits)) if (!seen.has(e.map)) { seen.add(e.map); queue.push(e.map); }
   }
-  return best;
+  return START_MAP;
 }
 for (const m of Object.values(MAPS)) {
   const anchor = m.type === 'dungeon' ? DUNGEONS.find((d) => d.id === m.dungeon).field : m.id;
