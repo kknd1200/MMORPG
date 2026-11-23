@@ -307,8 +307,8 @@ export const SKILLS = {
 export const BASIC_FX = {
   knight: { sheet: 'knight_basic', scale: 0.95, z: 26 },
   elf: { sheet: 'archer_basic', scale: 0.9, z: 24, proj: 'flight_arrow_steel' },
-  mage: { sheet: 'mage_basic', scale: 0.8, z: 26 },
-  priest: { sheet: 'priest_basic', scale: 0.85, z: 26 },
+  mage: { sheet: 'mage_basic', scale: 0.8, z: 26, proj: 'flight_bolt_arcane' },
+  priest: { sheet: 'priest_basic', scale: 0.85, z: 26, proj: 'flight_bolt_holy' },
   warrior: { sheet: 'warrior_basic', scale: 0.95, z: 22 },
 };
 
