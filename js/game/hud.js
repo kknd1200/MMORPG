@@ -13,7 +13,7 @@ import { MAPS, BOSS_SCHEDULE, bossWindow, formatClock, mapTitle, teleportDestina
 import { MONSTERS } from '../data/monsters.js';
 import { url as artUrl, fxIcon, statusIcon } from './art.js';
 import { avatarMarkup, paintAvatars } from '../ui/portraits.js';
-import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, MERC_REFRESH_COST, learnedSkills } from '../systems/party.js';
+import { CONDITIONS, SKILL_SLOTS, MAX_MERCS, MERC_REFRESH_COST, learnedSkills, skillBook } from '../systems/party.js';
 import { HOTBAR_KEYS } from './game.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -491,10 +491,10 @@ export class Hud {
         ${sk ? `<select data-slotcond="${i}">${Object.entries(CONDITIONS).map(([k, v]) => `<option value="${k}" ${sl.cond === k ? 'selected' : ''}>${v}</option>`).join('')}</select>` : ''}</div>
       </div>`);
     }
-    const list = [...cls.skills].sort((a, b) => SKILLS[a].level - SKILLS[b].level).map((id) => {
+    const list = skillBook(ch).sort((a,b) => a.level-b.level).map(({id,level}) => {
       const sk = SKILLS[id], ok = learned.has(id);
-      return `<div class="pskill ${ok ? '' : 'locked'}" ${ok ? `draggable="true" data-drag='${JSON.stringify({ type: 'pskill', id })}'` : ''} title="${esc(sk.name)} (Lv.${sk.level} · MP ${sk.mp} · ${sk.cooldown}초)\n${esc(sk.desc)}">
-        ${skillIcon(sk)}<small>${esc(sk.name)}<br>Lv.${sk.level}</small></div>`;
+      return `<div class="pskill ${ok ? '' : 'locked'}" ${ok ? `draggable="true" data-drag='${JSON.stringify({ type: 'pskill', id })}'` : ''} title="${esc(sk.name)} (Lv.${level} · MP ${sk.mp} · ${sk.cooldown}초)\n${esc(sk.desc)}">
+        ${skillIcon(sk)}<small>${esc(sk.name)}<br>Lv.${level}</small></div>`;
     }).join('');
     const d = g.derived(u);
     return `<div class="ptabs">${tabs}</div>
@@ -520,7 +520,11 @@ export class Hud {
       const cls = CLASSES[o.classId];
       return `<div class="merc-row">
         ${avatarMarkup({ classId: o.classId, gender: o.gender }, 'hud', 'portrait')}
-        <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level} · ${o.gender === 'female' ? '여성' : '남성'}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small></div>
+        <div class="info"><b>${esc(o.name)}</b> <span style="color:${cls.color}">${cls.name}</span> Lv.${o.level} · ${o.gender === 'female' ? '여성' : '남성'}<br><small>${esc(cls.role)} · HP ${cls.growth.hp[0]}~${cls.growth.hp[1]}/레벨</small>
+        <div class="merc-skills">${(o.mercSkillBook || []).map(({id,level}) => {
+          const sk = SKILLS[id];
+          return `<span class="merc-skill ${o.level < level ? 'locked' : ''}" title="${esc(sk.desc)} · MP ${sk.mp} · 재사용 ${sk.cooldown}초 · Lv.${level} 해금">${esc(sk.name)}${o.level < level ? ` (Lv.${level})` : ''}</span>`;
+        }).join('')}</div></div>
         <span class="price">${o.price.toLocaleString()}G</span>
         <button data-hire="${o.offerId}" ${full || g.char.gold < o.price ? 'disabled' : ''}>고용</button>
       </div>`;
@@ -528,7 +532,7 @@ export class Hud {
     return `<p>함께 싸울 용병을 찾나? 실력은 내가 보증하지. (파티 ${g.party.length} / ${MAX_MERCS}명)</p>
       <div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>
       <button class="wide" data-refresh-merc ${g.char.gold < MERC_REFRESH_COST ? 'disabled' : ''}>용병 목록 새로고침 · ${MERC_REFRESH_COST.toLocaleString()}G</button>${rows}
-      <small class="hint">용병 목록은 매시 정각에 무료로 바뀝니다. ${MERC_REFRESH_COST.toLocaleString()}골드를 지불하면 지금 새 목록을 볼 수 있습니다. 새 목록은 남녀 각 2명으로 구성됩니다. 고용한 용병은 그대로 유지되며 따로 성장합니다.</small>`;
+      <small class="hint">용병 목록은 매시 정각에 무료로 바뀝니다. ${MERC_REFRESH_COST.toLocaleString()}골드로 즉시 갱신할 수 있습니다. 새 목록은 남녀 각 2명입니다. 용병마다 직업 스킬 4개를 보유하며 2개는 즉시, 나머지는 Lv.15·30에 열립니다. 고용 후에도 구성이 유지됩니다.</small>`;
   }
 
   charHtml() {

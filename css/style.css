@@ -320,3 +320,7 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 
 .party-vital-numbers { display:flex; justify-content:space-between; gap:6px; margin-top:3px; font-size:10px; font-variant-numeric:tabular-nums; }
 .party-vital-numbers [data-unit-vital="hp"] { color:#e0a298; }.party-vital-numbers [data-unit-vital="mp"] { color:#9dbfee; }
+
+.merc-skills { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+.merc-skill { padding:2px 5px; border:1px solid #806940; border-radius:3px; font-size:11px; color:#e8d49d; background:#302b20; }
+.merc-skill.locked { color:#a6a095; border-color:#504b40; background:#25231f; }

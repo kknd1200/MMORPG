@@ -55,6 +55,7 @@ export function mercOffers(villageId, level, hourKey, count = 4, takenNames = []
   const firstFemale = seeded(hashStr(`${key}:gender`))() < 0.5;
   const out = [];
   const used = new Set(takenNames);
+  const builds = new Set();
   for (let i = 0; i < count; i++) {
     const classId = MERC_CLASSES[Math.floor(r() * MERC_CLASSES.length)];
     const lv = Math.max(1, level + Math.floor(r() * 3) - 1);
@@ -63,6 +64,7 @@ export function mercOffers(villageId, level, hourKey, count = 4, takenNames = []
       offerId: `${key}:${i}`,
       classId,
       gender,
+      mercSkillBook: rollMercSkills(classId, `${key}:${i}`, builds),
       name: pickName(r, used, gender),
       level: lv,
       price: mercPrice(lv),
@@ -91,9 +93,32 @@ function autoAllocate(classId) {
   return stats;
 }
 
+export function skillBook(char) {
+  const personal = char.isMerc && Array.isArray(char.mercSkillBook) ? char.mercSkillBook : null;
+  return personal ? personal.filter(e => SKILLS[e.id]?.classId === char.classId && Number.isInteger(e.level) && e.level > 0)
+    : CLASSES[char.classId].skills.map(id => ({ id, level: SKILLS[id].level }));
+}
+
 export function learnedSkills(char) {
-  return CLASSES[char.classId].skills.filter((id) => SKILLS[id].level <= char.level)
-    .sort((a, b) => SKILLS[a].level - SKILLS[b].level);
+  return skillBook(char).filter(e => e.level <= char.level).sort((a,b) => a.level-b.level).map(e => e.id);
+}
+
+// Each recruit gets two early techniques and two advanced techniques. Enumerate
+// builds so same-class recruits in one roster cannot accidentally be identical.
+function rollMercSkills(classId, seed, used) {
+  const ids = [...CLASSES[classId].skills].sort((a,b) => SKILLS[a].level-SKILLS[b].level);
+  const pairs = list => list.flatMap((a,i) => list.slice(i+1).map(b => [a,b]));
+  const direct = id => ['damage','chain','aoe_target'].includes(SKILLS[id].kind);
+  const builds = pairs(ids.slice(0,4)).filter(p => p.some(direct)).flatMap(early =>
+    pairs(ids.slice(4)).map(late => [...early.sort((a,b) => Number(direct(b))-Number(direct(a))),...late]));
+  const start = Math.floor(seeded(hashStr(seed))()*builds.length);
+  for (let n=0;n<builds.length;n++) {
+    const chosen = builds[(start+n)%builds.length], key = [...chosen].sort().join(':');
+    if (used.has(key)) continue;
+    used.add(key);
+    return chosen.map((id,i) => ({id,level:[1,1,15,30][i]}));
+  }
+  return builds[start].map((id,i) => ({id,level:[1,1,15,30][i]}));
 }
 
 // 스킬 종류에 맞는 기본 조건
@@ -110,6 +135,7 @@ export function fillSlots(char) {
   while (char.skillSlots.length < SKILL_SLOTS) char.skillSlots.push(null);
   const used = new Set(char.skillSlots.filter(Boolean).map((s) => s.id));
   const learned = learnedSkills(char).reverse();
+  if (char.isMerc && char.mercSkillBook) char.skillSlots = char.skillSlots.map(sl => sl && learned.includes(sl.id) ? sl : null);
   for (let i = 0; i < SKILL_SLOTS; i++) {
     if (char.skillSlots[i]) continue;
     const id = learned.find((x) => !used.has(x));
@@ -126,6 +152,7 @@ export function createMerc(offer, id, rng = Math.random) {
   const char = S.createCharacter({ id, name: offer.name, classId: offer.classId, stats: autoAllocate(offer.classId) });
   char.gender = offer.gender === 'female' ? 'female' : 'male';
   char.isMerc = true;
+  if (Array.isArray(offer.mercSkillBook)) char.mercSkillBook = offer.mercSkillBook.map(e => ({...e}));
   char.inventory = [];
   char.gold = 0;
   char.hotbar = [];

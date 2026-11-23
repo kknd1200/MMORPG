@@ -6,7 +6,7 @@ import { QUADRUPED_ATTACK_SECONDS, QUADRUPED_SKILL_SECONDS, QUADRUPED_IMPACT } f
 import { CLASSES } from '../data/classes.js';
 import { SKILLS, BASIC_FX, STATUS_FX, LEVELUP_FX, STATUS_ICON } from '../data/skills.js';
 import { preload, fxSheet, fxIcon, statusIcon } from './art.js';
-import { MAX_MERCS, MERC_REFRESH_COST, mercOffers, createMerc, fillSlots, learnedSkills, condOk, shareExp } from '../systems/party.js';
+import { MAX_MERCS, MERC_REFRESH_COST, mercOffers, createMerc, fillSlots, learnedSkills, skillBook, condOk, shareExp } from '../systems/party.js';
 import { ITEMS, INVENTORY_SIZE, SHOPS, sellPrice, canEquip } from '../data/items.js';
 import { MONSTERS } from '../data/monsters.js';
 import { MAPS, START_MAP, bossWindow, formatClock, mapTitle, teleportDestinations } from '../data/maps.js';
@@ -678,7 +678,9 @@ export class Game {
     if (!sk) return false;
     if (u.ent.dead) return false;
     if (sk.classId !== ch.classId) return fail('이 직업은 사용할 수 없는 스킬입니다.');
-    if (ch.level < sk.level) return fail(`${sk.name}: 레벨 ${sk.level}부터 사용할 수 있습니다.`);
+    const entry = skillBook(ch).find(e => e.id === sk.id);
+    if (!entry) return fail('이 용병이 보유하지 않은 스킬입니다.');
+    if (ch.level < entry.level) return fail(`${sk.name}: 레벨 ${entry.level}부터 사용할 수 있습니다.`);
     if (this.time < (u.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
     if (u.ent.attackAnim > 0) return fail('일반공격 동작이 끝난 뒤 사용할 수 있습니다.');
     if (this.time < (u.ent.skillMotionUntil || 0)) return fail('스킬 동작이 끝난 뒤 사용할 수 있습니다.');
