@@ -293,7 +293,7 @@ export class Renderer {
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / 0.3,
-      cast: (p.castAnim || 0) / 0.4,
+      cast: (p.castAnim || 0) / (p.castAnimDuration || 0.4),
       weaponColor: weapon?.icon?.color,
       armorId: ch.equipment?.armor,
       hurt: !p.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0,
@@ -312,7 +312,7 @@ export class Renderer {
     drawHumanoid(ctx, sx, sy, {
       classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
       facing: screenDir(e.visualFacing || e.facing), walk: e.walkPhase, moving: e.moving, motion: e.walkWeight,
-      attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / 0.4,
+      attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / (e.castAnimDuration || 0.4),
       weaponColor: ITEMS[ch.equipment?.weapon]?.icon?.color, armorId: ch.equipment?.armor,
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });

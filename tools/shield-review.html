@@ -1,0 +1,13 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>방패 강타 동작 확인</title><link rel="stylesheet" href="../css/style.css"><style>#scene{position:fixed;inset:0;width:100%;height:100%}.review-controls{position:fixed;top:12px;left:320px;z-index:20;padding:10px;background:#20251f;border:1px solid #86734a;border-radius:5px}.review-controls button{margin:0 4px}</style><canvas id="scene"></canvas><div id="hud"></div><div class="review-controls"><button id="cast">방패 강타 사용</button><button id="gender">남/여 기사 전환</button><span id="frame">대기 중</span></div><script type="module">
+import {Renderer} from '../js/game/render.js?shield-review=1';
+import {Game} from '../js/game/game.js?shield-review=1';import {createCharacter} from '../js/systems/stats.js';import {CLASSES} from '../js/data/classes.js';import {MONSTERS} from '../js/data/monsters.js';import {SKILLS} from '../js/data/skills.js?shield-review=1';import {frameAt,actionDur} from '../js/data/chars.js';
+const char=createCharacter({id:'skill-review',name:'동작 확인',classId:'knight',stats:{...CLASSES.knight.baseStats,str:18,con:14}});char.level=20;char.mp=char.maxMp=1000;
+const g=new Game({canvas:document.querySelector('#scene'),hudRoot:document.querySelector('#hud'),character:char});
+g.renderer=new Renderer(document.querySelector('#scene'));
+// 스킬 재생 검수: 이동·몬스터 AI를 멈추고 동일한 위치에서 실제 시전을 반복한다.
+g.leaderAI=()=>{};g.updateMonsters=()=>{};g.autoMode='normal';
+const type=Object.keys(MONSTERS)[0];const target={id:99999,type,x:g.player.x+1,y:g.player.y,radius:.5,hp:100000,maxHp:100000,armor:0,mr:0,level:1,state:'idle',dead:false,facing:{x:-1,y:0},attackAnim:0,lastHurt:-99};g.monsters=[target];
+document.querySelector('#cast').onclick=()=>{if(g.time<(g.player.skillMotionUntil||0))return;g.player.action=null;g.player.moveTarget=null;g.cooldowns.shield_bash=0;g.char.mp=g.char.maxMp;g.castTargetSkill(SKILLS.shield_bash,target)};
+document.querySelector('#gender').onclick=()=>{g.char.gender=g.char.gender==='female'?'male':'female';g.preloadUnit(g.leader);document.querySelector('#frame').textContent=g.char.gender==='female'?'여기사':'남기사'};
+setInterval(()=>{const e=g.player;if(e.castAnim>0){const key=g.char.gender==='female'?'knight_female':'knight';document.querySelector('#frame').textContent=`${frameAt(key,'skill',actionDur(key,'skill')*(1-e.castAnim/e.castAnimDuration))+1}/8 프레임 · ${(e.castAnimDuration||.4).toFixed(3)}초`}},30);g.start();
+</script></html>

@@ -38,7 +38,7 @@ export const SKILLS = {
     id: 'shield_bash', classId: 'knight', name: '방패 강타', level: 15,
     kind: 'damage', element: 'physical', stat: 'str', coef: 0.2, slow: 3,
     mp: 8, cooldown: 5, range: null, color: '#9ad8ff',
-    fx: { sheet: 'knight_a1', at: 'target', scale: 1.2, z: 26 },
+    fx: { sheet: 'knight_a1', at: 'target', scale: 1.2, z: 26, impactFrame: 4 },
     desc: '방패로 후려쳐 3초 동안 대상을 느리게 합니다.',
   },
   whirl_slash: {

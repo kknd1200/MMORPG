@@ -1,3 +1,5 @@
+import { heroSprite } from './hero-sheets.js';
+import { actionDur, hitTimes } from '../data/chars.js';
 import { advanceGait, monsterStride } from './locomotion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
 import { CLASSES } from '../data/classes.js';
@@ -633,6 +635,7 @@ export class Game {
     if (sk.classId !== ch.classId) return fail('이 직업은 사용할 수 없는 스킬입니다.');
     if (ch.level < sk.level) return fail(`${sk.name}: 레벨 ${sk.level}부터 사용할 수 있습니다.`);
     if (this.time < (u.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
+    if (this.time < (u.ent.skillMotionUntil || 0)) return fail('스킬 동작이 끝난 뒤 사용할 수 있습니다.');
     if (ch.mp < sk.mp) return fail('마나가 부족합니다.');
     return true;
   }
@@ -684,7 +687,16 @@ export class Game {
     const stat = ch.stats[sk.stat];
     const atk = this.derived(u).attack;
     p.attackAnim = 0.35;
-    p.castAnim = 0.4;
+    const shieldBash = sk.id === 'shield_bash';
+    const sprite = heroSprite(ch);
+    p.castAnimDuration = shieldBash ? actionDur(sprite, 'skill') || 0.695 : 0.4;
+    p.castAnim = p.castAnimDuration;
+    if (shieldBash) {
+      // 방패 강타의 준비·충돌·회수 프레임이 일반공격에 덮이지 않게 한다.
+      p.attackAnim = 0;
+      p.attackTimer = Math.max(p.attackTimer || 0, p.castAnimDuration);
+      p.skillMotionUntil = this.time + p.castAnimDuration;
+    }
     this.floatText(p, sk.name, sk.color, 13);
     if (sk.dash) {
       // 돌진: 대상 바로 앞까지 순식간에 이동
@@ -695,7 +707,9 @@ export class Game {
         p.x = tx; p.y = ty; this.clearPath(p);
       }
     }
-    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj) : 0.06;
+    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj) : shieldBash ? hitTimes(sprite, 'skill').at(-1) ?? 0.335 : 0.06;
+    // 이펙트의 준비 입자 다음에 나오는 방패 충돌 프레임을 몸의 타격 시점과 맞춘다.
+    const effectDelay = shieldBash ? Math.max(0, delay - (sk.fx.impactFrame / 16) * (sk.fx.life || 0.6)) : delay;
     let targets = [m];
     if (sk.kind === 'aoe_target') {
       targets = this.monsters.filter((o) => !o.dead && dist(o, m) <= sk.radius + o.radius);
@@ -722,7 +736,7 @@ export class Game {
         dl = delay + k * 0.12;
         this.addProjectile(targets[k - 1], t, 'sheet', sk.color, sk.proj, dl - 0.12);
       }
-      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
+      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, shieldBash ? effectDelay : dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip);
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
         if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
         this.skillHit(sk, t, stat, atk, i, dl, u);
@@ -758,7 +772,8 @@ export class Game {
   castSelfSkill(sk, u = this.leader) {
     const ch = u.char;
     const p = u.ent;
-    p.castAnim = 0.4;
+    p.castAnimDuration = 0.4;
+    p.castAnim = p.castAnimDuration;
     if (sk.kind === 'aoe') {
       this.spend(sk, u);
       this.floatText(p, sk.name, sk.color, 13);
