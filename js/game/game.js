@@ -340,7 +340,7 @@ export class Game {
       } else {
         this.clearPath(e);
         this.face(e, t);
-        if (e.attackTimer <= 0) { e.attackTimer = cls.attackInterval; this.unitAttack(u, t); }
+        this.tryBasicAttack(u, t);
       }
     } else {
       if (this.useSkills() && u.gcd <= 0) u.gcd = this.autoSkill(u, null) ? 0.8 : 0.5;
@@ -599,10 +599,7 @@ export class Game {
   performAction(action, target) {
     const p = this.player;
     if (action.type === 'attack') {
-      if (p.attackTimer <= 0) {
-        p.attackTimer = this.cls.attackInterval;
-        this.playerAttack(target);
-      }
+      this.playerAttack(target);
     } else if (action.type === 'talk') {
       p.action = null;
       this.openNpc = target;
@@ -614,7 +611,20 @@ export class Game {
     }
   }
 
-  playerAttack(m) { this.unitAttack(this.leader, m); }
+  playerAttack(m) { return this.tryBasicAttack(this.leader, m); }
+
+  // 일반공격은 자동사냥 모드·대상 변경과 관계없이 같은 시계로 제한한다.
+  tryBasicAttack(u, target) {
+    const e = u.ent;
+    if (e.dead || target.dead || e.attackTimer > 0 || this.time < (e.nextBasicAttackAt || 0)) return false;
+    if (e.castAnim > 0 || this.time < (e.skillMotionUntil || 0)) return false;
+    if (!this.hasAttackLine(e, target)) return false;
+    const interval = this.clsOf(u).attackInterval;
+    e.attackTimer = interval;
+    e.nextBasicAttackAt = this.time + interval;
+    this.unitAttack(u, target);
+    return true;
+  }
 
   // 일반공격 (리더 · 용병 공통)
   unitAttack(u, m) {
@@ -641,6 +651,7 @@ export class Game {
     if (sk.classId !== ch.classId) return fail('이 직업은 사용할 수 없는 스킬입니다.');
     if (ch.level < sk.level) return fail(`${sk.name}: 레벨 ${sk.level}부터 사용할 수 있습니다.`);
     if (this.time < (u.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
+    if (u.ent.attackAnim > 0) return fail('일반공격 동작이 끝난 뒤 사용할 수 있습니다.');
     if (this.time < (u.ent.skillMotionUntil || 0)) return fail('스킬 동작이 끝난 뒤 사용할 수 있습니다.');
     if (ch.mp < sk.mp) return fail('마나가 부족합니다.');
     return true;
@@ -683,6 +694,11 @@ export class Game {
   spend(sk, u = this.leader) {
     u.char.mp -= sk.mp;
     u.cooldowns[sk.id] = this.time + sk.cooldown;
+    // 성공한 시전만 동작 시간을 차지한다. 시전 중 일반공격이 끼어들지 않게 한다.
+    u.ent.castAnimDuration = 0.4;
+    u.ent.castAnim = 0.4;
+    u.ent.attackAnim = 0;
+    u.ent.skillMotionUntil = this.time + 0.4;
   }
 
   // 대상을 정하는 스킬: 단일 · 대상 주변 범위 · 연쇄
@@ -693,7 +709,7 @@ export class Game {
     this.face(p, m);
     const stat = ch.stats[sk.stat];
     const atk = this.derived(u).attack;
-    p.attackAnim = 0.35;
+    p.attackAnim = 0;
     const shieldBash = sk.id === 'shield_bash';
     const sprite = heroSprite(ch);
     p.castAnimDuration = shieldBash ? actionDur(sprite, 'skill') || 0.695 : 0.4;

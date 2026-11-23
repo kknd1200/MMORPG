@@ -16,7 +16,7 @@ for(const id of ['elf','mage','priest']) {
    for(const mode of ['normal','skill']) {
      const {g,u,target,calls}=fixture(id,mode);
      g.updatePlayer(.05);assert.equal(calls.navigate,0);assert.equal(calls.attacks,1);assert.equal(g.player.x,0);assert.equal(g.char.mp,0);
-     u.ent.attackTimer=0;g.mercAI(u,0,.05);assert.equal(calls.navigate,0);assert.equal(calls.attacks,2);
+     u.ent.attackTimer=0;g.time+=CLASSES[id].attackInterval;g.mercAI(u,0,.05);assert.equal(calls.navigate,0);assert.equal(calls.attacks,2);
      if(mode==='normal')assert.equal(calls.casts,0);
      target.x=10;g.updatePlayer(.05);assert.equal(calls.navigate,1);
      g.mercAI(u,0,.05);assert.equal(calls.navigate,2);assert.equal(calls.attacks,2);

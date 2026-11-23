@@ -25,7 +25,7 @@ function combat(classId='mage'){
 for(const id of ['elf','mage','priest'])test(`${id} leader and mercenary reposition behind cover instead of attacking`,()=>{
  const {g,w,unit,calls}=combat(id);g.unitAttack=()=>calls.attack++;w.set(2,2,T.TREE);
  g.updatePlayer(.05);g.mercAI(unit,0,.05);assert.equal(calls.move,2);assert.equal(calls.attack,0);
- w.set(2,2,T.GRASS);g.updatePlayer(.05);unit.ent.attackTimer=0;g.mercAI(unit,0,.05);assert.equal(calls.attack,2);assert.equal(calls.move,2);
+ w.set(2,2,T.GRASS);g.updatePlayer(.05);unit.ent.attackTimer=0;g.time+=CLASSES[id].attackInterval;g.mercAI(unit,0,.05);assert.equal(calls.attack,2);assert.equal(calls.move,2);
 });
 test('direct basic/skill calls cannot shoot through cover or spend MP; manual skill queues repositioning',()=>{
  const {g,w,unit,target,calls}=combat();w.set(2,2,T.WALL);g.unitAttack(unit,target);g.castTargetSkill(SKILLS.fire_bolt,target,unit);assert.equal(g.effects.length,0);assert.equal(calls.spend,0);assert.equal(calls.hit.length,0);

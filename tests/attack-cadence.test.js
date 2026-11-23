@@ -8,7 +8,7 @@ function fixture(classId) {
  return {g,unit,target,times};
 }
 for(const mode of ['leader','mercenary'])test(`${mode}: normal attack cooldown follows class order and persists across target switches`,()=>{
- for(const [id,seconds] of [['knight',8],['mage',10],['priest',10],['warrior',12],['elf',12]]) {
+ for(const [id,seconds] of [['knight',2],['mage',3],['priest',3],['warrior',4],['elf',4]]) {
   const {g,unit,target,times}=fixture(id);
   for(let n=0;n<1000;n++){
    g.time+=.05;target.id=n%2+1;g.player.action.targetId=target.id;
@@ -18,4 +18,33 @@ for(const mode of ['leader','mercenary'])test(`${mode}: normal attack cooldown f
   for(let i=1;i<times.length;i++)assert.ok(times[i]-times[i-1]>=seconds-.000001&&times[i]-times[i-1]<=seconds+.051,`${id}: expected ${seconds}s, got ${times[i]-times[i-1]}`);
   assert.equal(g.char.mp,0);
  }
+});
+
+function skillFixture(id) {
+ const {g,unit,target,times}=fixture(id);
+ const skills={knight:'power_strike',mage:'fire_bolt',priest:'holy_bolt',elf:'piercing_shot',warrior:'ground_smash'};
+ Object.assign(unit.char,{level:50,hp:100,maxHp:100,mp:10000,maxMp:10000,stats:CLASSES[id].baseStats,skillSlots:[{id:skills[id],cond:'always'}]});
+ Object.assign(unit,{cooldowns:{},buffs:[],isLeader:true});
+ const casts=[];
+ Object.assign(g,{party:[],monsters:[target],autoMode:'skill',derived:()=>({speed:3,attack:10}),fx(){},floatText(){},addProjectile:()=>.2,skillHit(){casts.push(g.time)}});
+ g.unitAttack=()=>{times.push(g.time);unit.ent.attackAnim=.3};
+ return {g,unit,target,times,casts};
+}
+for(const role of ['leader','mercenary'])test(`${role}: real auto skills never bypass the basic cooldown or overlap the basic animation`,()=>{
+ for(const id of ['knight','mage','priest','warrior','elf']){
+  const {g,unit,times,casts}=skillFixture(id);
+  for(let n=0;n<1200;n++){
+   g.time+=.05;
+   if(role==='leader'){g.updatePlayer(.05);g.leaderAI(.05)}else g.mercAI(unit,0,.05);
+  }
+  assert.ok(times.length>=3,`${id} basic attacks remain active`);assert.ok(casts.length>=3,`${id} skills remain active`);
+  for(let i=1;i<times.length;i++)assert.ok(times[i]-times[i-1]>=CLASSES[id].attackInterval-1e-8,`${id} basic interval too short`);
+  for(const at of casts)for(const basic of times){const gap=basic-at;assert.ok(gap>=.4-1e-8||gap<=-.3+1e-8,`${id} skill ${at} overlaps basic ${basic}`)}
+  assert.ok(unit.char.mp<10000);
+ }
+});
+test('mode changes, target changes and clearing the relative timer do not bypass the absolute basic deadline',()=>{
+ const {g,unit,target,times}=fixture('knight');assert.equal(g.tryBasicAttack(unit,target),true);
+ g.autoMode='skill';unit.ent.attackTimer=0;g.time=1;target.id=2;assert.equal(g.tryBasicAttack(unit,target),false);
+ g.autoMode='normal';g.time=2;assert.equal(g.tryBasicAttack(unit,target),true);assert.deepEqual(times,[0,2]);
 });
