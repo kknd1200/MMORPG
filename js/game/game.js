@@ -1,3 +1,4 @@
+import { isVanguard, formationGoal, vanguardTarget } from './party-formation.js';
 import { startShieldBash, advanceShieldBash, cancelShieldBash } from './shield-bash.js';
 import { createEquipmentInstance, hydrateItemInstances, isEquipment, pruneItemInstances } from '../systems/item-instances.js';
 import { enhanceEquipment } from '../systems/enhancement.js';
@@ -124,13 +125,13 @@ export class Game {
 
   makeMercUnit(char, near, i = 0) {
     fillSlots(char);
-    const off = [[-1.2, 0.8], [0.8, 1.3], [-0.6, 2]][i % 3];
     const ent = {
-      id: `merc:${char.id}`, isMerc: true, x: near.x + off[0], y: near.y + off[1], radius: 0.3, facing: { x: 0, y: 1 },
+      id: `merc:${char.id}`, isMerc: true, x: near.x, y: near.y, radius: 0.3, facing: { x: 0, y: 1 },
       action: null, attackTimer: Math.random() * 0.5, lastHurt: -99, dead: char.hp <= 0, respawnAt: 0, walkPhase: 0, moving: false,
     };
     const u = { id: ent.id, char, ent, buffs: [], cooldowns: {}, gcd: 0, target: null };
     ent.unit = u;
+    Object.assign(ent,formationGoal(this,u,near));
     if (ent.dead) ent.respawnAt = 30;
     return u;
   }
@@ -338,7 +339,7 @@ export class Game {
     }
   }
 
-  // 용병: 리더 뒤를 따라다니다가 적이 있으면 싸우고, 스킬 칸 순서대로 스킬 사용
+  // 기사·전사는 선봉으로 전진하고, 원거리·지원 용병은 후방 대형을 유지한다.
   mercAI(u, i, dt) {
     const e = u.ent, p = this.player;
     e.attackTimer -= dt;
@@ -351,10 +352,14 @@ export class Game {
     const dl = dist(e, p);
     if (dl > 25 || (dl > 10 && e.stuck > 2)) {
       // 너무 멀어지면 리더 곁으로 순간 이동
-      e.x = p.x; e.y = p.y; this.clearPath(e); e.stuck = 0;
+      Object.assign(e,formationGoal(this,u)); this.clearPath(e); e.stuck = 0;
     }
-    const speed = this.derived(u).speed * (dl > 4 ? 1.3 : 1);
+    const front=isVanguard(u);
+    const ownSpeed=this.derived(u).speed;
+    const speed=front ? Math.max(ownSpeed,this.derived().speed)*1.3 : ownSpeed*(dl>4?1.3:1);
     if (dl > 12 || p.dead) u.target = null;
+    else if (front && this.userMoving()) u.target=null;
+    else if (front && this.autoMode!=='manual') u.target=vanguardTarget(this,u);
     else if (!this.userMoving() || dl < 5) u.target = this.pickTarget(u, u.target);
     else u.target = null;
     const t = u.target;
@@ -367,17 +372,17 @@ export class Game {
       if (dist(e, t) > range || !this.hasAttackLine(e, t)) {
         const r = this.navigate(e, t, speed, dt);
         e.moving = r === 'moving';
+        e.stuck=r==='stuck'?(e.stuck || 0)+dt:0;
+        if(e.stuck>.75) {this.clearPath(e);e.stuck=0;}
       } else {
         this.clearPath(e);
         this.face(e, t);
+        e.stuck=0;
         this.tryBasicAttack(u, t);
       }
     } else {
       if (this.useSkills() && u.gcd <= 0) u.gcd = this.autoSkill(u, null) ? 0.8 : 0.5;
-      // 리더 뒤쪽 대형
-      const f = p.facing, bx = -f.x, by = -f.y, qx = -by, qy = bx;
-      const slot = [[1.4, 1], [1.4, -1], [2.5, 0]][i % 3];
-      const goal = { x: p.x + bx * slot[0] + qx * slot[1], y: p.y + by * slot[0] + qy * slot[1] };
+      const goal = formationGoal(this,u);
       if (dist(e, goal) > 0.7) {
         const r = this.navigate(e, goal, speed, dt);
         e.moving = r === 'moving';
@@ -1257,9 +1262,8 @@ export class Game {
     u.ent.dead = false;
     u.char.hp = full ? u.char.maxHp : Math.ceil(u.char.maxHp * 0.3);
     u.char.mp = full ? u.char.maxMp : Math.max(u.char.mp, Math.ceil(u.char.maxMp * 0.3));
-    const p = this.player;
-    u.ent.x = p.x + (Math.random() - 0.5); u.ent.y = p.y + 0.8;
-    if (this.world.blocked(u.ent.x, u.ent.y, u.ent.radius)) { u.ent.x = p.x; u.ent.y = p.y; }
+    Object.assign(u.ent,formationGoal(this,u));
+    this.clearPath(u.ent);
     this.fx({ sheet: 'priest_a5', scale: 1, z: 6 }, u.ent);
     this.hud.markDirty('party');
   }
@@ -1643,9 +1647,7 @@ export class Game {
     this.camera.x = p.x; this.camera.y = p.y;
     this.focusId = null;
     this.party.forEach((u, i) => {
-      const off = [[-1.2, 0.8], [0.8, 1.3], [-0.6, 2]][i % 3];
-      u.ent.x = p.x + off[0]; u.ent.y = p.y + off[1];
-      if (world.blocked(u.ent.x, u.ent.y, u.ent.radius)) { u.ent.x = p.x; u.ent.y = p.y; }
+      Object.assign(u.ent,formationGoal(this,u));
       u.ent.action = null; u.target = null; this.clearPath(u.ent);
     });
     this.portalReadyAt = this.time + 0.6;

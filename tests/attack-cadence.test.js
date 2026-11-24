@@ -4,7 +4,7 @@ import {Game} from '../js/game/game.js';
 import {CLASSES} from '../js/data/classes.js';
 function fixture(classId) {
  const cls=CLASSES[classId],ent={id:'player',x:1,y:1,attackTimer:0,action:{type:'attack',targetId:1},facing:{x:1,y:0}},char={classId,mp:0},unit={id:'player',ent,char,gcd:0},target={id:1,x:2,y:1,radius:.4},g=Object.create(Game.prototype),times=[];
- Object.assign(g,{time:0,cls,char,player:ent,leader:unit,autoMode:'normal',world:{hasLineOfSight:()=>true},mouse:{left:false},derived:()=>({speed:3}),findEntity:()=>target,pickTarget:()=>target,clearPath(){},unitAttack(){times.push(g.time)}});
+ Object.assign(g,{time:0,cls,char,player:ent,leader:unit,monsters:[target],autoMode:'normal',world:{hasLineOfSight:()=>true},mouse:{left:false},derived:()=>({speed:3}),findEntity:()=>target,pickTarget:()=>target,clearPath(){},unitAttack(){times.push(g.time)}});
  return {g,unit,target,times};
 }
 for(const mode of ['leader','mercenary'])test(`${mode}: every class uses a one-second normal attack cooldown and persists across target switches`,()=>{
