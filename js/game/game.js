@@ -1,3 +1,4 @@
+import {migrateEquipment} from '../systems/equipment-migration.js';
 import {dismantle,exchangeStones} from '../systems/inventory-tools.js';
 import {promoteRoster} from '../systems/roster.js';
 import {ensureLoadout,setPassive} from '../systems/loadout.js';
@@ -43,7 +44,7 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export class Game {
   constructor({ canvas, hudRoot, character, onSave, onExit, onPromote }) {
     this.canvas = canvas;
-    this.char = hydrateItemInstances(character);
+    this.char = migrateEquipment(hydrateItemInstances(character));
     this.cls = CLASSES[character.classId];
     this.onSave = onSave;
     this.onPromote=onPromote;
@@ -110,6 +111,7 @@ export class Game {
     this.hud = new Hud(hudRoot, this);
     this.enterMap(this.world, start, true);
     this.bindInput();
+    if(this.char.equipmentRuleReturns){this.log(`직업 장착 조건에 맞지 않는 장비 ${this.char.equipmentRuleReturns}개를 공용 가방에 보관했습니다.`,'system');delete this.char.equipmentRuleReturns;}
     this.log(`${this.char.name}님, ${this.world.def.name}에 오신 것을 환영합니다!`, 'system');
     this.log('좌클릭(누른 채 유지)으로 이동, 몬스터 좌클릭으로 공격합니다. 안내원에게 말을 걸어보세요.', 'system');
   }

@@ -16,7 +16,7 @@ export function registerInstance(id,record) {
   const rolled=record.roll || {}, enhanced=record.enhance;
   const values={};
   for (const key of ['atk','def']) if (base[key]!=null) values[key]=Number.isFinite(rolled[key]) ? rolled[key] : base[key];
-  if (base.type==='weapon') values.atk=round((values.atk || 0)+enhanced);
+  if (base.type==='weapon' || base.weaponType==='orb') values.atk=round((values.atk || 0)+enhanced);
   else values.def=round((values.def || 0)+enhanced);
   const bonuses={...base.bonuses};
   for (const key of Object.keys(bonuses)) if (Number.isFinite(rolled.bonuses?.[key])) bonuses[key]=rolled.bonuses[key];

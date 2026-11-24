@@ -8,7 +8,7 @@ import { itemIcon } from '../js/ui/item-icons.js';
 
 test('every game item has an existing original-art atlas cell', () => {
   assert.ok(fs.existsSync(new URL(`../assets/${ITEM_ICON_ATLAS.path}`,import.meta.url)));
-  assert.deepEqual(Object.keys(ITEM_ICON_CELLS).sort(),Object.keys(ITEMS).filter(id=>!ITEMS[id].atlas).sort());
+  assert.deepEqual(Object.keys(ITEM_ICON_CELLS).sort(),Object.keys(ITEMS).filter(id=>!ITEMS[id].atlas && !ITEMS[id].art).sort());
   const cells=Object.values(ITEM_ICON_CELLS);
   assert.equal(new Set(cells).size,cells.length);
   for(const n of cells)assert.ok(Number.isInteger(n)&&n>=0&&n<ITEM_ICON_ATLAS.columns*ITEM_ICON_ATLAS.rows);
@@ -18,10 +18,10 @@ test('all shop and starter items render artwork instead of the text placeholder'
     const html=itemIcon(id);
     assert.match(html,/class="icon item-art(?: rebirth-item-art)?"/);
     assert.ok(html.includes(ITEMS[id].name));
-    assert.match(html,ITEMS[id].atlas ? /items\/rebirth-items.webp/ : /items\/icons.webp/);
+    assert.match(html,ITEMS[id].art ? /items\/hand-equipment.webp/ : ITEMS[id].atlas ? /items\/rebirth-items.webp/ : /items\/icons.webp/);
     assert.doesNotMatch(html,/NaN|undefined/);
   }
-  for(const ids of Object.values(SHOPS))for(const id of ids)assert.ok(ITEM_ICON_CELLS[id]!=null || ITEMS[id].atlas);
+  for(const ids of Object.values(SHOPS))for(const id of ids)assert.ok(ITEM_ICON_CELLS[id]!=null || ITEMS[id].atlas || ITEMS[id].art);
   assert.match(itemIcon('long_sword'),/background-position:85.71428571428571% 0%/);
   assert.match(itemIcon('chain_mail'),/background-position:85.71428571428571% 100%/);
 });

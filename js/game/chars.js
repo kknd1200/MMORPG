@@ -1,4 +1,5 @@
 import { shieldBashPose } from '../data/skill-motions.js';
+import {equipmentBody,visibleEquipment,drawHeldItem} from './equipment-art.js';
 // 8방향 도트 캐릭터 그리기 (assets/chars, 데이터는 js/data/chars.js)
 //
 // - 대기: 바라보는 방향의 대기 그림 1장
@@ -51,7 +52,18 @@ export function drawChar(ctx, x, y, s) {
     ctx.rotate(-Math.PI / 2);
     ctx.translate(18, 0);
   }
-  const draw = () => ctx.drawImage(sheet, col * C, row * C, C, C, -ox * sc, -oy * sc, C * sc, C * sc);
+  const body=s.equipment?equipmentBody(sheet,key,name,dir,col):null;
+  const equipped=body?visibleEquipment(s):null,back=[3,4,5].includes(dir);
+  const gear=()=>{
+    if(equipped.main)drawHeldItem(ctx,equipped.main,body.grip,body.angle,{scale:sc,back,time:s.time || 0});
+    if(equipped.off)drawHeldItem(ctx,equipped.off,body.off,-Math.PI/2,{scale:sc,back,time:s.time || 0});
+  };
+  const draw = () => {
+    if(body && back)gear();
+    if(body)ctx.drawImage(body.canvas,0,0,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
+    else ctx.drawImage(sheet,col*C,row*C,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
+    if(body && !back)gear();
+  };
   draw();
   if (s.hurt > 0) {
     // 맞았을 때 밝게 번쩍 (filter 를 쓰지 않아 가벼움)

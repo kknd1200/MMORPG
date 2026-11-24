@@ -1,3 +1,4 @@
+import {migrateEquipment} from './equipment-migration.js';
 import { hydrateItemInstances, pruneItemInstances } from './item-instances.js';
 // 계정 / 캐릭터 저장 (브라우저 localStorage).
 // 서버가 붙기 전까지의 로컬 프로토타입용입니다. 실제 서비스에서는 서버 인증으로 교체하세요.
@@ -67,7 +68,7 @@ export function currentSession() {
 }
 
 export function listCharacters(username) {
-  return (load().accounts[username]?.characters ?? []).map(hydrateItemInstances);
+  return (load().accounts[username]?.characters ?? []).map(c=>migrateEquipment(hydrateItemInstances(c)));
 }
 
 export function isNameTaken(name) {

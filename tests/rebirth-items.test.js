@@ -19,7 +19,7 @@ function fixture(classId='knight') {
   g.hud={markDirty(){}};g.log=()=>{};g.floatText=()=>{};return g;
 }
 test('733 original names and cells retain stable IDs, every category, and legacy save IDs',()=>{
-  assert.equal(REBIRTH_ITEM_SOURCE.length,733);assert.equal(Object.keys(REBIRTH_ITEMS).length,733);assert.equal(Object.keys(ITEMS).length,762);
+  assert.equal(REBIRTH_ITEM_SOURCE.length,733);assert.equal(Object.keys(REBIRTH_ITEMS).length,733);assert.equal(Object.keys(ITEMS).length,780);
   assert.equal(new Set(REBIRTH_ITEM_SOURCE.map(r=>r.name)).size,733);
   assert.equal(new Set(REBIRTH_ITEM_SOURCE.map(r=>r.xy.join(','))).size,733);
   const image=fs.readFileSync(new URL('../assets/items/rebirth-items.webp',import.meta.url));assert.ok(image.length>1e6);
@@ -45,7 +45,7 @@ test('level and class requirements reject gear atomically; bows use the ranged s
   const knight=fixture();knight.char.level=1;knight.addItem(sword);knight.equip(0);assert.equal(knight.char.inventory[0].id,sword);assert.equal(knight.char.equipment.weapon,undefined);
 });
 test('two-handed equipment returns shields safely; a full bag cannot lose equipment',()=>{
-  const g=fixture(),sword=find('구리 대검'),shield=find('구리 원형 방패');
+  const g=fixture('warrior'),sword=find('구리 대검'),shield=find('구리 원형 방패');
   g.char.equipment={shield};g.addItem(sword);g.equip(0);assert.equal(g.char.equipment.shield,null);assert.equal(g.char.inventory[0].id,shield);
   g.equip(0);assert.equal(g.char.equipment.shield,null);assert.equal(g.char.inventory[0].id,shield);
   g.char.equipment={weapon:find('구리 검'),shield};g.char.inventory=Array.from({length:INVENTORY_SIZE},()=>({id:sword,qty:1}));

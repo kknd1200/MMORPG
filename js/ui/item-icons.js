@@ -8,8 +8,8 @@ const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 export function itemIcon(id) {
   const item = ITEMS[id];
   if (!item) return '<span class="icon blank" aria-label="빈 아이템 칸"></span>';
-  if (item.atlas) {
-    const [cx,cy]=item.atlas, a=REBIRTH_ATLAS;
+  if (item.atlas || item.art) {
+    const [cx,cy]=item.art?.xy || item.atlas, a=item.art || REBIRTH_ATLAS;
     return `<span class="icon item-art rebirth-item-art" role="img" aria-label="${esc(item.name)}" style="background-image:url('${url(a.path)}');background-size:${a.width/a.cell*100}% ${a.height/a.cell*100}%;background-position:${cx/(a.width-a.cell)*100}% ${cy/(a.height-a.cell)*100}%"></span>`;
   }
   const cell = ITEM_ICON_CELLS[item.baseId || id];

@@ -181,7 +181,7 @@ export class Hud {
     this.setBar(this.el.exp, ch.exp, need, `EXP ${(ch.exp / need * 100).toFixed(2)}%`);
 
     // 초상화: 직업 · 장착 무기 · 갑옷이 바뀔 때만 다시 그림
-    const pkey = `${ch.classId}|${ch.equipment?.weapon || ''}|${ch.equipment?.armor || ''}`;
+    const pkey = JSON.stringify([ch.classId,ch.gender,ch.level,ch.equipment]);
     if (this.portraitKey !== pkey) {
       this.portraitKey = pkey;
       this.el.portrait.innerHTML = avatarMarkup(ch, 'hud');
@@ -613,7 +613,7 @@ export class Hud {
     const types=[...new Set(eligible.map(e=>inventorySubtype(ITEMS[e.id])))];
     const filter=`<label>종류 <select data-inv-subtype><option value="">전체 종류</option>${types.map(t=>`<option ${t===sub?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
     const cells = [];
-    for (let i = 0; i < INVENTORY_SIZE; i++) {
+    for (let i = 0; i < Math.max(INVENTORY_SIZE,ch.inventory.length); i++) {
       const e = ch.inventory[i];
       if (!e) { if(tab==='전체' && !sub)cells.push('<div class="cell empty"></div>'); continue; }
       if(!eligible.includes(e) || sub && inventorySubtype(ITEMS[e.id])!==sub)continue;
@@ -625,7 +625,7 @@ export class Hud {
         ${shopOpen && sellPrice(e.id) > 0 ? `<button class="sell" data-sell="${i}">판매</button>` : ''}</div>`);
     }
     return `
-      <div class="gold">골드 ${ch.gold.toLocaleString()} · 가방 ${ch.inventory.length}/${INVENTORY_SIZE} · <a href="catalog.html" target="_blank" rel="noopener">아이템 도감 (733종)</a></div>
+      <div class="gold">골드 ${ch.gold.toLocaleString()} · 가방 ${ch.inventory.length}/${INVENTORY_SIZE}${ch.inventory.length>INVENTORY_SIZE?' (기존 장비 임시 초과 보관 · 정리 후 획득 가능)':''} · <a href="catalog.html" target="_blank" rel="noopener">아이템 도감</a></div>
       ${tabs}${filter}${tab==='분해'?`<p>장비 1개당 해당 분해석 1개. 강화 장비는 분해 전 확인합니다.</p><div>${['weapon','armor','accessory'].map((k,i)=>`<button data-exchange-stone="${k}">${['무기','방어구','장신구'][i]} 분해석 ${g.countItem(k+'_dismantle_stone')}/100 → 주문서 교환</button>`).join('')}</div>`:''}
       ${equipmentMarkup(g)}
       <div class="grid">${cells.join('')}</div>

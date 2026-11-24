@@ -50,7 +50,7 @@ export const CLASSES = {
     growth: { hp: [6, 10], mp: [4, 7] },
     skills: ['piercing_shot', 'triple_shot', 'venom_arrow', 'focus_shot', 'thorn_burst', 'frost_arrow', 'wind_step', 'forest_blessing'],
     fx: 'archer',
-    startEquipment: { weapon: 'training_bow', armor: 'cloth_armor' },
+    startEquipment: { ranged: 'training_bow', armor: 'cloth_armor' },
     color: '#3fa45b',
   },
   mage: {

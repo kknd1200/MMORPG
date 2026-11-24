@@ -290,6 +290,7 @@ export class Renderer {
     const hurtT = game.time - p.lastHurt;
     drawHumanoid(ctx, sx, sy, {
       classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
+      equipment:ch.equipment,level:ch.level,
       facing: screenDir(p.visualFacing || p.facing),
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
@@ -313,6 +314,7 @@ export class Renderer {
     const hurtT = game.time - e.lastHurt;
     drawHumanoid(ctx, sx, sy, {
       classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
+      equipment:ch.equipment,level:ch.level,
       facing: screenDir(e.visualFacing || e.facing), walk: e.walkPhase, moving: e.moving, motion: e.walkWeight,
       attack: (e.attackAnim || 0) / 0.3, castAction:e.castAction, cast: (e.castAnim || 0) / (e.castAnimDuration || 0.4),
       weaponColor: ITEMS[ch.equipment?.weapon]?.icon?.color, armorId: ch.equipment?.armor,

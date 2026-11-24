@@ -50,16 +50,16 @@ test('safe enhancements always succeed without RNG and add one attack or defense
 });
 
 test('drops roll each copy independently, preserve catalog templates and retain values on equip/save/reload',()=>{
-  const o=owner(),base=find('강철 단검'),snapshot=structuredClone(ITEMS[base]);
+  const o=owner(),base=find('구리 기사검'),snapshot=structuredClone(ITEMS[base]);
   const a=createEquipmentInstance(o,base,{randomize:true,rng:()=>0}),b=createEquipmentInstance(o,base,{randomize:true,rng:()=>.9999});
-  o.inventory=[{id:a,qty:1},{id:b,qty:1}];assert.notEqual(a,b);assert.notEqual(ITEMS[a].atk,ITEMS[b].atk);assert.notEqual(ITEMS[a].bonuses.critRate,ITEMS[b].bonuses.critRate);
+  o.inventory=[{id:a,qty:1},{id:b,qty:1}];assert.notEqual(a,b);assert.notEqual(ITEMS[a].atk,ITEMS[b].atk);assert.notEqual(ITEMS[a].bonuses.block,ITEMS[b].bonuses.block);
   assert.deepEqual(ITEMS[base],snapshot);assert.ok(!Object.keys(ITEMS).includes(a));assert.ok(!SHOPS.smith.includes(a));
   const saved=JSON.parse(JSON.stringify(o)),stats=structuredClone(ITEMS[a]);delete ITEMS[a];delete ITEMS[b];hydrateItemInstances(saved);assert.deepEqual(ITEMS[a],stats);
   const g=Object.create(Game.prototype);g.char=saved;g.leader={id:'player',char:saved};g.selUnit=()=>g.leader;g.log=()=>{};g.hud={markDirty(){}};
-  g.equip(0);assert.equal(g.char.equipment.weapon,a);assert.equal(equipmentTotals(g.char).atk,stats.atk);assert.equal(itemModifiers(g.char).critRate,stats.bonuses.critRate);
+  g.equip(0);assert.equal(g.char.equipment.weapon,a);assert.equal(equipmentTotals(g.char).atk,stats.atk);assert.equal(itemModifiers(g.char).block,stats.bonuses.block);
   const actual=attackPower(g.char);g.unequip('weapon');g.equip(g.char.inventory.findIndex(e=>e.id===a));assert.equal(attackPower(g.char),actual);
   assert.match(itemIcon(a),/rebirth-items.webp/);assert.match(itemIcon(createEquipmentInstance(o,'long_sword')),/icons.webp/);
-  const compare=itemComparisonMarkup({selUnit:()=>g.leader},b);assert.ok(compare.includes(String(ITEMS[b].atk)));assert.match(compare,/치명타/);
+  const compare=itemComparisonMarkup({selUnit:()=>g.leader},b);assert.ok(compare.includes(String(ITEMS[b].atk)));assert.match(compare,/방패 막기/);
 });
 
 test('wrong scroll, missing scroll, accessories and stale targets never spend or change anything',()=>{

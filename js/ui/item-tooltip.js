@@ -1,3 +1,4 @@
+import {WEAPON_TYPES} from '../data/weapon-rules.js';
 import { itemStatRows } from '../data/rebirth-items.js';
 import { ITEMS, canEquip, sellPrice } from '../data/items.js';
 import { CLASSES } from '../data/classes.js';
@@ -23,8 +24,8 @@ export function itemComparisonMarkup(game, id) {
 export function itemTooltipMarkup(game, id) {
   const item = ITEMS[id];
   if (!item) return '';
-  const classes = item.classes?.map(c=>CLASSES[c]?.name || c).join(' · ') || '모든 직업';
-  return `<div class="tooltip-heading">${itemIcon(id)}<b>${escapeHtml(item.name)}</b></div><p class="tooltip-description">${escapeHtml(item.desc)}</p><p class="tooltip-classes">장착/사용 직업: ${classes}</p>${itemComparisonMarkup(game,id)}<div class="tooltip-footer"><span>판매가 ${sellPrice(id)} 골드</span><span>클릭하여 ${['consumable','chest'].includes(item.type) ? '사용' : equipmentSlot(id) ? '장착' : '정보'} 메뉴</span></div>`;
+  const classes = item.classes?.length===0?'장착 불가':item.classes?.map(c=>CLASSES[c]?.name || c).join(' · ') || '모든 직업';
+  return `<div class="tooltip-heading">${itemIcon(id)}<b>${escapeHtml(item.name)}</b></div><p class="tooltip-description">${escapeHtml(item.desc)}</p><p class="tooltip-classes">${WEAPON_TYPES[item.weaponType]?.label || item.category || '소모품'} · 장착/사용 직업: ${classes}</p>${itemComparisonMarkup(game,id)}<div class="tooltip-footer"><span>판매가 ${sellPrice(id)} 골드</span><span>클릭하여 ${['consumable','chest'].includes(item.type) ? '사용' : equipmentSlot(id) ? '장착' : '정보'} 메뉴</span></div>`;
 }
 
 export class ItemTooltip {

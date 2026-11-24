@@ -1,4 +1,4 @@
-import { ITEMS } from './items.js';
+import { ITEMS,canEquip } from './items.js';
 
 export const EQUIPMENT_SLOTS = [
   { id: 'consumable', label: '소모품', row: 1, col: 1, shape: 'potion' },
@@ -25,7 +25,7 @@ export function equipmentTotals(char) {
   const total = { atk: 0, def: 0 };
   for (const slot of EQUIPMENT_SLOTS) {
     const item = ITEMS[char.equipment?.[slot.id]];
-    if (item && slotAccepts(slot.id, char.equipment[slot.id])) {
+    if (item && canEquip(char.equipment[slot.id],char.classId,char.level) && slotAccepts(slot.id, char.equipment[slot.id])) {
       total.atk += item.atk || 0;
       total.def += item.def || 0;
     }
@@ -52,7 +52,7 @@ export function equipmentBonuses(char) {
     if (!['hpFlat','atkSpd','thorns','venom'].includes(key) && !key.startsWith('sp_')) result[key]=(result[key] || 0)+value;
   }};
   for (const [slot,id] of Object.entries(char.equipment || {})) {
-    if (!slotAccepts(slot,id)) continue;
+    if (!slotAccepts(slot,id) || !canEquip(id,char.classId,char.level)) continue;
     const item=ITEMS[id];add(item.bonuses);
     if (item.source?.set != null) {
       const key=item.source.set, group=sets.get(key) || {count:0,bonuses:item.source.setBonuses};

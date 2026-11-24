@@ -1,3 +1,4 @@
+import {EXTRA_EQUIPMENT} from './extra-equipment.js';
 import { REBIRTH_ITEM_SOURCE } from './rebirth-item-source.js';
 
 export const REBIRTH_ATLAS = { path: 'items/rebirth-items.webp', width: 2048, height: 1472, cell: 64 };
@@ -41,7 +42,7 @@ export const REBIRTH_ITEMS = Object.fromEntries(REBIRTH_ITEM_SOURCE.map(r=>{
 }));
 
 export function rebirthDrops(level, rank='normal') {
-  const pool = Object.entries(REBIRTH_ITEMS).filter(([,it])=>Math.abs(it.level-level)<=12 && (!it.source.unique && it.source.set == null || rank!=='normal'));
+  const pool = Object.entries({...REBIRTH_ITEMS,...EXTRA_EQUIPMENT}).filter(([,it])=>Math.abs(it.level-level)<=12 && (!it.source.unique && it.source.set == null || rank!=='normal'));
   // Fixed overall category budgets prevent hundreds of independent loot rolls per kill.
   const groups=[pool.filter(([,it])=>it.slot),pool.filter(([,it])=>!it.slot && it.type!=='chest'),pool.filter(([,it])=>it.type==='chest')];
   return groups.flatMap((entries,i)=>entries.map(([item])=>({item,chance:([.025,.15,.006][i]*(rank==='boss'?5:rank==='guard'?3:1))/entries.length})));

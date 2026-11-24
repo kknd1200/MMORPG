@@ -3,7 +3,7 @@ import { createEquipmentInstance, registerInstance, forgetInstance } from './ite
 
 export function enhancementKind(itemOrId) {
   const item=typeof itemOrId==='string' ? ITEMS[itemOrId] : itemOrId;
-  if (item?.type==='weapon') return 'weapon';
+  if (item?.type==='weapon' || item?.weaponType==='orb') return 'weapon';
   if (item?.type==='armor' && (item.category==='장신구' || ['neck','ring1','ring2'].includes(item.slot))) return 'accessory';
   if (item?.type==='armor' && item.category!=='장신구' && !['neck','ring1','ring2'].includes(item.slot)) return 'armor';
   return null;

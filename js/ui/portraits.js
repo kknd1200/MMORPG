@@ -15,13 +15,13 @@ export const PORTRAIT_LAYOUT = Object.freeze({
 /** 캐릭터 한 명의 초상화 캔버스 (그리기는 paintAvatars) */
 export function avatarMarkup(ch, layout = 'card', cls = '') {
   const eq = ch.equipment || {};
-  return `<canvas class="avatar ${cls}" data-portrait="${layout}" data-class="${ch.classId}" data-gender="${ch.gender || 'male'}" data-weapon="${eq.weapon || ''}" data-armor="${eq.armor || ''}" role="img" aria-label=""></canvas>`;
+  return `<canvas class="avatar ${cls}" data-portrait="${layout}" data-class="${ch.classId}" data-gender="${ch.gender || 'male'}" data-level="${ch.level || 1}" data-weapon="${eq.weapon || ''}" data-ranged="${eq.ranged || ''}" data-shield="${eq.shield || ''}" data-armor="${eq.armor || ''}" role="img" aria-label=""></canvas>`;
 }
 
 export function loginRosterMarkup() {
   return CLASS_ORDER.map((id) => {
     const cls = CLASSES[id];
-    return `<figure class="login-class"><canvas class="avatar" data-portrait="login" data-class="${id}" data-weapon="${cls.startEquipment.weapon}" role="img" aria-label="${cls.name} 캐릭터"></canvas><figcaption>${cls.name}</figcaption></figure>`;
+    return `<figure class="login-class">${avatarMarkup({classId:id,equipment:cls.startEquipment},'login')}<figcaption>${cls.name}</figcaption></figure>`;
   }).join('');
 }
 
@@ -45,6 +45,7 @@ export function paintAvatars(root) {
     drawHumanoid(ctx, layout.width / 2, layout.footY, {
       classId: cv.dataset.class, gender: cv.dataset.gender, look, facing: { x: 0.45, y: 0.9 }, walk: 0, moving: false, time: 0,
       scale: layout.scale,
+      level:Number(cv.dataset.level) || 1,equipment:{weapon:cv.dataset.weapon,ranged:cv.dataset.ranged,shield:cv.dataset.shield},
       weaponColor: ITEMS[cv.dataset.weapon]?.icon?.color,
       armorId: cv.dataset.armor || null,
     });

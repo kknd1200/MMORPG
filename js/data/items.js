@@ -1,3 +1,5 @@
+import {applyWeaponRules} from './weapon-rules.js';
+import {EXTRA_EQUIPMENT} from './extra-equipment.js';
 import { REBIRTH_ITEMS } from './rebirth-items.js';
 // 아이템 정의
 // type: consumable | weapon | armor
@@ -5,6 +7,7 @@ import { REBIRTH_ITEMS } from './rebirth-items.js';
 
 export const ITEMS = {
   ...REBIRTH_ITEMS,
+  ...EXTRA_EQUIPMENT,
   weapon_enchant_scroll: {
     name:'무기 강화 주문서',type:'consumable',enhanceType:'weapon',price:500,atlas:[1600,640],icon:{color:'#e1a064',text:'무강'},
     desc:'인벤토리에서 더블클릭 후 무기를 선택하여 강화합니다. 성공 시 공격력 +1. +1~6 100%, +7 13%, +8 3%, +9 1.5%, +10 이상 0.5%. 실패 시 장비 파괴. 주문서는 매회 1장 소모됩니다.',
@@ -75,9 +78,13 @@ export const ITEMS = {
 for(const [kind,label] of [['weapon','무기'],['armor','방어구'],['accessory','장신구']]) ITEMS[kind+'_dismantle_stone']={name:label+' 분해석',type:'material',category:'재료',group:'분해석',stackable:true,price:0,atlas:[0,704],icon:{color:'#a0d5ee',text:'석'},desc:label+' 분해로 획득. 100개를 같은 종류 강화 주문서 1장으로 교환합니다.'};
 ITEMS.accessory_enchant_scroll={...ITEMS.armor_enchant_scroll,name:'장신구 강화 주문서',enhanceType:'accessory',desc:'장신구를 강화합니다. 성공 시 방어력 +1. +1~4 100%, +5 13%, +6 3%, +7 1.5%, +8 이상 0.5%. 실패 시 파괴. 장신구 분해석 100개로 교환합니다.'};
 
+// Preserve legacy save IDs while replacing obsolete priest maces with scriptures.
+for(const [id,name,xy] of [['training_mace','수련용 경전',[1280,64]],['iron_mace','철장식 경전',[1344,64]],['holy_mace','성스러운 경전',[1600,64]]])Object.assign(ITEMS[id],{name,atlas:xy,desc:'사제 전용 경전. '+ITEMS[id].desc});
+applyWeaponRules(ITEMS);
+
 export const INVENTORY_SIZE = 100;
 
-const imported = Object.entries(REBIRTH_ITEMS);
+const imported = Object.entries({...REBIRTH_ITEMS,...EXTRA_EQUIPMENT});
 export const SMITH_MAX_ITEM_LEVEL = 36; // 흑운 단검과 동급 이하
 export const SHOPS = {
   merchant: ['weapon_enchant_scroll', 'armor_enchant_scroll', 'red_potion', 'orange_potion', 'blue_potion', 'courage_potion', 'return_scroll', ...imported.filter(([,it]) => !it.slot && it.type !== 'chest' && it.category !== '전리품').map(([id])=>id)],

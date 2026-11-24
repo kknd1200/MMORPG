@@ -51,7 +51,7 @@ export function referenceCharacter(classId, level) {
     classId, level, stats,
     maxHp: Math.round(cls.start.hp + (level - 1) * (avg(cls.growth.hp) + S.conHpBonus(stats.con))),
     maxMp: Math.round(cls.start.mp + (level - 1) * avg(cls.growth.mp)),
-    equipment: { weapon: WEAPONS[classId][tier], armor: armorId },
+    equipment: { [classId==='elf'?'ranged':'weapon']: WEAPONS[classId][tier], armor: armorId },
   };
 }
 
@@ -59,7 +59,8 @@ export function referenceCharacter(classId, level) {
 export function playerDps(classId, level, target = { level, eva: 0.06, mr: 0.08, armor: Math.round(level * 0.18) }, referenceInterval = null) {
   const ch = referenceCharacter(classId, level);
   const cls = CLASSES[classId];
-  const atk = S.attackPower(ch);
+  const weapon=ITEMS[WEAPONS[classId][gearTier(level)]];
+  const atk=cls.baseAttack+S.levelAttack(ch)+(weapon.atk || 0);
   const stat = ch.stats[cls.primaryStat];
   const normalHit = S.physicalHitChance(stat, level, target);
   let dps = (normalHit * S.physicalMitigate(atk, target.armor)) / (referenceInterval ?? cls.attackInterval);

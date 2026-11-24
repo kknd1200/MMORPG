@@ -1,3 +1,4 @@
+import {WEAPON_TYPES} from '../data/weapon-rules.js';
 import {improvedItem} from '../systems/inventory-tools.js';
 import { itemStatRows } from '../data/rebirth-items.js';
 import { ITEMS, canEquip, sellPrice, INVENTORY_SIZE } from '../data/items.js';
@@ -8,6 +9,7 @@ import { avatarMarkup } from './portraits.js';
 export const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const signed = n => `${n >= 0 ? '+' : ''}${n}`;
 const paths = {
+ orb: 'M16 3a10 10 0 1 1 0 20 10 10 0 0 1 0-20 M8 23l-3 6h22l-3-6 M16 6v4',
  potion: 'M10 3h12v5h-3v5c7 4 8 14-3 15S6 17 13 13V8h-3z M10 20h13',
  head: 'M7 27V14a9 9 0 0 1 18 0v13h-6V15h-6v12z M10 14h12',
  bow: 'M9 3q24 13 0 26L9 3 M9 3l8 13-8 13 M5 24l20-18 M21 6h4v4',
@@ -37,8 +39,9 @@ export function equipmentMarkup(game) {
     <div class="equipment-grid">${EQUIPMENT_SLOTS.map(slot => {
       const id = char.equipment?.[slot.id], item = ITEMS[id];
       const upgrade = availableInSlot(game, char, slot.id).some(e => improvedItem(e.id,char,slot.id));
-      const label = `${slot.label}: ${item ? item.name : '미장착'}`;
-      return `<button class="equipment-tile ${item ? 'occupied' : 'empty'}" style="grid-row:${slot.row};grid-column:${slot.col}" ${item ? `data-item-hover="${id}"` : ''} data-equipment-slot="${slot.id}" aria-label="${escapeHtml(label)}" ${item ? '' : `title="${escapeHtml(label)}"`}>${item ? itemIcon(id) : emptySlotIcon(slot.shape)}<span class="equipment-slot-label">${slot.label}</span>${upgrade ? '<span class="equipment-upgrade" aria-label="더 좋은 장비 있음">▲</span>' : ''}</button>`;
+      const slotLabel=slot.id==='shield' && char.classId==='mage'?'오브':slot.label;
+      const label = `${slotLabel}: ${item ? item.name : '미장착'}`;
+      return `<button class="equipment-tile ${item ? 'occupied' : 'empty'}" style="grid-row:${slot.row};grid-column:${slot.col}" ${item ? `data-item-hover="${id}"` : ''} data-equipment-slot="${slot.id}" aria-label="${escapeHtml(label)}" ${item ? '' : `title="${escapeHtml(label)}"`}>${item ? itemIcon(id) : emptySlotIcon(slot.id==='shield' && char.classId==='mage'?'orb':slot.shape)}<span class="equipment-slot-label">${slotLabel}</span>${upgrade ? '<span class="equipment-upgrade" aria-label="더 좋은 장비 있음">▲</span>' : ''}</button>`;
     }).join('')}</div>
     <div class="equipment-totals"><b>장비 효과 합계</b><span>일반공격 <strong>${signed(totals.atk)}</strong></span><span>방어력 <strong>${signed(totals.def)}</strong></span></div></section><section class="inventory-bag"><h3>가방 <small>파티 공용</small></h3>`;
 }
@@ -49,7 +52,7 @@ export function itemDetailsMarkup(game, context) {
   const slot = comparisonSlot(context.id,char,context.slot);
   const old = ITEMS[char.equipment?.[slot] || (slot==='ranged' ? char.equipment?.weapon : slot==='weapon' ? char.equipment?.ranged : null)];
   const owned = game.char.inventory.filter(e => e.id === context.id).reduce((n,e) => n+e.qty,0);
-  const classNames = item.classes?.map(id => CLASSES[id]?.name || id).join(' · ') || '모든 직업';
+  const classNames = item.classes?.length===0?'장착 불가':item.classes?.map(id => CLASSES[id]?.name || id).join(' · ') || '모든 직업';
   const beforeStats=Object.fromEntries(itemStatRows(old).map(([key,,n])=>[key,n]));
   const afterStats=Object.fromEntries(itemStatRows(item).map(([key,,n])=>[key,n]));
   const keys=new Map([...itemStatRows(item),...itemStatRows(old)].map(([key,label])=>[key,label]));
@@ -64,8 +67,8 @@ export function itemDetailsMarkup(game, context) {
   const actionLabel = equipped ? '장착 해제' : ['consumable','chest'].includes(item.type) ? '사용' : slot ? '장착' : '사용 불가';
   const shop = context.source === 'shop';
   return `<header class="item-dialog-header"><h3 id="item-detail-title">아이템 정보</h3><button type="button" data-item-close aria-label="아이템 설명 닫기">×</button></header>
-    <div class="item-detail-heading">${itemIcon(context.id)}<div><h2>${escapeHtml(item.name)}</h2><span>${slot ? EQUIPMENT_SLOTS.find(s=>s.id===slot).label : escapeHtml(item.category || '소모품')}${equipped ? ' · 착용 중' : ''}</span></div></div>
-    <p class="item-description">${escapeHtml(item.desc)}</p>
+    <div class="item-detail-heading">${itemIcon(context.id)}<div><h2>${escapeHtml(item.name)}</h2><span>${slot ? slot==='shield' && item.weaponType==='orb'?'오브':EQUIPMENT_SLOTS.find(s=>s.id===slot).label : escapeHtml(item.category || '소모품')}${equipped ? ' · 착용 중' : ''}</span></div></div>
+    <p class="item-description">${escapeHtml(item.desc)}</p>${WEAPON_TYPES[item.weaponType]?`<p>무기 종류: ${WEAPON_TYPES[item.weaponType].label}</p>`:''}
     <div class="item-detail-stats">${stats}</div>
     <dl class="item-detail-meta"><div><dt>${slot ? '장착 대상' : '사용 대상'}</dt><dd>${escapeHtml(slot ? char.name : game.char.name)}</dd></div><div><dt>필요 레벨</dt><dd>${item.minLevel || 1}</dd></div><div><dt>직업 조건</dt><dd>${classNames}</dd></div><div><dt>가방 보유 수량</dt><dd>${owned}개</dd></div><div><dt>상점 가격</dt><dd>${item.price} 골드</dd></div><div><dt>판매 가격</dt><dd>${sellPrice(context.id)} 골드</dd></div></dl>
     ${!usable ? '<p class="item-requirement">직업·레벨 조건을 만족하지 않거나, 현재 사용할 수 없는 아이템입니다. (장착할 수 없는 항목)</p>' : ''}
