@@ -1,3 +1,5 @@
+import { createEquipmentInstance, hydrateItemInstances, isEquipment, pruneItemInstances } from '../systems/item-instances.js';
+import { enhanceEquipment } from '../systems/enhancement.js';
 import { EQUIPMENT_SLOTS, equipmentSlot, slotAccepts, comparisonSlot } from '../data/equipment.js';
 import { heroSprite } from './hero-sheets.js';
 import { actionDur, hitTimes } from '../data/chars.js';
@@ -38,7 +40,7 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 export class Game {
   constructor({ canvas, hudRoot, character, onSave, onExit }) {
     this.canvas = canvas;
-    this.char = character;
+    this.char = hydrateItemInstances(character);
     this.cls = CLASSES[character.classId];
     this.onSave = onSave;
     this.onExit = onExit;
@@ -483,6 +485,7 @@ export class Game {
       this.char.mapId = this.world.id;
       this.char.pos = { x: p.x, y: p.y };
     }
+    pruneItemInstances(this.char);
     this.onSave?.(this.char);
   }
 
@@ -1324,7 +1327,7 @@ export class Game {
     if (this.focusId === m.id) this.focusId = null;
     for (const u of this.party) if (u.target === m) u.target = null;
     for (const drop of def.drops || []) {
-      if (Math.random() < drop.chance && this.addItem(drop.item)) {
+      if (Math.random() < drop.chance && this.addItem(drop.item, 1, { randomize:true })) {
         this.log(`[획득] ${ITEMS[drop.item].name}`, 'rare');
       }
     }
@@ -1399,7 +1402,7 @@ export class Game {
   }
 
   // ------------------------------------------------------------ items
-  addItem(id, qty = 1) {
+  addItem(id, qty = 1, {randomize=false,individual=false} = {}) {
     const inv=this.char.inventory,it=ITEMS[id];
     if (!it || !Number.isSafeInteger(qty) || qty<=0) return false;
     const stackable=it.stackable || it.type==='consumable';
@@ -1407,7 +1410,7 @@ export class Game {
     if (stack) { stack.qty+=qty; this.hud.markDirty('inv'); return true; }
     if (inv.length+(stackable?1:qty)>INVENTORY_SIZE) { this.log('인벤토리가 가득 찼습니다.','warn'); return false; }
     if (stackable) inv.push({id,qty});
-    else for (let i=0;i<qty;i++) inv.push({id,qty:1});
+    else for (let i=0;i<qty;i++) inv.push({id:isEquipment(it) && !it.instanceId && (randomize || individual) ? createEquipmentInstance(this.char,id,{randomize}) : id,qty:1});
     this.hud.markDirty('inv'); return true;
   }
 
@@ -1432,6 +1435,7 @@ export class Game {
     if (this.player.dead) return;
     if (it.type === 'weapon' || it.type === 'armor') { this.equip(idx); return; }
     if (this.time < this.itemReadyAt) return;
+    if (it.enhanceType) { this.hud.beginEnhancement(id); return; }
     if (it.type==='chest') { this.openChest(id,idx); return; }
     if (!it.effect) { this.log('보관·판매용 아이템입니다. 현재 사용할 수 없습니다.','warn'); return; }
     const eff = it.effect;
@@ -1480,6 +1484,16 @@ export class Game {
     this.hud.markDirty('party','inv','char');
   }
 
+  enhance(scrollId,target,rng=Math.random) {
+    if (this.player.dead || this.pendingTravel) return {ok:false,error:'현재 강화할 수 없습니다.'};
+    const result=enhanceEquipment(this.char,scrollId,target,this.units(),rng);
+    if (!result.ok) { this.log(result.error,'warn'); return result; }
+    this.log(result.success ? `[강화 성공] +${result.level} ${result.name}` : `[강화 실패] ${result.name}이(가) 파괴되었습니다.`,result.success?'rare':'warn');
+    this.hud.markDirty('inv','char','party','hotbar');
+    this.save();
+    return result;
+  }
+
   openChest(id, idx) {
     const entries=ITEMS[id].contents?.filter(e=>ITEMS[e.id] && e.weight>0) || [];
     if (!entries.length) { this.log('이 상자에 등록된 내용물이 없습니다.','warn'); return; }
@@ -1488,7 +1502,7 @@ export class Game {
     const qty=S.randInt(chosen.min,chosen.max), inv=this.char.inventory;
     const copy=inv.map(e=>({...e}));
     this.removeItemAt(idx,1);
-    if (!this.addItem(chosen.id,qty)) { this.char.inventory=copy; return; }
+    if (!this.addItem(chosen.id,qty,{randomize:true})) { this.char.inventory=copy; return; }
     this.log(`[상자] ${ITEMS[chosen.id].name} ${qty}개 획득`,'rare');
     this.itemReadyAt=this.time+.4;
   }
@@ -1511,7 +1525,7 @@ export class Game {
     if (!Number.isSafeInteger(qty) || qty<=0) return;
     const cost = it.price * qty;
     if (this.char.gold < cost) { this.log('골드가 부족합니다.', 'warn'); return; }
-    if (!this.addItem(id, qty)) return;
+    if (!this.addItem(id, qty, {individual:true})) return;
     this.char.gold -= cost;
     this.log(`${it.name} ${qty}개를 ${cost} 골드에 구입했습니다.`, 'info');
     this.hud.markDirty('inv', 'npc');

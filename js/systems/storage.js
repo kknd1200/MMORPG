@@ -1,3 +1,4 @@
+import { hydrateItemInstances, pruneItemInstances } from './item-instances.js';
 // 계정 / 캐릭터 저장 (브라우저 localStorage).
 // 서버가 붙기 전까지의 로컬 프로토타입용입니다. 실제 서비스에서는 서버 인증으로 교체하세요.
 import { MAX_CHARACTERS } from '../data/classes.js';
@@ -66,7 +67,7 @@ export function currentSession() {
 }
 
 export function listCharacters(username) {
-  return load().accounts[username]?.characters ?? [];
+  return (load().accounts[username]?.characters ?? []).map(hydrateItemInstances);
 }
 
 export function isNameTaken(name) {
@@ -85,6 +86,7 @@ export function addCharacter(username, char) {
 }
 
 export function saveCharacter(username, char) {
+  pruneItemInstances(char);
   const db = load();
   const acc = db.accounts[username];
   if (!acc) return;

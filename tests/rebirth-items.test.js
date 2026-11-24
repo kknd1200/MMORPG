@@ -19,7 +19,7 @@ function fixture(classId='knight') {
   g.hud={markDirty(){}};g.log=()=>{};g.floatText=()=>{};return g;
 }
 test('733 original names and cells retain stable IDs, every category, and legacy save IDs',()=>{
-  assert.equal(REBIRTH_ITEM_SOURCE.length,733);assert.equal(Object.keys(REBIRTH_ITEMS).length,733);assert.equal(Object.keys(ITEMS).length,756);
+  assert.equal(REBIRTH_ITEM_SOURCE.length,733);assert.equal(Object.keys(REBIRTH_ITEMS).length,733);assert.equal(Object.keys(ITEMS).length,758);
   assert.equal(new Set(REBIRTH_ITEM_SOURCE.map(r=>r.name)).size,733);
   assert.equal(new Set(REBIRTH_ITEM_SOURCE.map(r=>r.xy.join(','))).size,733);
   const image=fs.readFileSync(new URL('../assets/items/rebirth-items.webp',import.meta.url));assert.ok(image.length>1e6);

@@ -1,3 +1,4 @@
+import { enhancementKind, enhancementChance, enhancementPercent } from '../systems/enhancement.js';
 import { formatVital, refreshPartyVitals } from '../ui/party-vitals.js';
 import { ItemTooltip } from '../ui/item-tooltip.js';
 import { equipmentMarkup, itemDetailsMarkup, availableInSlot, escapeHtml } from '../ui/equipment.js';
@@ -132,7 +133,7 @@ export class Hud {
     this.bindPanelEvents();
   }
 
-  destroy() { this.root.innerHTML = ''; }
+  destroy() { clearTimeout(this.itemClickTimer); this.root.innerHTML = ''; }
 
   // 창 제목을 잡고 끌어서 이동
   makeDraggable(panel, handle) {
@@ -418,6 +419,7 @@ export class Hud {
   }
 
   closePanel(name) {
+    if (name==='inv') clearTimeout(this.itemClickTimer);
     this.itemTooltip?.hide();
     this.open.delete(name);
     this.panels[name].classList.remove('show');
@@ -751,6 +753,8 @@ export class Hud {
   }
 
   closeItem() {
+    clearTimeout(this.itemClickTimer);
+    this.enhancementTargets=null;
     const overlay = this.root.querySelector('.item-overlay');
     if (overlay) overlay.hidden = true;
     this.itemContext = null;
@@ -774,11 +778,41 @@ export class Hud {
     const g = this.game, unit = g.unitById(context.unitId);
     if (!unit || unit !== g.selUnit()) { this.closeItem(); return; }
     const idx = g.char.inventory.findIndex(e => e.id === context.id);
+    if (action==='use' && ITEMS[context.id]?.enhanceType && idx>=0) { this.beginEnhancement(context.id); return; }
     if (action === 'equip' && idx >= 0) g.equip(idx, unit, context.slot);
     else if (action === 'unequip' && unit.char.equipment[context.slot] === context.id) g.unequip(context.slot, unit);
     else if (action === 'use' && idx >= 0) g.useItem(context.id);
     else if (action === 'buy' && SHOPS[g.openNpc?.kind]?.includes(context.id)) g.buy(context.id, 1);
     this.closeItem();
+    if (this.open.has('inv')) this.renderPanel('inv');
+    if (this.open.has('npc')) this.renderPanel('npc');
+  }
+
+  beginEnhancement(scrollId) {
+    clearTimeout(this.itemClickTimer);
+    const g=this.game,scroll=ITEMS[scrollId];
+    if (!scroll?.enhanceType || g.player.dead || !g.countItem(scrollId)) return;
+    const targets=[];
+    for (let index=0;index<g.char.inventory.length;index++) {
+      const e=g.char.inventory[index];
+      if (enhancementKind(e.id)===scroll.enhanceType) targets.push({kind:'bag',index,id:e.id,label:'가방'});
+    }
+    for (const u of g.units()) for (const [slot,id] of Object.entries(u.char.equipment || {})) if (enhancementKind(id)===scroll.enhanceType) targets.push({kind:'equipped',id,slot,unitId:u.id,label:u.char.name+' 착용 중'});
+    this.itemContext={mode:'enhancement',scrollId};this.enhancementTargets=targets;
+    this.showItemDialog(`<header class="item-dialog-header"><h3 id="item-detail-title">강화할 장비 선택</h3><button data-item-close aria-label="닫기">×</button></header><p>${esc(scroll.name)} · 보유 ${g.countItem(scrollId)}장</p><p class="item-requirement">장비를 선택하면 즉시 1회 강화합니다. 주문서 1장 소모 · 실패 시 선택한 장비 파괴</p><div class="equipment-choices enhancement-choices">${targets.map((t,i)=>{
+      const item=ITEMS[t.id],level=(item.enhance || 0)+1,rate=enhancementChance(scroll.enhanceType,level);
+      return `<button data-enhance-target="${i}">${itemIcon(t.id)}<span>${esc(item.name)}<small>${esc(t.label)} · +${item.enhance || 0} → +${level}<br>성공 ${enhancementPercent(rate)} · ${rate===1?'실패 없음':'실패 시 파괴'}</small></span></button>`;
+    }).join('') || '<p>강화할 수 있는 장비가 없습니다.</p>'}</div><div class="item-dialog-actions"><button data-item-close>취소</button></div>`);
+  }
+
+  selectEnhancement(index) {
+    const context=this.itemContext, target=this.enhancementTargets?.[index];
+    if (context?.mode!=='enhancement' || !target) return;
+    // Clear the selection before spending, preventing double-clicks from retrying a destroyed item.
+    this.enhancementTargets=null;
+    const result=this.game.enhance(context.scrollId,target);
+    this.itemContext={mode:'enhancement-result'};
+    this.showItemDialog(`<header class="item-dialog-header"><h3 id="item-detail-title">${result.ok ? result.success?'강화 성공':'강화 실패 · 장비 파괴':'강화 불가'}</h3><button data-item-close aria-label="닫기">×</button></header><p>${esc(result.ok ? (result.success ? '+'+result.level+' '+result.name+' 강화 성공' : result.name+'이(가) 파괴되었습니다.') : result.error)}</p><div class="item-dialog-actions"><button data-item-close>확인</button></div>`);
     if (this.open.has('inv')) this.renderPanel('inv');
     if (this.open.has('npc')) this.renderPanel('npc');
   }
@@ -852,11 +886,24 @@ export class Hud {
       const cell = e.target.closest('[data-inv]');
       const slot = e.target.closest('[data-equipment-slot]');
       const shop = e.target.closest('[data-shop-item]');
-      if (cell) { const item = g.char.inventory[Number(cell.dataset.inv)]; if (item) this.showItem(item.id, 'bag'); }
+      if (cell) {
+        const item=g.char.inventory[Number(cell.dataset.inv)];if (!item) return;
+        clearTimeout(this.itemClickTimer);
+        if (ITEMS[item.id]?.enhanceType && e.type==='click') {
+          const id=item.id;
+          this.itemClickTimer=setTimeout(()=>{if (!this.itemContext && this.open.has('inv') && g.countItem(id)) this.showItem(id,'bag');},700);
+        } else this.showItem(item.id,'bag');
+      }
       else if (slot) this.showEquipmentSlot(slot.dataset.equipmentSlot);
       else if (shop) this.showItem(shop.dataset.shopItem, 'shop');
     };
     this.root.addEventListener('click', inspect);
+    this.root.addEventListener('dblclick', e=>{
+      const cell=e.target.closest('[data-inv]');
+      if (!cell || e.target.closest('.item-overlay,[data-sell]')) return;
+      const entry=g.char.inventory[Number(cell.dataset.inv)];
+      if (ITEMS[entry?.id]?.enhanceType) { e.preventDefault(); clearTimeout(this.itemClickTimer); this.beginEnhancement(entry.id); }
+    });
     this.root.addEventListener('keydown', e => {
       if (this.itemContext) {
         e.stopPropagation();
@@ -873,6 +920,7 @@ export class Hud {
     });
     this.root.querySelector('.item-overlay').addEventListener('click', e => {
       if (e.target.classList.contains('item-overlay') || e.target.closest('[data-item-close]')) this.closeItem();
+      else if (e.target.closest('[data-enhance-target]')) this.selectEnhancement(Number(e.target.closest('[data-enhance-target]').dataset.enhanceTarget));
       else if (e.target.closest('[data-item-action]')) this.itemAction(e.target.closest('[data-item-action]').dataset.itemAction);
       else if (e.target.closest('[data-item-choice]')) this.showItem(e.target.closest('[data-item-choice]').dataset.itemChoice, 'bag', this.itemContext?.slot);
     });

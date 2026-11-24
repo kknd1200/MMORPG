@@ -5,6 +5,14 @@ import { REBIRTH_ITEMS } from './rebirth-items.js';
 
 export const ITEMS = {
   ...REBIRTH_ITEMS,
+  weapon_enchant_scroll: {
+    name:'무기 강화 주문서',type:'consumable',enhanceType:'weapon',price:500,atlas:[1600,640],icon:{color:'#e1a064',text:'무강'},
+    desc:'인벤토리에서 더블클릭 후 무기를 선택하여 강화합니다. 성공 시 공격력 +1. +1~6 100%, +7 13%, +8 3%, +9 1.5%, +10 이상 0.5%. 실패 시 장비 파괴. 주문서는 매회 1장 소모됩니다.',
+  },
+  armor_enchant_scroll: {
+    name:'방어구 강화 주문서',type:'consumable',enhanceType:'armor',price:300,atlas:[1664,640],icon:{color:'#91bed6',text:'방강'},
+    desc:'인벤토리에서 더블클릭 후 방어구를 선택하여 강화합니다. 성공 시 방어력 +1. +1~4 100%, +5 13%, +6 3%, +7 1.5%, +8 이상 0.5%. 실패 시 장비 파괴. 장신구는 대상에서 제외됩니다. 주문서는 매회 1장 소모됩니다.',
+  },
   // ---- 소모품 ----
   red_potion: {
     name: '빨간 물약', type: 'consumable', price: 20,
@@ -67,10 +75,11 @@ export const ITEMS = {
 export const INVENTORY_SIZE = 24;
 
 const imported = Object.entries(REBIRTH_ITEMS);
+export const SMITH_MAX_ITEM_LEVEL = 36; // 흑운 단검과 동급 이하
 export const SHOPS = {
-  merchant: ['red_potion', 'orange_potion', 'blue_potion', 'courage_potion', 'return_scroll', ...imported.filter(([,it]) => !it.slot && it.type !== 'chest' && it.category !== '전리품').map(([id])=>id)],
+  merchant: ['weapon_enchant_scroll', 'armor_enchant_scroll', 'red_potion', 'orange_potion', 'blue_potion', 'courage_potion', 'return_scroll', ...imported.filter(([,it]) => !it.slot && it.type !== 'chest' && it.category !== '전리품').map(([id])=>id)],
   smith: [
-    ...imported.filter(([,it]) => it.slot && !it.source.unique && it.source.set == null).map(([id])=>id),
+    ...imported.filter(([,it]) => it.slot && it.level <= SMITH_MAX_ITEM_LEVEL && !it.source.unique && it.source.set == null).map(([id])=>id),
     'training_sword', 'long_sword', 'training_bow', 'long_bow',
     'training_staff', 'oak_staff', 'training_mace', 'iron_mace', 'training_axe', 'battle_axe',
     'cloth_armor', 'leather_armor', 'chain_mail',

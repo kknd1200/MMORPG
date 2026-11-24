@@ -30,7 +30,7 @@ export function equipmentTotals(char) {
       total.def += item.def || 0;
     }
   }
-  return total;
+  return {atk:Number(total.atk.toFixed(2)),def:Number(total.def.toFixed(2))};
 }
 
 export function slotAccepts(slot, id) {

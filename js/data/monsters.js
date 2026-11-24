@@ -71,7 +71,7 @@ const FAMILY = {
 function dropsFor(level, rank, style) {
   const named = rank !== 'normal';
   const k = named ? 3 : 1;
-  const d = [];
+  const d = [{item:'weapon_enchant_scroll',chance:.006*k},{item:'armor_enchant_scroll',chance:.01*k}];
   if (level < 25) d.push({ item: 'red_potion', chance: 0.12 * k });
   if (level >= 10) d.push({ item: 'orange_potion', chance: (level >= 25 ? 0.12 : 0.06) * k });
   d.push({ item: 'blue_potion', chance: (style === 'magic' ? 0.14 : 0.07) * k });

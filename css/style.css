@@ -343,3 +343,6 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .rebirth-item-art { image-rendering:pixelated; }
 .shop-filters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0; }
 .shop-filters input { width:130px; }
+
+.enhancement-choices button { display:flex; align-items:center; gap:10px; text-align:left; }
+.enhancement-choices small { display:block; margin-top:5px; color:#d5bc84; line-height:1.6; }

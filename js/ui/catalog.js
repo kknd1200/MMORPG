@@ -17,7 +17,7 @@ function render() {
   byId('items').innerHTML=list.slice(page*48,(page+1)*48).map(([id,it])=>{
     const shops=Object.entries(SHOPS).filter(([,ids])=>ids.includes(id)).map(([key])=>key==='smith'?'대장장이':'잡화상');
     const classes=it.classes?.map(k=>CLASSES[k]?.name || k).join(' · ') || '모든 직업';
-    const acquisition=shops.length ? shops.join(' · ')+' / 레벨대 몬스터 드롭' : it.source?.unique || it.source?.set!=null ? '레벨대 네임드·보스 드롭' : '레벨대 몬스터 드롭';
+    const acquisition=it.enhanceType ? '잡화상 / 몬스터 드롭' : shops.length ? shops.join(' · ')+' / 레벨대 몬스터 드롭' : it.source?.unique || it.source?.set!=null ? '레벨대 네임드·보스 드롭' : '레벨대 몬스터 드롭';
     return `<article class="catalog-card">${itemIcon(id)}<h2>${esc(it.name)}</h2><small>${esc(category(it))} · Lv.${it.minLevel || it.level || 1}</small><p>${esc(it.desc)}</p><p>직업: ${esc(classes)}<br>획득: ${esc(acquisition)}<br>판매: ${sellPrice(id)}G${shops.length ? ' / 구매: '+it.price+'G' : ''}</p></article>`;
   }).join('') || '<p>검색 결과가 없습니다.</p>';
   byId('page').textContent=`${page+1} / ${pages}`;byId('previous').disabled=page===0;byId('next').disabled=page===pages-1;
