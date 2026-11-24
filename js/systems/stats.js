@@ -1,3 +1,4 @@
+import {passiveModifiers} from './loadout.js';
 import { equipmentTotals, equipmentBonuses } from '../data/equipment.js';
 // 캐릭터 성장 / 전투 공식 (DOM 의존성 없음 → node 테스트 가능)
 import {
@@ -214,7 +215,7 @@ export function attackPower(char, buffs = []) {
 // 방어력 = 체력/3 + 레벨 보너스 + 방어구 + 버프
 export function defense(char, buffs = []) {
   const armor = equipmentTotals(char).def;
-  return Math.floor(char.stats.con / 3) + levelDefense(char) + armor + sumBuffs(buffs, 'def');
+  return Math.floor(char.stats.con / 3) + levelDefense(char) + armor + (passiveModifiers(char).def || 0) + sumBuffs(buffs, 'def');
 }
 
 export function moveSpeed(buffs = []) {
@@ -285,13 +286,14 @@ export function derivedStats(char, buffs = []) {
     hit: playerHitChance(char,same,buffs),
     skillHit: playerHitChance(char,same,buffs),
     magicHit: magicHitChance(char.stats.int, char.level, same),
-    speed: moveSpeed(buffs),
+    speed: moveSpeed([...buffs,{speed:passiveModifiers(char).speed || 0}]),
     conHpBonus: conHpBonus(char.stats.con),
   };
 }
 
 export function itemModifiers(char, buffs=[]) {
   const values=equipmentBonuses(char);
+  for(const [key,n] of Object.entries(passiveModifiers(char))) values[key]=(values[key] || 0)+n;
   for (const buff of buffs) for (const key of ['atkPct','drPct','accPct','cdr','critRate','critDmg','regen','lifesteal','expPct','goldPct','block','skillDmg','double','execute','bossDmg']) values[key]=(values[key] || 0)+(buff[key] || 0);
   return values;
 }

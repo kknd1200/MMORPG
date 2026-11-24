@@ -1,3 +1,4 @@
+import {ensureLoadout,passiveBook} from '../systems/loadout.js';
 import { enhancementKind, enhancementChance, enhancementPercent } from '../systems/enhancement.js';
 import { formatVital, refreshPartyVitals } from '../ui/party-vitals.js';
 import { ItemTooltip } from '../ui/item-tooltip.js';
@@ -489,6 +490,7 @@ export class Hud {
     const g = this.game, u = g.selUnit(), ch = u.char, cls = CLASSES[ch.classId];
     const tabs = g.units().map((x) => `<button class="ptab ${x === u ? 'selected' : ''}" data-sel="${x.id}">
       ${avatarMarkup(x.char, 'tab')}${esc(x.char.name)}${x.isLeader ? ' ★' : ''}</button>`).join('');
+    ensureLoadout(ch);
     const learned = new Set(learnedSkills(ch));
     const slots = [];
     for (let i = 0; i < SKILL_SLOTS; i++) {
@@ -514,10 +516,13 @@ export class Hud {
           <button data-open="char">캐릭터 정보</button> <button data-open="inv">장비 바꾸기</button>
           ${u.isLeader ? '' : `<button class="danger" data-dismiss="${u.id}">내보내기</button>`}</div>
       </div>
-      <h4>스킬 칸 <small>앞 칸부터, 조건이 맞고 재사용이 끝난 스킬을 자동으로 씁니다</small></h4>
+      <h4>액티브 장착 2칸 <small>앞 칸부터, 조건이 맞고 재사용이 끝난 스킬을 자동으로 씁니다</small></h4>
       <div class="pslots">${slots.join('')}</div>
-      <h4>스킬 <small>끌어서 위 칸에 놓기</small></h4>
+      <h4>보유 액티브 4종 <small>끌어서 위 2칸에 놓기</small></h4>
       <div class="pskills">${list}</div>
+      <h4>패시브 장착 2칸 <small>선택한 효과만 상시 적용 · MP 소모 없음</small></h4>
+      <div class="passive-slots">${[0,1].map(i=>`<label>패시브 ${i+1}<select data-passive-slot="${i}"><option value="">미장착</option>${passiveBook(ch).map(p=>`<option value="${p.id}" ${ch.passiveSlots[i]===p.id?'selected':''}>${esc(p.name)} · ${esc(p.desc)}</option>`).join('')}</select></label>`).join('')}</div>
+      <h4>보유 패시브 4종</h4><div class="passive-list">${passiveBook(ch).map(p=>`<p><b>${esc(p.name)}</b> ${ch.passiveSlots.includes(p.id)?' · 장착 중':''}<br><small>${esc(p.desc)}</small></p>`).join('')}</div>
       <small class="hint">자동사냥 '일반공격'일 때는 스킬을 쓰지 않습니다. 파티 버프(투지 · 축복 · 숲의 축복 · 전투 깃발)는 파티 전원에게 걸리고, 치유는 HP가 가장 낮은 파티원에게 갑니다.</small>`;
   }
 
@@ -611,7 +616,7 @@ export class Hud {
   skillsHtml() {
     const g = this.game, ch = g.char, cls = CLASSES[ch.classId];
     const atk = g.derived().attack;
-    const rows = [...cls.skills].sort((a, b) => SKILLS[a].level - SKILLS[b].level).map((id) => {
+    const rows = skillBook(ch).sort((a,b)=>a.level-b.level).map(e=>e.id).map((id) => {
       const sk = SKILLS[id];
       const learned = ch.level >= sk.level;
       let formula = '';
@@ -631,7 +636,7 @@ export class Hud {
         </div>
       </div>`;
     }).join('');
-    return `${rows}<small class="hint">배운 스킬을 화면 아래 단축칸(F5~F12)으로 끌어다 놓으세요.</small>`;
+    return `<button data-open="party">액티브 2개 · 패시브 2개 설정</button>${rows}<small class="hint">배운 스킬을 화면 아래 단축칸(F5~F12)으로 끌어다 놓으세요.</small>`;
   }
 
   npcHtml() {
@@ -655,7 +660,7 @@ export class Hud {
           <li><b>이 마을 출구</b>: ${exitsText(def)}</li>
           <li><b>이동술사</b>: 골드를 내면 다른 마을 · 필드, 던전 입구까지 데려다줘요.</li>
           <li><b>파티</b>: 용병단장에게 골드를 내고 용병을 최대 3명 고용할 수 있어요. 파티원은 나를 따라다니며 근처 적과 알아서 싸워요. 몬스터를 클릭하면 모두 그 대상을 집중 공격해요.</li>
-          <li><b>스킬 배치</b>: 파티 창(P)에서 파티원마다 스킬 칸 4개에 스킬을 넣고 순서와 조건을 정해요. 앞 칸부터 자동으로 써요.</li>
+          <li><b>스킬 배치</b>: 파티 창(P)에서 파티원마다 액티브 2칸과 패시브 2칸을 선택하고 순서와 조건을 정해요. 앞 칸부터 자동으로 써요.</li>
           <li><b>자동사냥</b>: 오른쪽 아래 버튼(A)으로 끔 → 일반공격만 → 스킬까지 사용 순서로 바뀌어요. 켜면 파티가 스스로 적을 찾아다녀요.</li>
           <li><b>던전</b>: 7곳, 각각 지하 7층까지 있고 마지막 층에 보스가 있어요. 입구는 필드 안의 동굴이에요.</li>
           <li><b>필드 보스</b>: 필드마다 정해진 시각에만 나타나서 ${BOSS_SCHEDULE.stay}분 동안 머물러요. 이동술사에게 시간표가 있어요.</li>
@@ -845,6 +850,7 @@ export class Hud {
       if (e.target.closest('.hud-portrait')) this.selectUnit('player');
     });
     this.root.addEventListener('change', (e) => {
+      if(e.target.matches('[data-passive-slot]')) g.setPassiveSlot(g.selectedId,Number(e.target.dataset.passiveSlot),e.target.value || null);
       if (e.target.matches('[data-shop-category]')) { this.shopCategory=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
       if (e.target.matches('[data-shop-search]')) { this.shopQuery=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
       const sel = e.target.closest('select[data-slotcond]');

@@ -45,7 +45,7 @@ test('전사(용병) 스킬 8개 · 그림 파일', () => {
   }
 });
 
-test('스킬 칸: 배운 스킬만, 빈 칸만 채움', () => {
+test('스킬 칸: 배운 스킬만, 선택한 두 칸과 빈 칸 유지', () => {
   const c = S.createCharacter({ id: 'a', name: 'a', classId: 'mage', stats: { ...CLASSES.mage.baseStats, int: 18, con: 13 } });
   c.skillSlots = [];
   fillSlots(c);
@@ -53,7 +53,7 @@ test('스킬 칸: 배운 스킬만, 빈 칸만 채움', () => {
   c.level = 20;
   fillSlots(c);
   assert.equal(c.skillSlots[0].id, 'fire_bolt');
-  assert.equal(c.skillSlots.filter(Boolean).length, 4);
+  assert.equal(c.skillSlots.filter(Boolean).length, 1);
 });
 
 test('조건 · 경험치 나누기', () => {

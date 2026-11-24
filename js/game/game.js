@@ -1,3 +1,4 @@
+import {ensureLoadout,setPassive} from '../systems/loadout.js';
 import { isVanguard, formationGoal, vanguardTarget } from './party-formation.js';
 import { startShieldBash, advanceShieldBash, cancelShieldBash } from './shield-bash.js';
 import { createEquipmentInstance, hydrateItemInstances, isEquipment, pruneItemInstances } from '../systems/item-instances.js';
@@ -226,6 +227,7 @@ export class Game {
   }
 
   setSkillSlot(unitId, i, entry) {
+    if (!Number.isInteger(i) || i<0 || i>=2) return;
     const u = this.unitById(unitId);
     if (!u) return;
     fillSlots(u.char);
@@ -239,7 +241,13 @@ export class Game {
     this.hud.markDirty('party');
   }
 
+  setPassiveSlot(unitId,index,id) {
+    const u=this.unitById(unitId);if(!u || !setPassive(u.char,index,id))return;
+    this.hud.markDirty('party','char');this.save();
+  }
+
   swapSkillSlot(unitId, a, b) {
+    if (![a,b].every(i=>Number.isInteger(i) && i>=0 && i<2)) return;
     const u = this.unitById(unitId);
     if (!u) return;
     const s2 = u.char.skillSlots;
@@ -686,12 +694,14 @@ export class Game {
     if (!sk) return false;
     if (u.ent.dead) return false;
     if (sk.classId !== ch.classId) return fail('이 직업은 사용할 수 없는 스킬입니다.');
+    ensureLoadout(ch);
     const entry = skillBook(ch).find(e => e.id === sk.id);
     if (!entry) return fail('이 용병이 보유하지 않은 스킬입니다.');
     if (ch.level < entry.level) return fail(`${sk.name}: 레벨 ${entry.level}부터 사용할 수 있습니다.`);
     if (this.time < (u.cooldowns[sk.id] || 0)) return fail(`${sk.name}: 재사용 대기 중입니다.`);
     if (u.ent.attackAnim > 0) return fail('일반공격 동작이 끝난 뒤 사용할 수 있습니다.');
     if (this.time < (u.ent.skillMotionUntil || 0)) return fail('스킬 동작이 끝난 뒤 사용할 수 있습니다.');
+    if (!(ch.skillSlots || []).some(e=>e?.id===sk.id)) return fail('액티브 슬롯에 장착한 스킬만 사용할 수 있습니다.');
     if (ch.mp < sk.mp) return fail('마나가 부족합니다.');
     return true;
   }
@@ -1392,7 +1402,8 @@ export class Game {
       }
       if (!inTown && this.time - e.lastHurt < 6) continue;
       const r = S.regenAmounts(ch);
-      r.hp += Math.floor(ch.maxHp*(S.itemModifiers(ch,u.buffs).regen || 0));
+      r.hp += Math.ceil(ch.maxHp*(S.itemModifiers(ch,u.buffs).regen || 0));
+      r.mp += S.itemModifiers(ch,u.buffs).mpRegen || 0;
       const mult = inTown ? 3 : 1;
       ch.hp = Math.min(ch.maxHp, ch.hp + r.hp * mult);
       ch.mp = Math.min(ch.maxMp, ch.mp + r.mp * mult);

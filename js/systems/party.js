@@ -1,15 +1,16 @@
+import {activeBook,ensureLoadout} from './loadout.js';
 // 파티 · 용병 데이터 (DOM 없음 → node 테스트 가능)
 //
 // 파티 = 내 대표 캐릭터 1명 + 마을 용병단장에게 골드로 고용한 용병 최대 3명.
 // 용병도 캐릭터와 같은 데이터(레벨 · 경험치 · 스탯 · 장비 · 성장 주사위)를 가지고 따로 성장합니다.
-// 전투는 자동: 파티원마다 스킬 칸 4개에 넣은 스킬을 앞칸부터, 조건이 맞고 재사용이 끝난 것을 씁니다.
+// 전투는 자동: 파티원마다 액티브 2칸에 넣은 스킬을 앞칸부터, 조건이 맞고 재사용이 끝난 것을 씁니다.
 import { CLASSES, STAT_KEYS, CREATION } from '../data/classes.js';
 import { SKILLS } from '../data/skills.js';
 import * as S from './stats.js';
 
 export const MAX_MERCS = 3;
 export const MERC_REFRESH_COST = 100;
-export const SKILL_SLOTS = 4;
+export const SKILL_SLOTS = 2;
 export const MERC_CLASSES = ['knight', 'elf', 'mage', 'priest', 'warrior'];
 
 const NAMES = {
@@ -94,9 +95,7 @@ function autoAllocate(classId) {
 }
 
 export function skillBook(char) {
-  const personal = char.isMerc && Array.isArray(char.mercSkillBook) ? char.mercSkillBook : null;
-  return personal ? personal.filter(e => SKILLS[e.id]?.classId === char.classId && Number.isInteger(e.level) && e.level > 0)
-    : CLASSES[char.classId].skills.map(id => ({ id, level: SKILLS[id].level }));
+  return activeBook(char);
 }
 
 export function learnedSkills(char) {
@@ -129,21 +128,9 @@ export function defaultCondition(sk) {
   return 'always';
 }
 
-/** 배운 스킬로 스킬 칸 채우기 (빈 칸만). 높은 레벨 스킬을 앞에 */
+/** 액티브 2칸·패시브 2칸 초기화 및 기존 선택 호환 */
 export function fillSlots(char) {
-  if (!Array.isArray(char.skillSlots)) char.skillSlots = [];
-  while (char.skillSlots.length < SKILL_SLOTS) char.skillSlots.push(null);
-  const used = new Set(char.skillSlots.filter(Boolean).map((s) => s.id));
-  const learned = learnedSkills(char).reverse();
-  if (char.isMerc && char.mercSkillBook) char.skillSlots = char.skillSlots.map(sl => sl && learned.includes(sl.id) ? sl : null);
-  for (let i = 0; i < SKILL_SLOTS; i++) {
-    if (char.skillSlots[i]) continue;
-    const id = learned.find((x) => !used.has(x));
-    if (!id) break;
-    used.add(id);
-    char.skillSlots[i] = { id, cond: defaultCondition(SKILLS[id]) };
-  }
-  return char.skillSlots;
+  return ensureLoadout(char);
 }
 
 /** 용병 고용: 캐릭터와 같은 방식으로 만들고, 고용 레벨까지 성장 주사위를 굴림 (용병도 축·저주가 갈림) */

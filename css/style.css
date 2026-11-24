@@ -346,3 +346,10 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 
 .enhancement-choices button { display:flex; align-items:center; gap:10px; text-align:left; }
 .enhancement-choices small { display:block; margin-top:5px; color:#d5bc84; line-height:1.6; }
+
+.passive-slots { display:grid; gap:10px; }
+.passive-slots label { display:grid; gap:5px; }
+.passive-slots select { width:100%; white-space:normal; }
+.passive-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.passive-list p { border:1px solid #625739; padding:10px; margin:0; }
+.pslots { grid-template-columns:repeat(2,minmax(0,1fr)); }

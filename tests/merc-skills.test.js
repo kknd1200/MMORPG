@@ -26,7 +26,7 @@ test('hired skill book survives save, source changes, and growth without acquiri
   assert.deepEqual(ch.mercSkillBook,original);o.mercSkillBook[0].level=99;assert.deepEqual(ch.mercSkillBook,original);
   const restored=JSON.parse(JSON.stringify(ch));
   for(const [lv,count] of [[1,2],[14,2],[15,3],[29,3],[30,4],[99,4]]){
-   restored.level=lv;fillSlots(restored);assert.equal(learnedSkills(restored).length,count);assert.equal(restored.skillSlots.filter(Boolean).length,count);assert.deepEqual(restored.mercSkillBook,original);
+   restored.level=lv;fillSlots(restored);assert.equal(learnedSkills(restored).length,count);assert.equal(restored.skillSlots.filter(Boolean).length,2);assert.deepEqual(restored.mercSkillBook,original);
    assert.ok(restored.skillSlots.filter(Boolean).every(e=>original.some(x=>x.id===e.id)));
   }
  }
@@ -39,7 +39,7 @@ test('casting enforces individual ownership and personal unlock levels without c
  ch.skillSlots[0]={id:unowned,cond:'always'};fillSlots(ch);assert.ok(ch.skillSlots.every(e=>!e||e.id!==unowned));
  for(const isMerc of [false,true]){
   const legacy={classId:'knight',isMerc,level:1,mp:100},unit={char:legacy,ent:{},cooldowns:{}};
-  assert.equal(skillBook(legacy).length,8);assert.equal(g.canCast(SKILLS.power_strike,true,unit),true);assert.equal(g.canCast(SKILLS.shield_bash,true,unit),false);
+  assert.equal(skillBook(legacy).length,4);assert.equal(g.canCast(SKILLS.power_strike,true,unit),true);assert.equal(g.canCast(SKILLS.shield_bash,true,unit),false);
  }
 });
 test('recruiter preview and party skill list show the personal repertoire and the same unlock requirements',()=>{
