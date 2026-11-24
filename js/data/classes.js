@@ -6,9 +6,9 @@ export const STAT_KEYS = ['str', 'dex', 'int', 'con'];
 export const STAT_NAMES = { str: '힘', dex: '민첩', int: '지능', con: '체력' };
 
 export const STAT_DESCRIPTIONS = {
-  str: '근접 직업의 주스탯. 근접 공격 명중과 근접 스킬 피해가 오릅니다.',
-  dex: '원거리 직업의 주스탯. 원거리 공격 명중과 원거리 스킬 피해가 오릅니다.',
-  int: '마법 직업의 주스탯. 마법 명중과 마법 스킬 피해가 오릅니다.',
+  str: '기사·전사의 주스탯. 일반공격·공격 스킬 명중률과 근접 스킬 피해가 오릅니다.',
+  dex: '궁수(요정)의 주스탯. 일반공격·공격 스킬 명중률과 궁수 스킬 피해가 오릅니다.',
+  int: '마법사·사제의 주스탯. 일반공격·공격 스킬 명중률과 마법 스킬 피해가 오릅니다.',
   con: '공통 스탯. 방어력과 레벨업 시 HP 성장량이 오릅니다.',
 };
 
@@ -21,7 +21,7 @@ export const CLASSES = {
     primaryStat: 'str',
     attackType: 'melee',
     attackRange: 1.3,
-    attackInterval: 2,
+    attackInterval: 1,
     projectile: null,
     baseAttack: 10,
     attackGrowth: 0.5, // 레벨당 일반공격력 증가 (Lv.1 = 0)
@@ -41,7 +41,7 @@ export const CLASSES = {
     primaryStat: 'dex',
     attackType: 'ranged',
     attackRange: 6.5,
-    attackInterval: 4,
+    attackInterval: 1,
     projectile: 'arrow',
     baseAttack: 8,
     attackGrowth: 0.45,
@@ -61,7 +61,7 @@ export const CLASSES = {
     primaryStat: 'int',
     attackType: 'ranged',
     attackRange: 6,
-    attackInterval: 3,
+    attackInterval: 1,
     projectile: 'bolt',
     baseAttack: 3,
     attackGrowth: 0.15,
@@ -81,7 +81,7 @@ export const CLASSES = {
     primaryStat: 'int',
     attackType: 'ranged',
     attackRange: 6,
-    attackInterval: 3,
+    attackInterval: 1,
     projectile: 'bolt',
     baseAttack: 5,
     attackGrowth: 0.25,
@@ -102,7 +102,7 @@ export const CLASSES = {
     primaryStat: 'str',
     attackType: 'melee',
     attackRange: 1.3,
-    attackInterval: 4,
+    attackInterval: 1,
     projectile: null,
     baseAttack: 11,
     baseStats: { str: 15, dex: 8, int: 7, con: 13 },

@@ -231,6 +231,15 @@ export function magicHitChance(int, level, target) {
   return clamp(0.8 + (int - 10) * 0.02 + (level - target.level) * 0.02 - (target.mr || 0) * 0.5, 0.05, 0.98);
 }
 
+// All player attacks use the class primary stat; apply equipment accuracy exactly once.
+export function playerHitChance(char, target, buffs=[], element=null) {
+  const cls=CLASSES[char.classId], stat=char.stats[cls.primaryStat];
+  const opponent={...target,level:target.level ?? char.level};
+  const magic=(element || (cls.primaryStat==='int'?'magic':'physical'))==='magic';
+  const base=magic ? magicHitChance(stat,char.level,opponent) : physicalHitChance(stat,char.level,opponent);
+  return clamp(base+(itemModifiers(char,buffs).accPct || 0),.05,.98);
+}
+
 export function normalDamage(atk, targetArmor, rng = Math.random) {
   const raw = atk * (0.9 + rng() * 0.2);
   return physicalMitigate(raw, targetArmor);
@@ -273,7 +282,8 @@ export function derivedStats(char, buffs = []) {
     attack: attackPower(char, buffs),
     attackParts: attackBreakdown(char, buffs),
     defense: defense(char, buffs),
-    hit: physicalHitChance(char.stats[cls.primaryStat], char.level, same),
+    hit: playerHitChance(char,same,buffs),
+    skillHit: playerHitChance(char,same,buffs),
     magicHit: magicHitChance(char.stats.int, char.level, same),
     speed: moveSpeed(buffs),
     conHpBonus: conHpBonus(char.stats.con),

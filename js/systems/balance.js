@@ -21,6 +21,8 @@ export const TARGET = {
   killsPerLevel: (lv) => 5 + 0.6 * lv, // 레벨업까지 사냥 수
 };
 const SKILL_USE = 0.6;
+// Keep the established monster curve independent of changes to live player cadence.
+const BASELINE_INTERVAL = { knight:2, elf:4, mage:3, priest:3, warrior:4 };
 
 const WEAPONS = {
   knight: ['training_sword', 'long_sword', 'steel_blade'],
@@ -54,13 +56,13 @@ export function referenceCharacter(classId, level) {
 }
 
 // 같은 레벨 몬스터 상대로 초당 피해 (명중률·방어 반영)
-export function playerDps(classId, level, target = { level, eva: 0.06, mr: 0.08, armor: Math.round(level * 0.18) }) {
+export function playerDps(classId, level, target = { level, eva: 0.06, mr: 0.08, armor: Math.round(level * 0.18) }, referenceInterval = null) {
   const ch = referenceCharacter(classId, level);
   const cls = CLASSES[classId];
   const atk = S.attackPower(ch);
   const stat = ch.stats[cls.primaryStat];
   const normalHit = S.physicalHitChance(stat, level, target);
-  let dps = (normalHit * S.physicalMitigate(atk, target.armor)) / cls.attackInterval;
+  let dps = (normalHit * S.physicalMitigate(atk, target.armor)) / (referenceInterval ?? cls.attackInterval);
   // 배운 공격 스킬 중 초당 피해가 가장 높은 것 하나
   let best = 0;
   for (const id of cls.skills) {
@@ -88,7 +90,7 @@ for (let lv = 1; lv <= 110; lv++) {
   const pl = Math.min(lv, 99);
   let dps = 0, hp = 0, def = 0;
   for (const id of CLASS_ORDER) {
-    dps += playerDps(id, pl);
+    dps += playerDps(id, pl, undefined, BASELINE_INTERVAL[id]);
     const e = playerEhp(id, pl);
     hp += e.hp; def += e.def;
   }

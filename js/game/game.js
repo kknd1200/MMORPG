@@ -663,8 +663,7 @@ export class Game {
   unitAttack(u, m) {
     if (!this.hasAttackLine(u.ent, m)) return;
     const ch = u.char, e = u.ent;
-    const stat = ch.stats[this.clsOf(u).primaryStat];
-    const hit = Math.random() < Math.min(.98,S.physicalHitChance(stat, ch.level, m)+(S.itemModifiers(ch,u.buffs).accPct || 0));
+    const hit = Math.random() < S.playerHitChance(ch,m,u.buffs);
     e.attackAnim = 0.3;
     this.face(e, m);
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
@@ -813,8 +812,8 @@ export class Game {
     if (!this.hasAttackLine(origin, m)) return;
     const ch = u.char;
     const magic = sk.element === 'magic';
-    const chance = magic ? S.magicHitChance(stat, ch.level, m) : Math.min(.98,S.physicalHitChance(stat, ch.level, m)+(S.itemModifiers(ch,u.buffs).accPct || 0));
-    if (Math.random() >= Math.min(.98,chance+(S.itemModifiers(ch,u.buffs).accPct || 0))) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
+    const chance=S.playerHitChance(ch,m,u.buffs,sk.element);
+    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
     const raw = S.skillDamage(stat, atk, sk.coef) * (1+(S.itemModifiers(ch,u.buffs).skillDmg || 0));
     const dmg = magic ? S.magicMitigate(raw, m.mr) : S.physicalMitigate(raw, m.armor);
     if (sk.slow) m.slowUntil = this.time + sk.slow;

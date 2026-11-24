@@ -575,8 +575,9 @@ export class Hud {
       <table class="derived">
         <tr><td>HP / MP</td><td>${Math.ceil(ch.hp)} / ${ch.maxHp} · ${Math.floor(ch.mp)} / ${ch.maxMp}</td></tr>
         <tr><td>일반공격</td><td>${d.attack} <small>(기본 ${ap.base} + 레벨 ${ap.level} + 무기 ${ap.weapon} + 버프 ${ap.buff})</small></td></tr>
-        <tr><td>공격 명중</td><td>${pct(d.hit)} <small>(${STAT_NAMES[cls.primaryStat]} 기준, 동레벨 상대)</small></td></tr>
-        <tr><td>마법 명중</td><td>${pct(d.magicHit)} <small>(지능 기준)</small></td></tr>
+        <tr><td>일반공격 명중</td><td>${pct(d.hit)} <small>(${STAT_NAMES[cls.primaryStat]} 기준, 동레벨 상대)</small></td></tr>
+        <tr><td>공격 스킬 명중</td><td>${pct(d.skillHit)} <small>(${STAT_NAMES[cls.primaryStat]} 기준, 동레벨 상대)</small></td></tr>
+        <tr><td>일반공격 간격</td><td>${cls.attackInterval}초</td></tr>
         <tr><td>방어력</td><td>${d.defense}</td></tr>
         <tr><td>이동 속도</td><td>${d.speed.toFixed(1)} 칸/초</td></tr>
         <tr><td>레벨업 HP</td><td>${cls.growth.hp[0]}~${cls.growth.hp[1]} + 체력 보너스 ${d.conHpBonus}</td></tr>

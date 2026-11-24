@@ -7,8 +7,8 @@ function fixture(classId) {
  Object.assign(g,{time:0,cls,char,player:ent,leader:unit,autoMode:'normal',world:{hasLineOfSight:()=>true},mouse:{left:false},derived:()=>({speed:3}),findEntity:()=>target,pickTarget:()=>target,clearPath(){},unitAttack(){times.push(g.time)}});
  return {g,unit,target,times};
 }
-for(const mode of ['leader','mercenary'])test(`${mode}: normal attack cooldown follows class order and persists across target switches`,()=>{
- for(const [id,seconds] of [['knight',2],['mage',3],['priest',3],['warrior',4],['elf',4]]) {
+for(const mode of ['leader','mercenary'])test(`${mode}: every class uses a one-second normal attack cooldown and persists across target switches`,()=>{
+ for(const [id,seconds] of [['knight',1],['mage',1],['priest',1],['warrior',1],['elf',1]]) {
   const {g,unit,target,times}=fixture(id);
   for(let n=0;n<1000;n++){
    g.time+=.05;target.id=n%2+1;g.player.action.targetId=target.id;
@@ -45,6 +45,6 @@ for(const role of ['leader','mercenary'])test(`${role}: real auto skills never b
 });
 test('mode changes, target changes and clearing the relative timer do not bypass the absolute basic deadline',()=>{
  const {g,unit,target,times}=fixture('knight');assert.equal(g.tryBasicAttack(unit,target),true);
- g.autoMode='skill';unit.ent.attackTimer=0;g.time=1;target.id=2;assert.equal(g.tryBasicAttack(unit,target),false);
- g.autoMode='normal';g.time=2;assert.equal(g.tryBasicAttack(unit,target),true);assert.deepEqual(times,[0,2]);
+ g.autoMode='skill';unit.ent.attackTimer=0;g.time=.5;target.id=2;assert.equal(g.tryBasicAttack(unit,target),false);
+ g.autoMode='normal';g.time=1;assert.equal(g.tryBasicAttack(unit,target),true);assert.deepEqual(times,[0,1]);
 });
