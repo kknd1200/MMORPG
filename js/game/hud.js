@@ -1,3 +1,5 @@
+import {inventoryCategory,inventorySubtype,improvedItem,dismantleKind} from '../systems/inventory-tools.js';
+import {itemComparisonMarkup} from '../ui/item-tooltip.js';
 import {ensureLoadout,passiveBook} from '../systems/loadout.js';
 import { enhancementKind, enhancementChance, enhancementPercent } from '../systems/enhancement.js';
 import { formatVital, refreshPartyVitals } from '../ui/party-vitals.js';
@@ -134,7 +136,12 @@ export class Hud {
     this.bindPanelEvents();
   }
 
-  destroy() { clearTimeout(this.itemClickTimer); this.root.innerHTML = ''; }
+  destroy() {
+    clearTimeout(this.itemClickTimer);
+    for(const args of this.rootHandlers || [])this.root.removeEventListener(...args);
+    this.itemTooltip?.destroy();
+    this.root.innerHTML = '';
+  }
 
   // 창 제목을 잡고 끌어서 이동
   makeDraggable(panel, handle) {
@@ -459,7 +466,7 @@ export class Hud {
   }
 
   renderPanel(name) {
-    this.itemTooltip?.hide();
+    this.itemTooltip?.refresh();
     const body = this.panels[name].querySelector('.body');
     if (name === 'char') body.innerHTML = this.charHtml();
     else if (name === 'inv') body.innerHTML = this.invHtml();
@@ -550,6 +557,10 @@ export class Hud {
   }
 
   charHtml() {
+    const g=this.game;
+    return `<div class="party-overview">${g.units().map(u=>{const ch=u.char,d=g.derived(u),grade=S.luckGrade(ch);return `<article><h3>${esc(ch.name)} · ${CLASSES[ch.classId].name} ${u.isLeader?'★ 대표':''}</h3><p>Lv.${ch.level} · ${grade.label}<br>HP ${Math.ceil(ch.hp)}/${ch.maxHp} · MP ${Math.floor(ch.mp)}/${ch.maxMp}<br>공격 ${d.attack.toFixed(1)} · 방어 ${d.defense}<br>힘 ${ch.stats.str} · 민첩 ${ch.stats.dex} · 지능 ${ch.stats.int} · 체력 ${ch.stats.con}</p><button data-sel="${esc(u.id)}">상세 선택</button>${!u.isLeader?`<button data-promote="${esc(u.id)}" ${u.ent.dead?'disabled':''}>대표 캐릭터로 교체</button>`:''}</article>`;}).join('')}</div><h3>선택한 캐릭터 상세</h3>${this.charDetailHtml()}`;
+  }
+  charDetailHtml() {
     const g = this.game, su = g.selUnit(), ch = su.char, cls = CLASSES[ch.classId];
     const d = g.derived(su);
     const grade = S.luckGrade(ch);
@@ -595,19 +606,27 @@ export class Hud {
   invHtml() {
     const g = this.game, ch = g.char, su = g.selUnit();
     const shopOpen = !!(this.game.openNpc && SHOPS[this.game.openNpc.kind]);
+    const tab=this.invTab || '전체',sub=this.invSubtype || '';
+    const categories=['전체','무기','방어구','장신구','소모품','재료','분해'];
+    const tabs=`<div class="inventory-tabs">${categories.map(c=>`<button data-inv-tab="${c}" class="${tab===c?'selected':''}">${c}</button>`).join('')}</div>`;
+    const eligible=ch.inventory.filter(e=>tab==='전체' || tab==='분해' ? tab!=='분해' || dismantleKind(ITEMS[e.id]) : inventoryCategory(ITEMS[e.id])===tab);
+    const types=[...new Set(eligible.map(e=>inventorySubtype(ITEMS[e.id])))];
+    const filter=`<label>종류 <select data-inv-subtype><option value="">전체 종류</option>${types.map(t=>`<option ${t===sub?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
     const cells = [];
     for (let i = 0; i < INVENTORY_SIZE; i++) {
       const e = ch.inventory[i];
-      if (!e) { cells.push('<div class="cell empty"></div>'); continue; }
+      if (!e) { if(tab==='전체' && !sub)cells.push('<div class="cell empty"></div>'); continue; }
+      if(!eligible.includes(e) || sub && inventorySubtype(ITEMS[e.id])!==sub)continue;
       const it = ITEMS[e.id];
       const usable = ['consumable','chest'].includes(it.type) || canEquip(e.id, su.char.classId, su.char.level || 1);
 
       cells.push(`<div class="cell ${usable ? '' : 'nouse'}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기" draggable="true" data-item-hover="${e.id}" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}'>
-        ${itemIcon(e.id)}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
+        ${itemIcon(e.id)}${improvedItem(e.id,su.char) && canEquip(e.id,su.char.classId,su.char.level)?'<span class="bag-upgrade" aria-label="더 좋은 능력치 또는 옵션">▲</span>':''}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
         ${shopOpen && sellPrice(e.id) > 0 ? `<button class="sell" data-sell="${i}">판매</button>` : ''}</div>`);
     }
     return `
-      <div class="gold">골드 ${ch.gold.toLocaleString()} · <a href="catalog.html" target="_blank" rel="noopener">아이템 도감 (733종)</a></div>
+      <div class="gold">골드 ${ch.gold.toLocaleString()} · 가방 ${ch.inventory.length}/${INVENTORY_SIZE} · <a href="catalog.html" target="_blank" rel="noopener">아이템 도감 (733종)</a></div>
+      ${tabs}${filter}${tab==='분해'?`<p>장비 1개당 해당 분해석 1개. 강화 장비는 분해 전 확인합니다.</p><div>${['weapon','armor','accessory'].map((k,i)=>`<button data-exchange-stone="${k}">${['무기','방어구','장신구'][i]} 분해석 ${g.countItem(k+'_dismantle_stone')}/100 → 주문서 교환</button>`).join('')}</div>`:''}
       ${equipmentMarkup(g)}
       <div class="grid">${cells.join('')}</div>
       <small class="hint">마우스 올리기: 정보·장비 비교 · 클릭: 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 판매' : ''}</small></section></div>`;
@@ -744,9 +763,10 @@ export class Hud {
   showItem(id, source = 'bag', slot = null) {
     this.itemTooltip?.hide();
     if (!ITEMS[id]) return;
+    if(source==='bag' && this.invTab==='분해'){this.showDismantle(id);return;}
     const unit = this.game.selUnit();
     this.itemContext = { id, source, slot, unitId: unit.id };
-    this.showItemDialog(itemDetailsMarkup(this.game, this.itemContext));
+    this.showItemDialog(itemDetailsMarkup(this.game, this.itemContext)+itemComparisonMarkup(this.game,id));
   }
 
   showItemDialog(html) {
@@ -823,13 +843,30 @@ export class Hud {
     if (this.open.has('npc')) this.renderPanel('npc');
   }
 
+  showDismantle(id,confirm=false) {
+    const index=this.game.char.inventory.findIndex(e=>e.id===id),item=ITEMS[id];if(index<0 || !dismantleKind(item))return;
+    this.itemContext={mode:'dismantle',id,index};
+    this.showItemDialog(`<header class="item-dialog-header"><h3>장비 분해</h3><button data-item-close>×</button></header><h3>${esc(item.name)}</h3><p>${confirm?'강화된 아이템입니다. 정말로 삭제하고 분해하시겠습니까? 복구할 수 없습니다.':'이 장비를 분해하면 해당 종류 분해석 1개를 얻습니다.'}</p><button data-dismantle-confirm="${confirm?'yes':'no'}">${confirm?'정말 삭제하고 분해':'분해'}</button><button data-item-close>취소</button>`);
+  }
+  dismantleAction(confirmed) {
+    const c=this.itemContext;if(c?.mode!=='dismantle')return;
+    const r=this.game.dismantleItem(c.index,c.id,confirmed);
+    if(r.confirm){this.showDismantle(c.id,true);return;}
+    this.closeItem();if(this.open.has('inv'))this.renderPanel('inv');
+  }
+
   bindPanelEvents() {
     const g = this.game;
+    this.rootHandlers=[];
+    const onRoot=(...args)=>{this.root.addEventListener(...args);this.rootHandlers.push(args);};
     this.itemTooltip = new ItemTooltip(this.root, g, () => !!this.itemContext || !!g.pendingTravel || this.dragging);
-    this.root.addEventListener('click', (e) => {
+    onRoot('click', (e) => {
       const t = e.target.closest('button');
       if (!t) return;
-      if (t.dataset.shopPage) { this.shopPage=Math.max(0,(this.shopPage || 0)+Number(t.dataset.shopPage)); this.renderPanel('npc'); }
+      if(t.dataset.promote) g.promote(t.dataset.promote);
+      else if(t.dataset.invTab){this.invTab=t.dataset.invTab;this.invSubtype='';this.renderPanel('inv');}
+      else if(t.dataset.exchangeStone) g.exchangeStones(t.dataset.exchangeStone);
+      else if (t.dataset.shopPage) { this.shopPage=Math.max(0,(this.shopPage || 0)+Number(t.dataset.shopPage)); this.renderPanel('npc'); }
       else if (t.dataset.stat) g.allocateStat(t.dataset.stat);
       else if (t.dataset.unequip) g.unequip(t.dataset.unequip);
       else if (t.dataset.sell) g.sell(Number(t.dataset.sell));
@@ -844,12 +881,13 @@ export class Hud {
       else if (t.dataset.open) this.openPanel(t.dataset.open);
       else if (t.hasAttribute('data-auto')) g.cycleAutoMode();
     });
-    this.root.addEventListener('click', (e) => {
+    onRoot('click', (e) => {
       const f = e.target.closest('.pframe[data-sel]');
-      if (f) { this.selectUnit(f.dataset.sel); if (!this.open.has('party')) this.openPanel('party'); }
-      if (e.target.closest('.hud-portrait')) this.selectUnit('player');
+      if (f) { this.selectUnit(f.dataset.sel); this.openPanel('char'); }
+      if (e.target.closest('.hud-portrait')) {this.selectUnit('player');this.openPanel('char');}
     });
-    this.root.addEventListener('change', (e) => {
+    onRoot('change', (e) => {
+      if(e.target.matches('[data-inv-subtype]')){this.invSubtype=e.target.value;this.renderPanel('inv');}
       if(e.target.matches('[data-passive-slot]')) g.setPassiveSlot(g.selectedId,Number(e.target.dataset.passiveSlot),e.target.value || null);
       if (e.target.matches('[data-shop-category]')) { this.shopCategory=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
       if (e.target.matches('[data-shop-search]')) { this.shopQuery=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
@@ -857,8 +895,8 @@ export class Hud {
       if (sel) g.setSlotCond(g.selectedId, Number(sel.dataset.slotcond), sel.value);
     });
     // 파티 스킬 칸: 끌어다 놓기 / 순서 바꾸기 / 우클릭 비우기
-    this.root.addEventListener('dragover', (e) => { if (e.target.closest('.pslot')) e.preventDefault(); });
-    this.root.addEventListener('drop', (e) => {
+    onRoot('dragover', (e) => { if (e.target.closest('.pslot')) e.preventDefault(); });
+    onRoot('drop', (e) => {
       const slot = e.target.closest('.pslot');
       if (!slot) return;
       e.preventDefault();
@@ -869,7 +907,7 @@ export class Hud {
       if (data.type === 'pslot') g.swapSkillSlot(g.selectedId, data.from, i);
       else if (data.type === 'pskill' || data.type === 'skill') g.setSkillSlot(g.selectedId, i, { id: data.id });
     });
-    this.root.addEventListener('contextmenu', (e) => {
+    onRoot('contextmenu', (e) => {
       const slot = e.target.closest('.pslot');
       if (slot) { e.preventDefault(); g.setSkillSlot(g.selectedId, Number(slot.dataset.pslot), null); }
     });
@@ -904,14 +942,14 @@ export class Hud {
       else if (slot) this.showEquipmentSlot(slot.dataset.equipmentSlot);
       else if (shop) this.showItem(shop.dataset.shopItem, 'shop');
     };
-    this.root.addEventListener('click', inspect);
-    this.root.addEventListener('dblclick', e=>{
+    onRoot('click', inspect);
+    onRoot('dblclick', e=>{
       const cell=e.target.closest('[data-inv]');
       if (!cell || e.target.closest('.item-overlay,[data-sell]')) return;
       const entry=g.char.inventory[Number(cell.dataset.inv)];
       if (ITEMS[entry?.id]?.enhanceType) { e.preventDefault(); clearTimeout(this.itemClickTimer); this.beginEnhancement(entry.id); }
     });
-    this.root.addEventListener('keydown', e => {
+    onRoot('keydown', e => {
       if (this.itemContext) {
         e.stopPropagation();
         if (e.key === 'Escape') { e.preventDefault(); this.closeItem(); }
@@ -927,16 +965,17 @@ export class Hud {
     });
     this.root.querySelector('.item-overlay').addEventListener('click', e => {
       if (e.target.classList.contains('item-overlay') || e.target.closest('[data-item-close]')) this.closeItem();
+      else if(e.target.closest('[data-dismantle-confirm]')) this.dismantleAction(e.target.closest('[data-dismantle-confirm]').dataset.dismantleConfirm==='yes');
       else if (e.target.closest('[data-enhance-target]')) this.selectEnhancement(Number(e.target.closest('[data-enhance-target]').dataset.enhanceTarget));
       else if (e.target.closest('[data-item-action]')) this.itemAction(e.target.closest('[data-item-action]').dataset.itemAction);
       else if (e.target.closest('[data-item-choice]')) this.showItem(e.target.closest('[data-item-choice]').dataset.itemChoice, 'bag', this.itemContext?.slot);
     });
-    this.root.addEventListener('dragstart', (e) => {
+    onRoot('dragstart', (e) => {
       const src = e.target.closest?.('[data-drag]');
       if (!src) return;
       this.dragging = true;
       e.dataTransfer.setData('text/plain', src.dataset.drag);
     });
-    this.root.addEventListener('dragend', () => { this.dragging = false; });
+    onRoot('dragend', () => { this.dragging = false; });
   }
 }

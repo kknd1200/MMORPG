@@ -90,7 +90,7 @@ export function saveCharacter(username, char) {
   const db = load();
   const acc = db.accounts[username];
   if (!acc) return;
-  const i = acc.characters.findIndex((c) => c.id === char.id);
+  const i = acc.characters.findIndex((c) => (c.partySaveId || c.id) === (char.partySaveId || char.id));
   const copy = JSON.parse(JSON.stringify(char));
   if (i >= 0) acc.characters[i] = copy;
   else acc.characters.push(copy);

@@ -353,3 +353,5 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .passive-list { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .passive-list p { border:1px solid #625739; padding:10px; margin:0; }
 .pslots { grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+.inventory-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.inventory-tabs .selected{border-color:#e4c36e}.bag-upgrade{position:absolute;left:1px;top:0;color:#69e485;font-size:13px;text-shadow:0 1px #000}.party-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.party-overview article{padding:10px;border:1px solid #756240}.panel[data-panel="char"]{width:720px;max-width:calc(100vw - 20px)}

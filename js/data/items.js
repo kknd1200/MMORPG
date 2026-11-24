@@ -72,7 +72,10 @@ export const ITEMS = {
   chain_mail: { name: '사슬 갑옷', type: 'armor', def: 6, classes: ['knight', 'priest', 'warrior'], price: 1000, icon: { color: '#a3abb8', text: '갑' }, desc: '방어력 +6 (기사/사제)' },
 };
 
-export const INVENTORY_SIZE = 24;
+for(const [kind,label] of [['weapon','무기'],['armor','방어구'],['accessory','장신구']]) ITEMS[kind+'_dismantle_stone']={name:label+' 분해석',type:'material',category:'재료',group:'분해석',stackable:true,price:0,atlas:[0,704],icon:{color:'#a0d5ee',text:'석'},desc:label+' 분해로 획득. 100개를 같은 종류 강화 주문서 1장으로 교환합니다.'};
+ITEMS.accessory_enchant_scroll={...ITEMS.armor_enchant_scroll,name:'장신구 강화 주문서',enhanceType:'accessory',desc:'장신구를 강화합니다. 성공 시 방어력 +1. +1~4 100%, +5 13%, +6 3%, +7 1.5%, +8 이상 0.5%. 실패 시 파괴. 장신구 분해석 100개로 교환합니다.'};
+
+export const INVENTORY_SIZE = 100;
 
 const imported = Object.entries(REBIRTH_ITEMS);
 export const SMITH_MAX_ITEM_LEVEL = 36; // 흑운 단검과 동급 이하

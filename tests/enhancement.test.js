@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ITEMS, SHOPS, SMITH_MAX_ITEM_LEVEL } from '../js/data/items.js';
+import { ITEMS, SHOPS, SMITH_MAX_ITEM_LEVEL, INVENTORY_SIZE } from '../js/data/items.js';
 import { createEquipmentInstance, hydrateItemInstances, pruneItemInstances, rollEquipment } from '../js/systems/item-instances.js';
 import { enhanceEquipment, enhancementKind, enhancementChance } from '../js/systems/enhancement.js';
 import { equipmentTotals } from '../js/data/equipment.js';
@@ -80,7 +80,7 @@ test('equipped mercenary gear can be upgraded or destroyed without affecting lea
 });
 
 test('a full bag can enhance existing gear and a stale second click cannot consume another scroll',()=>{
-  const o=owner();o.inventory=[{id:'long_sword',qty:1},{id:'weapon_enchant_scroll',qty:2},...Array.from({length:22},()=>({id:'cloth_armor',qty:1}))];const t=target(o);
+  const o=owner();o.inventory=[{id:'long_sword',qty:1},{id:'weapon_enchant_scroll',qty:2},...Array.from({length:INVENTORY_SIZE-2},()=>({id:'cloth_armor',qty:1}))];const t=target(o);
   assert.ok(enhanceEquipment(o,'weapon_enchant_scroll',t,members(o)).success);const after=structuredClone(o);
   assert.equal(enhanceEquipment(o,'weapon_enchant_scroll',t,members(o)).ok,false);assert.deepEqual(o,after);
 });

@@ -4,11 +4,12 @@ import { createEquipmentInstance, registerInstance, forgetInstance } from './ite
 export function enhancementKind(itemOrId) {
   const item=typeof itemOrId==='string' ? ITEMS[itemOrId] : itemOrId;
   if (item?.type==='weapon') return 'weapon';
+  if (item?.type==='armor' && (item.category==='장신구' || ['neck','ring1','ring2'].includes(item.slot))) return 'accessory';
   if (item?.type==='armor' && item.category!=='장신구' && !['neck','ring1','ring2'].includes(item.slot)) return 'armor';
   return null;
 }
 export function enhancementChance(kind, targetLevel) {
-  if (!['weapon','armor'].includes(kind) || !Number.isSafeInteger(targetLevel) || targetLevel<1) return 0;
+  if (!['weapon','armor','accessory'].includes(kind) || !Number.isSafeInteger(targetLevel) || targetLevel<1) return 0;
   const safe=kind==='weapon'?6:4, step=targetLevel-safe;
   return step<=0 ? 1 : step===1 ? .13 : step===2 ? .03 : step===3 ? .015 : .005;
 }

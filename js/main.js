@@ -204,6 +204,7 @@ async function startGame(id) {
     hudRoot: $('#hud'),
     character: char,
     onSave: (c) => Store.saveCharacter(user, c),
+    onPromote: id => {state.game.stop();state.game=null;void startGame(id);},
     onExit: (to) => {
       state.game = null;
       if (to === 'logout') { Store.logout(); state.user = null; show('screen-login'); }

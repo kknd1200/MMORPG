@@ -1,3 +1,4 @@
+import {improvedItem} from '../systems/inventory-tools.js';
 import { itemStatRows } from '../data/rebirth-items.js';
 import { ITEMS, canEquip, sellPrice, INVENTORY_SIZE } from '../data/items.js';
 import { CLASSES } from '../data/classes.js';
@@ -35,8 +36,7 @@ export function equipmentMarkup(game) {
     <div class="equipment-heading"><b>착용 중</b><span>${escapeHtml(char.name)} · ${CLASSES[char.classId].name}</span></div>
     <div class="equipment-grid">${EQUIPMENT_SLOTS.map(slot => {
       const id = char.equipment?.[slot.id], item = ITEMS[id];
-      const currentScore = (item?.atk || 0) + (item?.def || 0);
-      const upgrade = availableInSlot(game, char, slot.id).some(e => ((ITEMS[e.id].atk || 0) + (ITEMS[e.id].def || 0)) > currentScore);
+      const upgrade = availableInSlot(game, char, slot.id).some(e => improvedItem(e.id,char,slot.id));
       const label = `${slot.label}: ${item ? item.name : '미장착'}`;
       return `<button class="equipment-tile ${item ? 'occupied' : 'empty'}" style="grid-row:${slot.row};grid-column:${slot.col}" ${item ? `data-item-hover="${id}"` : ''} data-equipment-slot="${slot.id}" aria-label="${escapeHtml(label)}" ${item ? '' : `title="${escapeHtml(label)}"`}>${item ? itemIcon(id) : emptySlotIcon(slot.shape)}<span class="equipment-slot-label">${slot.label}</span>${upgrade ? '<span class="equipment-upgrade" aria-label="더 좋은 장비 있음">▲</span>' : ''}</button>`;
     }).join('')}</div>

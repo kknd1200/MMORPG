@@ -1,3 +1,5 @@
+import {dismantle,exchangeStones} from '../systems/inventory-tools.js';
+import {promoteRoster} from '../systems/roster.js';
 import {ensureLoadout,setPassive} from '../systems/loadout.js';
 import { isVanguard, formationGoal, vanguardTarget } from './party-formation.js';
 import { startShieldBash, advanceShieldBash, cancelShieldBash } from './shield-bash.js';
@@ -39,11 +41,12 @@ const TARGETED = new Set(['damage', 'aoe_target', 'chain']);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 export class Game {
-  constructor({ canvas, hudRoot, character, onSave, onExit }) {
+  constructor({ canvas, hudRoot, character, onSave, onExit, onPromote }) {
     this.canvas = canvas;
     this.char = hydrateItemInstances(character);
     this.cls = CLASSES[character.classId];
     this.onSave = onSave;
+    this.onPromote=onPromote;
     this.onExit = onExit;
     this.renderer = new Renderer(canvas);
     this.worlds = new Map(); // 한 번 만든 맵은 다시 쓰기 (지형만, 몬스터는 들어갈 때마다 새로)
@@ -1411,6 +1414,19 @@ export class Game {
   }
 
   // ------------------------------------------------------------ items
+  promote(unitId) {
+    const unit=this.unitById(unitId);if(!unit || unit.isLeader || unit.ent.dead || this.player.dead)return;
+    this.save();const updated=promoteRoster(this.char,unit.char.id);this.onSave?.(updated);this.onPromote?.(updated.id);
+  }
+  dismantleItem(index,id,confirmed=false) {
+    const result=dismantle(this.char,index,id,confirmed);
+    if(result.ok){pruneItemInstances(this.char);this.hud.markDirty('inv','hotbar');this.save();}
+    else if(!result.confirm)this.log(result.error,'warn');return result;
+  }
+  exchangeStones(kind) {
+    const r=exchangeStones(this.char,kind);if(r.ok){this.hud.markDirty('inv');this.save();}else this.log(r.error,'warn');
+  }
+
   addItem(id, qty = 1, {randomize=false,individual=false} = {}) {
     const inv=this.char.inventory,it=ITEMS[id];
     if (!it || !Number.isSafeInteger(qty) || qty<=0) return false;

@@ -4,7 +4,7 @@ import {PASSIVES} from '../data/passives.js';
 export const ACTIVE_SLOTS=2,PASSIVE_SLOTS=2;
 const defaults={knight:['power_strike','battle_cry','shield_bash','whirl_slash'],warrior:['ground_smash','crush','berserk','spin_cleave'],elf:['piercing_shot','wind_step','triple_shot','thorn_burst'],mage:['fire_bolt','meditation','frost_nova','ice_lance'],priest:['holy_light','heal','blessing','wrath']};
 export function activeBook(char) {
- const personal=char.isMerc && char.mercSkillBook;
+ const personal=char.mercSkillBook;
  if(Array.isArray(personal))return personal.filter(e=>SKILLS[e.id]?.classId===char.classId).slice(0,4);
  if(!Array.isArray(char.activeSkillBook)) {
   const ids=[...new Set([...(char.skillSlots || []).filter(Boolean).map(e=>e.id),...defaults[char.classId]].filter(id=>SKILLS[id]?.classId===char.classId))].slice(0,4);
