@@ -62,16 +62,25 @@ test('enhanced equipment warning is a separate non-destructive step and cancel l
  h.showDismantle(id);h.dismantleAction(false);h.closeItem=()=>{h.itemContext=null;};h.dismantleAction(true);assert.equal(char.inventory[0].id,'weapon_dismantle_stone');
 });
 
-test('pinned comparison survives pointer departure, another hover and refresh; old HUD listeners are removed',()=>{
+test('hover comparison follows equipment, closes on departure and cleans up old HUD listeners',()=>{
  const oldDocument=globalThis.document,oldWindow=globalThis.window;
- const makeTarget=id=>({dataset:{itemHover:id},getAttribute:()=>null,setAttribute(){},removeAttribute(){}});
+ const makeTarget=id=>({dataset:{itemHover:id},getAttribute:()=>null,setAttribute(){},removeAttribute(){},contains(node){return node===this || node?.parent===this;}});
  const listeners=new Map(),root={innerHTML:'',append(){},addEventListener(name,fn){const a=listeners.get(name)||[];a.push(fn);listeners.set(name,a);},removeEventListener(name,fn){listeners.set(name,(listeners.get(name)||[]).filter(x=>x!==fn));},querySelector:s=>s==='.item-overlay'?{addEventListener(){}}:null};
  globalThis.document={createElement:()=>({hidden:true,style:{},setAttribute(){},getBoundingClientRect:()=>({width:310,height:300}),remove(){}})};globalThis.window={innerWidth:1000,innerHeight:800};
  try {
   const unit={char:{name:'Hero',classId:'knight',equipment:{weapon:'training_sword'}}},g={selUnit:()=>unit};
   const t=new ItemTooltip(root,g),a=makeTarget('long_sword'),b=makeTarget('steel_blade');t.show(a,10,10);const html=t.el.innerHTML;
-  assert.equal(listeners.has('pointerout'),false);assert.equal(listeners.has('focusout'),false);t.show(b,50,50);assert.equal(t.target,a);assert.equal(t.el.innerHTML,html);t.refresh();assert.equal(t.el.hidden,false);
-  t.hide();t.show(b,50,50);assert.equal(t.target,b);t.destroy();assert.ok([...listeners.values()].every(a=>a.length===0));
+  const fire=(name,event={})=>{for(const fn of listeners.get(name)||[])fn(event);};
+  const child={parent:a};fire('pointerout',{relatedTarget:child});assert.equal(t.el.hidden,false);
+  fire('pointerout',{relatedTarget:null});assert.equal(t.target,null);assert.equal(t.el.hidden,true);
+  t.show(a,10,10);t.show(b,50,50);assert.equal(t.target,b);assert.notEqual(t.el.innerHTML,html);t.refresh();assert.equal(t.el.hidden,false);
+  fire('pointerleave');assert.equal(t.el.hidden,true);
+  t.show(a,10,10,true);fire('focusout',{relatedTarget:child});assert.equal(t.el.hidden,false);fire('focusout',{relatedTarget:b});assert.equal(t.el.hidden,true);
+  t.show(a,10,10);fire('pointermove',{target:{closest:()=>null},clientX:90,clientY:90});assert.equal(t.el.hidden,true);
+  t.show(a,10,10);fire('scroll');assert.equal(t.el.hidden,true);
+  a.isConnected=false;root.contains=node=>node===b;document.elementFromPoint=()=>({closest:()=>b});t.show(a,10,10);t.refresh();assert.equal(t.target,b);
+  b.isConnected=false;document.elementFromPoint=()=>null;t.refresh();assert.equal(t.el.hidden,true);
+  t.destroy();assert.ok([...listeners.values()].every(a=>a.length===0));
   const h=Object.create(Hud.prototype);h.root=root;h.game=g;h.bindPanelEvents();assert.ok([...listeners.values()].some(a=>a.length));h.destroy();assert.ok([...listeners.values()].every(a=>a.length===0));
  } finally {globalThis.document=oldDocument;globalThis.window=oldWindow;}
 });

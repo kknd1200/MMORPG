@@ -466,7 +466,6 @@ export class Hud {
   }
 
   renderPanel(name) {
-    this.itemTooltip?.refresh();
     const body = this.panels[name].querySelector('.body');
     if (name === 'char') body.innerHTML = this.charHtml();
     else if (name === 'inv') body.innerHTML = this.invHtml();
@@ -475,6 +474,7 @@ export class Hud {
     else if (name === 'party') body.innerHTML = this.partyHtml();
     else if (name === 'atlas') body.innerHTML = worldMapMarkup(this.game.world.id, this.atlasSelection);
     paintAvatars(body);
+    this.itemTooltip?.refresh();
   }
 
   // ------------------------------------------------------------ 파티

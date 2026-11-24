@@ -36,24 +36,35 @@ export class ItemTooltip {
     this.handlers=[];
     const listen=(...args)=>{root.addEventListener(...args);this.handlers.push(args);};
     listen('pointerover', e => this.show(e.target.closest('[data-item-hover]'), e.clientX, e.clientY));
+    listen('pointermove', e => {
+      if(this.target && !this.keyboard)this.show(e.target.closest('[data-item-hover]'),e.clientX,e.clientY);
+    });
+    listen('pointerout', e => {
+      if(this.target && !this.target.contains(e.relatedTarget))this.hide();
+    });
+    listen('pointerleave', () => this.hide());
     listen('focusin', e => {
       const target = e.target.closest('[data-item-hover]');
       if (!target) return;
       const box = target.getBoundingClientRect();
       this.show(target,box.right,box.top,true);
     });
+    listen('focusout', e => {
+      if(this.keyboard && this.target && !this.target.contains(e.relatedTarget))this.hide();
+    });
+    listen('scroll', () => this.hide(),true);
     listen('dragstart', () => this.hide(),true);
   }
   show(target, x, y, keyboard = false) {
-    if (!target || this.blocked()) return;
-    if(this.target && this.target.dataset.itemHover!==target.dataset.itemHover)return;
+    if (!target || this.blocked()) {this.hide();return;}
     if (target !== this.target) {
       this.hide(); this.target = target;
       this.oldDescription = target.getAttribute('aria-describedby');
       target.setAttribute('aria-describedby',this.el.id);
       this.el.innerHTML = itemTooltipMarkup(this.game,target.dataset.itemHover);
     }
-    this.keyboard = keyboard; this.el.hidden = false; this.position(x,y);
+    this.keyboard = keyboard;this.pointerX=x;this.pointerY=y;
+    this.el.hidden = false; this.position(x,y);
   }
   destroy() {
     this.hide();
@@ -61,6 +72,11 @@ export class ItemTooltip {
     this.el.remove();
   }
   refresh() {
+    if(this.target?.isConnected===false){
+      const target=this.keyboard?document.activeElement?.closest('[data-item-hover]'):document.elementFromPoint(this.pointerX,this.pointerY)?.closest('[data-item-hover]');
+      if(!target || !this.root.contains(target)){this.hide();return;}
+      this.show(target,this.pointerX,this.pointerY,this.keyboard);
+    }
     const id=this.target?.dataset.itemHover;
     if(id && ITEMS[id])this.el.innerHTML=itemTooltipMarkup(this.game,id);
     else if(id)this.hide();
