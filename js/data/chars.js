@@ -1,3 +1,4 @@
+import { SHIELD_BASH_MOTION } from './skill-motions.js';
 // 8방향 도트 캐릭터 (assets/chars/<이름>/) — 사용자 제공 「Dynamic 8Directions」 팩 5종에서 옮김
 //   idle.webp   : 대기 8방향 (160px 칸 8개, 가로)
 //   normal.webp : 일반공격 8방향 × 8프레임 (행 = 방향, 열 = 시간)
@@ -506,6 +507,8 @@ export const CHARS = {
  }
 };
 
+for (const key of ['knight','knight_female']) CHARS[key].actions.shield_bash=SHIELD_BASH_MOTION;
+
 /** 화면 방향 벡터 → 방향 번호 (0~7) */
 export function dirIndex(f) {
   if (!f || (!f.x && !f.y)) return 0;
@@ -533,6 +536,6 @@ export function frameAt(key, action, t) {
   const a = CHARS[key]?.actions[action];
   if (!a) return 0;
   let s = 0;
-  for (let i = 0; i < a.durations.length; i++) { s += a.durations[i] / 1000; if (t < s) return i; }
-  return a.durations.length - 1;
+  for (let i = 0; i < a.durations.length; i++) { s += a.durations[i] / 1000; if (t < s) return a.frames?.[i] ?? i; }
+  return a.frames?.at(-1) ?? a.durations.length - 1;
 }

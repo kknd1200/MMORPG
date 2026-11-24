@@ -28,8 +28,8 @@ export function preloadHeroActions(state) {
 export function drawHeroSheet(ctx, x, y, state) {
   const sprite = heroSprite(state);
   if (!sprite) return false; // NPCs continue to use their own appearance.
-  const action = state.cast > 0 ? 'skill' : state.attack > 0 ? 'normal' : null;
-  const progress = action === 'skill' ? state.cast : state.attack;
+  const action = state.cast > 0 ? state.castAction || 'skill' : state.attack > 0 ? 'normal' : null;
+  const progress = state.cast > 0 ? state.cast : state.attack;
   const act = action ? { name: action, t: (1 - Math.max(0, Math.min(1, progress))) * actionDur(sprite, action) } : null;
   // A loading image must never turn an approved character back into a primitive.
   drawChar(ctx, x, y, { ...state, sprite, act });

@@ -37,9 +37,9 @@ export const SKILLS = {
   shield_bash: {
     id: 'shield_bash', classId: 'knight', name: '방패 강타', level: 15,
     kind: 'damage', element: 'physical', stat: 'str', coef: 0.2, slow: 3,
-    mp: 8, cooldown: 5, range: null, color: '#9ad8ff',
+    mp: 8, cooldown: 5, range: 1.3, pullRadius: 3, color: '#9ad8ff',
     fx: { sheet: 'knight_a1', at: 'target', scale: 1.2, z: 26, impactFrame: 4 },
-    desc: '방패로 후려쳐 3초 동안 대상을 느리게 합니다.',
+    desc: '방패를 앞세워 돌진한 뒤 주변 3칸의 몬스터를 끌어옵니다. 대상은 3초 동안 느려집니다. 벽·나무 너머의 몬스터는 끌어오지 못합니다.',
   },
   whirl_slash: {
     id: 'whirl_slash', classId: 'knight', name: '회오리 베기', level: 20,

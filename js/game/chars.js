@@ -1,3 +1,4 @@
+import { shieldBashPose } from '../data/skill-motions.js';
 // 8방향 도트 캐릭터 그리기 (assets/chars, 데이터는 js/data/chars.js)
 //
 // - 대기: 바라보는 방향의 대기 그림 1장
@@ -26,7 +27,8 @@ export function drawChar(ctx, x, y, s) {
   const act = s.act && !s.dead ? s.act : null;
   const walking = !act && !s.dead && s.moving;
   const name = act ? act.name : walking ? 'walk' : 'idle';
-  const sheet = img(`chars/${key}/${name}.webp`) || img(`chars/${key}/idle.webp`);
+  const source=CHARS[key].actions[name]?.source || name;
+  const sheet = img(`chars/${key}/${source}.webp`) || img(`chars/${key}/idle.webp`);
   if (!sheet) return false;
   const full = sheet.height > CHAR_CELL; // 8방향 × 8프레임 시트가 불러와졌는지 (아니면 대기 그림)
   const TAU = Math.PI * 2;
@@ -38,6 +40,11 @@ export function drawChar(ctx, x, y, s) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.imageSmoothingEnabled = false;
+  if (act?.name==='shield_bash') {
+    const pose=shieldBashPose(act.t),angle=CHAR_ANGLES[dir];
+    ctx.translate(Math.cos(angle)*pose.lunge,Math.sin(angle)*pose.lunge*.45);
+    ctx.rotate(-Math.cos(angle)*pose.lean);ctx.scale(1,pose.squash);
+  }
   if (s.dead) {
     ctx.globalAlpha *= 0.7;
     ctx.translate(0, -6);

@@ -1,8 +1,7 @@
+import { startShieldBash, advanceShieldBash, cancelShieldBash } from './shield-bash.js';
 import { createEquipmentInstance, hydrateItemInstances, isEquipment, pruneItemInstances } from '../systems/item-instances.js';
 import { enhanceEquipment } from '../systems/enhancement.js';
 import { EQUIPMENT_SLOTS, equipmentSlot, slotAccepts, comparisonSlot } from '../data/equipment.js';
-import { heroSprite } from './hero-sheets.js';
-import { actionDur, hitTimes } from '../data/chars.js';
 import { advanceGait, monsterStride } from './locomotion.js';
 import { QUADRUPED_ATTACK_SECONDS, QUADRUPED_SKILL_SECONDS, QUADRUPED_IMPACT } from './quadruped-motion.js';
 // 인게임 루프: 이동 / 전투 / 스킬 / 아이템 / 입력
@@ -325,7 +324,7 @@ export class Game {
   leaderAI(dt) {
     const p = this.player, L = this.leader;
     L.gcd -= dt;
-    if (p.dead || this.userMoving() || p.action?.type === 'talk' || p.action?.type === 'skill') return;
+    if (p.shieldBash || p.dead || this.userMoving() || p.action?.type === 'talk' || p.action?.type === 'skill') return;
     if (!p.action) {
       let t = this.pickTarget(L, null);
       if (!t && this.autoMode !== 'manual') t = this.roamTarget();
@@ -347,7 +346,7 @@ export class Game {
     e.castAnim = Math.max(0, (e.castAnim || 0) - dt);
     e.moving = false;
     u.gcd -= dt;
-    if (e.dead) return;
+    if (e.dead || e.shieldBash) return;
     const cls = this.clsOf(u);
     const dl = dist(e, p);
     if (dl > 25 || (dl > 10 && e.stuck > 2)) {
@@ -504,6 +503,7 @@ export class Game {
 
     this.updatePlayer(dt);
     this.updateParty(dt);
+    for (const unit of this.units()) advanceShieldBash(this,unit);
     this.checkPortal();
     if (this.pendingTravel) return;
     if (this.pending.length) {
@@ -602,6 +602,7 @@ export class Game {
       return;
     }
 
+    if (p.shieldBash) return;
     if (this.mouse.left && this.mouse.mode === 'move') {
       p.moveTarget = { x: this.mouse.wx, y: this.mouse.wy };
       p.action = null;
@@ -737,6 +738,7 @@ export class Game {
 
   // 대상을 정하는 스킬: 단일 · 대상 주변 범위 · 연쇄
   castTargetSkill(sk, m, u = this.leader) {
+    if (sk.id==='shield_bash') return startShieldBash(this,sk,m,u);
     if (!this.hasAttackLine(u.ent, m)) return;
     const ch = u.char, p = u.ent;
     this.spend(sk, u);
@@ -744,16 +746,9 @@ export class Game {
     const stat = ch.stats[sk.stat];
     const atk = this.derived(u).attack;
     p.attackAnim = 0;
-    const shieldBash = sk.id === 'shield_bash';
-    const sprite = heroSprite(ch);
-    p.castAnimDuration = shieldBash ? actionDur(sprite, 'skill') || 0.695 : 0.4;
-    p.castAnim = p.castAnimDuration;
-    if (shieldBash) {
-      // 방패 강타의 준비·충돌·회수 프레임이 일반공격에 덮이지 않게 한다.
-      p.attackAnim = 0;
-      p.attackTimer = Math.max(p.attackTimer || 0, p.castAnimDuration);
-      p.skillMotionUntil = this.time + p.castAnimDuration;
-    }
+    p.castAction=null;
+    p.castAnimDuration=.4;
+    p.castAnim=p.castAnimDuration;
     this.floatText(p, sk.name, sk.color, 13);
     if (sk.dash) {
       // 돌진: 대상 바로 앞까지 순식간에 이동
@@ -764,9 +759,7 @@ export class Game {
         p.x = tx; p.y = ty; this.clearPath(p);
       }
     }
-    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj) : shieldBash ? hitTimes(sprite, 'skill').at(-1) ?? 0.335 : 0.06;
-    // 이펙트의 준비 입자 다음에 나오는 방패 충돌 프레임을 몸의 타격 시점과 맞춘다.
-    const effectDelay = shieldBash ? Math.max(0, delay - (sk.fx.impactFrame / 16) * (sk.fx.life || 0.6)) : delay;
+    let delay = sk.proj ? this.addProjectile(p, m, 'sheet', sk.color, sk.proj) : .06;
     let targets = [m];
     if (sk.kind === 'aoe_target') {
       targets = this.monsters.filter((o) => !o.dead && dist(o, m) <= sk.radius + o.radius && this.hasAttackLine(m, o));
@@ -795,7 +788,7 @@ export class Game {
         dl = delay + k * 0.12;
         this.addProjectile(targets[k - 1], t, 'sheet', sk.color, sk.proj, dl - 0.12);
       }
-      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, shieldBash ? effectDelay : dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip, origin);
+      if (sk.kind !== 'aoe_target') this.fx(sk.fx, t, dl, k > 0 ? this.leftOf(targets[k - 1], t) : flip, origin);
       for (let i = 0; i < (sk.hits || 1) && !t.dead; i++) {
         if (sk.hits > 1 && i > 0 && sk.proj) this.addProjectile(p, t, 'sheet', sk.color, sk.proj, i * 0.12);
         this.skillHit(sk, t, stat, atk, i, dl, u, origin);
@@ -807,7 +800,7 @@ export class Game {
   // flip: 이펙트 그림은 오른쪽을 향해 그려져 있음 → 화면 왼쪽을 향하면 좌우 반전
   fx(spec, at, delay = 0, flip = false, attackOrigin = null) {
     if (!spec?.sheet) return;
-    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip, attackOrigin });
+    this.effects.push({ type: 'sheet', key: spec.sheet, x: at.x, y: at.y, z: spec.z ?? 24, scale: spec.scale || 1, t: -delay, life: spec.life || 0.6, follow: at, flip, attackOrigin, startFrame:spec.startFrame, reverse:spec.reverse });
   }
 
   // a 에서 b 가 화면 왼쪽인지 (아이소메트릭: 화면 x = 월드 x − y)
@@ -1061,7 +1054,7 @@ export class Game {
       const ox = m.x, oy = m.y;
       const tu = this.monsterTarget(m, m.state === 'idle' ? (m.isBoss ? 7 : 5) : 14);
       const te = tu?.ent || p;
-      this.monsterBrain(m, def, te, tu ? dist(m, te) : 999, playerSafe || !tu, dt, tu);
+      if (!m.forcedPull) this.monsterBrain(m, def, te, tu ? dist(m, te) : 999, playerSafe || !tu, dt, tu);
       m.moving = Math.hypot(m.x - ox, m.y - oy) > 1e-4;
       // 독 같은 지속 피해
       if (m.dot && this.time >= m.dot.next) {
@@ -1156,6 +1149,7 @@ export class Game {
   }
 
   monsterAttackImpact(m, def, u) {
+    if (m.forcedPull) return;
     const e = u.ent;
     if (def.projectile) {
       this.addProjectile(m, e, def.projectile, def.projectile === 'bolt' ? def.color : '#d8c8a0');
@@ -1167,6 +1161,7 @@ export class Game {
 
   // 몬스터 한 번의 타격: 명중 판정 → 피해. 맞으면 true
   monsterHit(m, def, mult, delay = 0, u = this.leader) {
+    if (m.forcedPull) return false;
     if (!this.hasAttackLine(m, u.ent)) return false;
     const ch = u.char;
     const d = this.derived(u);
@@ -1194,7 +1189,7 @@ export class Game {
     const color = EFFECT_COLOR[sk.effect] || def.color;
     this.floatText(m, sk.name, color, 13);
     const impact = () => {
-      if (m.dead || p.dead || !this.hasAttackLine(m, p)) return;
+      if (m.dead || m.forcedPull || p.dead || !this.hasAttackLine(m, p)) return;
       if (def.projectile) this.addProjectile(m, p, def.projectile, color);
       this.fx(STATUS_FX[sk.effect] || { sheet: 'warrior_a1', scale: 0.8, z: 24 }, p, def.projectile ? 0.25 : 0.12);
       let landed = false;
@@ -1623,6 +1618,7 @@ export class Game {
   }
 
   enterMap(world, pos, first = false) {
+    for (const unit of this.units()) cancelShieldBash(unit);
     this.pendingTravel = null;
     this.dismissedPortal = null;
     this.hud?.closeTravelPrompt();
@@ -1678,7 +1674,7 @@ export class Game {
   checkPortal() {
     const p = this.player, portal = this.portalUnderPlayer();
     if (this.dismissedPortal && portal !== this.dismissedPortal) this.dismissedPortal = null;
-    if (!portal || p.dead || this.time < this.portalReadyAt || this.pendingTravel || portal === this.dismissedPortal) return;
+    if (!portal || p.shieldBash || p.dead || this.time < this.portalReadyAt || this.pendingTravel || portal === this.dismissedPortal) return;
     const destination = MAPS[portal.to.map];
     if (this.world.type !== 'dungeon' && destination?.type !== 'dungeon') {
       this.changeMap(portal.to.map, portal.to.spot);

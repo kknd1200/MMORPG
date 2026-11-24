@@ -294,6 +294,7 @@ export class Renderer {
       walk: p.walkPhase,
       moving: p.moving, motion: p.walkWeight,
       attack: (p.attackAnim || 0) / 0.3,
+      castAction:p.castAction,
       cast: (p.castAnim || 0) / (p.castAnimDuration || 0.4),
       weaponColor: weapon?.icon?.color,
       armorId: ch.equipment?.armor,
@@ -313,7 +314,7 @@ export class Renderer {
     drawHumanoid(ctx, sx, sy, {
       classId: ch.classId, gender: ch.gender, look: LOOKS[ch.classId] || LOOKS.knight,
       facing: screenDir(e.visualFacing || e.facing), walk: e.walkPhase, moving: e.moving, motion: e.walkWeight,
-      attack: (e.attackAnim || 0) / 0.3, cast: (e.castAnim || 0) / (e.castAnimDuration || 0.4),
+      attack: (e.attackAnim || 0) / 0.3, castAction:e.castAction, cast: (e.castAnim || 0) / (e.castAnimDuration || 0.4),
       weaponColor: ITEMS[ch.equipment?.weapon]?.icon?.color, armorId: ch.equipment?.armor,
       hurt: !e.dead && hurtT < 0.15 ? 1 - hurtT / 0.15 : 0, dead: e.dead, time: game.time,
     });
@@ -427,7 +428,8 @@ export class Renderer {
         if (fx.t < 0) continue;
         const im = img(fxSheet(fx.key));
         if (!im) continue;
-        const f = Math.min(FX.frames - 1, Math.floor(k * FX.frames));
+        const first=fx.startFrame || 0,span=FX.frames-first;
+        const f=fx.reverse ? FX.frames-1-Math.min(span-1,Math.floor(k*span)) : first+Math.min(span-1,Math.floor(k*span));
         const at = fx.follow || fx;
         const x = this.px(at.x, at.y), y = this.py(at.x, at.y) - fx.z;
         const size = FX.cell * fx.scale;
@@ -472,8 +474,15 @@ export class Renderer {
       } else if (fx.type === 'ring') {
         ctx.globalAlpha = 1 - k;
         ctx.strokeStyle = fx.color; ctx.lineWidth = 3;
-        const r = fx.r * (0.3 + 0.7 * k);
+        const r = fx.r * (fx.inward ? 1-.85*k : .3+.7*k);
         ctx.beginPath(); ctx.ellipse(this.px(fx.x, fx.y), this.py(fx.x, fx.y), r * ISO_RX, r * ISO_RY, 0, 0, TAU); ctx.stroke();
+        if(fx.inward) {
+          for(let n=0;n<8;n++) {
+            const a=n*TAU/8+k*.35,outer=r+.25;
+            ctx.beginPath();ctx.moveTo(this.px(fx.x,fx.y)+Math.cos(a)*outer*ISO_RX,this.py(fx.x,fx.y)+Math.sin(a)*outer*ISO_RY);
+            ctx.lineTo(this.px(fx.x,fx.y)+Math.cos(a)*r*ISO_RX,this.py(fx.x,fx.y)+Math.sin(a)*r*ISO_RY);ctx.stroke();
+          }
+        }
       } else if (fx.type === 'slash') {
         ctx.globalAlpha = 1 - k;
         ctx.strokeStyle = fx.color; ctx.lineWidth = 3;
