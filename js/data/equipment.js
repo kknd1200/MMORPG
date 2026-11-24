@@ -25,10 +25,40 @@ export function equipmentTotals(char) {
   const total = { atk: 0, def: 0 };
   for (const slot of EQUIPMENT_SLOTS) {
     const item = ITEMS[char.equipment?.[slot.id]];
-    if (item && equipmentSlot(char.equipment[slot.id]) === slot.id) {
+    if (item && slotAccepts(slot.id, char.equipment[slot.id])) {
       total.atk += item.atk || 0;
       total.def += item.def || 0;
     }
   }
   return total;
+}
+
+export function slotAccepts(slot, id) {
+  const target=equipmentSlot(id);
+  return target===slot || target==='ring1' && slot==='ring2';
+}
+export function comparisonSlot(id, char, preferred=null) {
+  if (preferred && slotAccepts(preferred,id)) return preferred;
+  const slot=equipmentSlot(id);
+  if (slot==='ring1') {
+    if (!char.equipment?.ring1) return 'ring1';
+    if (!char.equipment?.ring2) return 'ring2';
+  }
+  return slot;
+}
+export function equipmentBonuses(char) {
+  const result={}, sets=new Map();
+  const add=values=>{for (const [key,value] of Object.entries(values || {})) {
+    if (!['hpFlat','atkSpd','thorns','venom'].includes(key) && !key.startsWith('sp_')) result[key]=(result[key] || 0)+value;
+  }};
+  for (const [slot,id] of Object.entries(char.equipment || {})) {
+    if (!slotAccepts(slot,id)) continue;
+    const item=ITEMS[id];add(item.bonuses);
+    if (item.source?.set != null) {
+      const key=item.source.set, group=sets.get(key) || {count:0,bonuses:item.source.setBonuses};
+      group.count++;sets.set(key,group);
+    }
+  }
+  for (const group of sets.values()) for (const [count,bonus] of Object.entries(group.bonuses)) if (group.count>=+count) add(bonus);
+  return result;
 }

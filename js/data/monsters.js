@@ -1,3 +1,4 @@
+import { rebirthDrops } from './rebirth-items.js';
 // 몬스터 · 사냥터 정의
 //
 // 몬스터 원본(이름 · 등급 · 공격방식 · 스킬 · 패시브 · 그림)은 rebirth-roster.js (「환생 루프」 300종)
@@ -123,7 +124,7 @@ function buildMonster(src, level, rankId) {
     size: Math.max(0.3, src.scale) * rank.size,
     color: src.color,
     art: src.art,
-    drops: dropsFor(level, rankId, src.style),
+    drops: [...dropsFor(level, rankId, src.style), ...rebirthDrops(level, rankId)],
   };
 }
 

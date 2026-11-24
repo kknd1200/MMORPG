@@ -1,3 +1,4 @@
+import { equipmentTotals, equipmentBonuses } from '../data/equipment.js';
 // 캐릭터 성장 / 전투 공식 (DOM 의존성 없음 → node 테스트 가능)
 import {
   CLASSES, STAT_KEYS, STAT_NAMES, CREATION, STAT_CAP, MAX_LEVEL,
@@ -201,9 +202,9 @@ export function levelDefense(char) {
 export function attackBreakdown(char, buffs = []) {
   const base = CLASSES[char.classId].baseAttack;
   const level = levelAttack(char);
-  const weapon = ITEMS[char.equipment?.weapon]?.atk || 0;
+  const weapon = equipmentTotals(char).atk;
   const buff = sumBuffs(buffs, 'atk');
-  return { base, level, weapon, buff, total: base + level + weapon + buff };
+  return { base, level, weapon, buff, total: (base + level + weapon + buff) * (1 + Math.min(2,itemModifiers(char,buffs).atkPct || 0)) };
 }
 
 export function attackPower(char, buffs = []) {
@@ -212,7 +213,7 @@ export function attackPower(char, buffs = []) {
 
 // 방어력 = 체력/3 + 레벨 보너스 + 방어구 + 버프
 export function defense(char, buffs = []) {
-  const armor = ITEMS[char.equipment?.armor]?.def || 0;
+  const armor = equipmentTotals(char).def;
   return Math.floor(char.stats.con / 3) + levelDefense(char) + armor + sumBuffs(buffs, 'def');
 }
 
@@ -277,4 +278,18 @@ export function derivedStats(char, buffs = []) {
     speed: moveSpeed(buffs),
     conHpBonus: conHpBonus(char.stats.con),
   };
+}
+
+export function itemModifiers(char, buffs=[]) {
+  const values=equipmentBonuses(char);
+  for (const buff of buffs) for (const key of ['atkPct','drPct','accPct','cdr','critRate','critDmg','regen','lifesteal','expPct','goldPct','block','skillDmg','double','execute','bossDmg']) values[key]=(values[key] || 0)+(buff[key] || 0);
+  return values;
+}
+export function itemDamage(raw, char, buffs, target, rng=Math.random) {
+  const b=itemModifiers(char,buffs);
+  if (rng()<Math.min(.5,b.critRate || 0)) raw*=1.5+(b.critDmg || 0);
+  if (rng()<Math.min(.5,b.double || 0)) raw*=2;
+  if (target.isBoss) raw*=1+(b.bossDmg || 0);
+  if (target.hp<target.maxHp*.3) raw*=1+(b.execute || 0);
+  return Math.max(1,Math.round(raw));
 }

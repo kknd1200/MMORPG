@@ -1,3 +1,4 @@
+import { EQUIPMENT_SLOTS, equipmentSlot, slotAccepts, comparisonSlot } from '../data/equipment.js';
 import { heroSprite } from './hero-sheets.js';
 import { actionDur, hitTimes } from '../data/chars.js';
 import { advanceGait, monsterStride } from './locomotion.js';
@@ -197,11 +198,10 @@ export class Game {
   dismissMerc(id) {
     const u = this.party.find((x) => x.id === id);
     if (!u) return;
-    // 장비는 인벤토리로 돌려받음
-    for (const slot of ['weapon', 'armor']) {
-      const it = u.char.equipment[slot];
-      if (it && !it.startsWith('training_') && it !== 'cloth_armor') this.addItem(it);
-    }
+    // Check capacity before returning every slot, so dismissal cannot lose equipment.
+    const gear=EQUIPMENT_SLOTS.map(slot=>u.char.equipment[slot.id]).filter(id=>id && !id.startsWith('training_') && id!=='cloth_armor');
+    if (this.char.inventory.length+gear.length>INVENTORY_SIZE) { this.log('용병 장비를 돌려받을 가방 공간이 부족합니다.','warn'); return; }
+    for (const id of gear) this.addItem(id);
     this.party = this.party.filter((x) => x !== u);
     this.char.party = this.char.party.filter((c) => c !== u.char);
     if (this.selectedId === u.id) this.selectedId = 'player';
@@ -660,7 +660,7 @@ export class Game {
     if (!this.hasAttackLine(u.ent, m)) return;
     const ch = u.char, e = u.ent;
     const stat = ch.stats[this.clsOf(u).primaryStat];
-    const hit = Math.random() < S.physicalHitChance(stat, ch.level, m);
+    const hit = Math.random() < Math.min(.98,S.physicalHitChance(stat, ch.level, m)+(S.itemModifiers(ch,u.buffs).accPct || 0));
     e.attackAnim = 0.3;
     this.face(e, m);
     const bfx = BASIC_FX[ch.classId] || BASIC_FX.knight;
@@ -724,7 +724,7 @@ export class Game {
 
   spend(sk, u = this.leader) {
     u.char.mp -= sk.mp;
-    u.cooldowns[sk.id] = this.time + sk.cooldown;
+    u.cooldowns[sk.id] = this.time + sk.cooldown * (1 - Math.min(.5,S.itemModifiers(u.char,u.buffs).cdr || 0));
     // 성공한 시전만 동작 시간을 차지한다. 시전 중 일반공격이 끼어들지 않게 한다.
     u.ent.castAnimDuration = 0.4;
     u.ent.castAnim = 0.4;
@@ -817,9 +817,9 @@ export class Game {
     if (!this.hasAttackLine(origin, m)) return;
     const ch = u.char;
     const magic = sk.element === 'magic';
-    const chance = magic ? S.magicHitChance(stat, ch.level, m) : S.physicalHitChance(stat, ch.level, m);
-    if (Math.random() >= chance) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
-    const raw = S.skillDamage(stat, atk, sk.coef);
+    const chance = magic ? S.magicHitChance(stat, ch.level, m) : Math.min(.98,S.physicalHitChance(stat, ch.level, m)+(S.itemModifiers(ch,u.buffs).accPct || 0));
+    if (Math.random() >= Math.min(.98,chance+(S.itemModifiers(ch,u.buffs).accPct || 0))) { this.floatText(m, 'MISS', '#bbbbbb', 15, delay + i * 0.12); this.aggro(m, u); return; }
+    const raw = S.skillDamage(stat, atk, sk.coef) * (1+(S.itemModifiers(ch,u.buffs).skillDmg || 0));
     const dmg = magic ? S.magicMitigate(raw, m.mr) : S.physicalMitigate(raw, m.armor);
     if (sk.slow) m.slowUntil = this.time + sk.slow;
     if (sk.dot) m.dot = { dmg: Math.max(1, Math.round(stat * atk * sk.dot)), until: this.time + sk.dotTime, next: this.time + 1, color: sk.color };
@@ -1234,6 +1234,9 @@ export class Game {
   hurtUnit(u, dmg, def, delay = 0, color = '#ff5050') {
     const ch = u.char, e = u.ent;
     if (e.dead) return;
+    const mods=S.itemModifiers(ch,u.buffs);
+    dmg=Math.max(1,Math.round(dmg*(1-Math.min(.75,mods.drPct || 0))));
+    if (Math.random()<Math.min(.5,mods.block || 0)) dmg=Math.max(1,Math.round(dmg*.5));
     ch.hp -= dmg;
     e.lastHurt = this.time;
     this.floatText(e, `-${dmg}`, u.isLeader ? color : '#ff9a7a', u.isLeader ? 15 : 13, delay);
@@ -1274,6 +1277,11 @@ export class Game {
     }
     const hide = passive(MONSTERS[m.type], 'hide');
     if (hide) dmg = Math.max(1, Math.round(dmg * (1 - hide)));
+    if (u) {
+      dmg=S.itemDamage(dmg,u.char,u.buffs,m);
+      const drain=S.itemModifiers(u.char,u.buffs).lifesteal || 0;
+      if (drain && !u.ent.dead) u.char.hp=Math.min(u.char.maxHp,u.char.hp+Math.floor(Math.min(m.hp,dmg)*drain));
+    }
     m.hp -= dmg;
     m.hurtFlash = 0.12;
     this.floatText(m, `${dmg}`, color, 16, delay);
@@ -1300,7 +1308,7 @@ export class Game {
       }
       this.effects.push({ type: 'ring', x: m.x, y: m.y, r: 2.5, t: 0, life: 1, color: '#ffd24a' });
     }
-    const gold = S.randInt(def.gold[0], def.gold[1]);
+    const gold = Math.round(S.randInt(def.gold[0], def.gold[1])*(1+(S.itemModifiers(ch,this.leader.buffs).goldPct || 0)));
     ch.gold += gold;
     // 경험치는 근처(20칸)에 살아 있는 파티원끼리 나눔
     const sharers = this.aliveUnits().filter((u) => dist(u.ent, m) < 20);
@@ -1308,7 +1316,7 @@ export class Game {
     const each = shareExp(def.exp, sharers.length);
     let ups = [];
     for (const u of sharers) {
-      const r = S.gainExp(u.char, each);
+      const r = S.gainExp(u.char, Math.round(each*(1+(S.itemModifiers(u.char,u.buffs).expPct || 0))));
       if (u.isLeader) ups = r;
       else for (const lv of r) this.onMercLevelUp(u, lv);
     }
@@ -1383,6 +1391,7 @@ export class Game {
       }
       if (!inTown && this.time - e.lastHurt < 6) continue;
       const r = S.regenAmounts(ch);
+      r.hp += Math.floor(ch.maxHp*(S.itemModifiers(ch,u.buffs).regen || 0));
       const mult = inTown ? 3 : 1;
       ch.hp = Math.min(ch.maxHp, ch.hp + r.hp * mult);
       ch.mp = Math.min(ch.maxMp, ch.mp + r.mp * mult);
@@ -1391,17 +1400,15 @@ export class Game {
 
   // ------------------------------------------------------------ items
   addItem(id, qty = 1) {
-    const inv = this.char.inventory;
-    const it = ITEMS[id];
-    if (it.type === 'consumable') {
-      const e = inv.find((x) => x.id === id);
-      if (e) { e.qty += qty; this.hud.markDirty('inv'); return true; }
-    }
-    if (inv.length >= INVENTORY_SIZE) { this.log('인벤토리가 가득 찼습니다.', 'warn'); return false; }
-    if (it.type === 'consumable') inv.push({ id, qty });
-    else for (let i = 0; i < qty; i++) inv.push({ id, qty: 1 });
-    this.hud.markDirty('inv');
-    return true;
+    const inv=this.char.inventory,it=ITEMS[id];
+    if (!it || !Number.isSafeInteger(qty) || qty<=0) return false;
+    const stackable=it.stackable || it.type==='consumable';
+    const stack=stackable && inv.find(e=>e.id===id);
+    if (stack) { stack.qty+=qty; this.hud.markDirty('inv'); return true; }
+    if (inv.length+(stackable?1:qty)>INVENTORY_SIZE) { this.log('인벤토리가 가득 찼습니다.','warn'); return false; }
+    if (stackable) inv.push({id,qty});
+    else for (let i=0;i<qty;i++) inv.push({id,qty:1});
+    this.hud.markDirty('inv'); return true;
   }
 
   removeItemAt(idx, qty = 1) {
@@ -1425,7 +1432,10 @@ export class Game {
     if (this.player.dead) return;
     if (it.type === 'weapon' || it.type === 'armor') { this.equip(idx); return; }
     if (this.time < this.itemReadyAt) return;
+    if (it.type==='chest') { this.openChest(id,idx); return; }
+    if (!it.effect) { this.log('보관·판매용 아이템입니다. 현재 사용할 수 없습니다.','warn'); return; }
     const eff = it.effect;
+    if (eff.cleanse) this.leader.buffs=this.leader.buffs.filter(b=>!String(b.id).startsWith('st_'));
     if (eff.hp && ch.hp >= ch.maxHp) { this.log('이미 HP가 가득 찼습니다.', 'warn'); return; }
     if (eff.mp && ch.mp >= ch.maxMp) { this.log('이미 MP가 가득 찼습니다.', 'warn'); return; }
     // 물약: 고정량 + 최대치 비율 (고레벨에서도 쓸모 있게)
@@ -1450,21 +1460,37 @@ export class Game {
   }
 
   // 장비는 내 인벤토리에서, 지금 고른 파티원에게 장착
-  equip(idx, u = this.selUnit()) {
-    const inv = this.char.inventory;
-    const ch = u.char;
-    const entry = inv[idx];
-    if (!entry) return;
-    const it = ITEMS[entry.id];
-    if (!canEquip(entry.id, ch.classId)) { this.log(`${it.name}은(는) ${CLASSES[ch.classId].name}이(가) 장착할 수 없습니다.`, 'warn'); return; }
-    const slot = it.type;
-    const old = ch.equipment[slot];
-    inv.splice(idx, 1);
-    ch.equipment[slot] = entry.id;
-    if (old) inv.push({ id: old, qty: 1 });
-    this.log(`${u.isLeader ? '' : `[${ch.name}] `}${it.name}을(를) 장착했습니다.`, 'info');
-    this.hud.markDirty('party');
-    this.hud.markDirty('inv', 'char');
+  equip(idx, u = this.selUnit(), requestedSlot=null) {
+    const inv=this.char.inventory,ch=u.char,entry=inv[idx],it=ITEMS[entry?.id];
+    if (!it) return;
+    if (!canEquip(entry.id,ch.classId,ch.level || 1)) { this.log(`${it.name}: 직업 또는 레벨 조건을 만족하지 않습니다.`, 'warn'); return; }
+    const slot=comparisonSlot(entry.id,ch,requestedSlot), slots=new Set([slot]);
+    if (['weapon','ranged'].includes(slot)) {
+      slots.add(slot==='weapon'?'ranged':'weapon');
+      if (it.twoHanded) slots.add('shield');
+    }
+    if (slot==='shield' && [ch.equipment.weapon,ch.equipment.ranged].some(id=>ITEMS[id]?.twoHanded)) { this.log('양손 무기를 해제한 뒤 방패를 장착하세요.','warn'); return; }
+    const returned=[...slots].map(key=>ch.equipment[key]).filter(Boolean);
+    if (inv.length-(entry.qty===1?1:0)+returned.length>INVENTORY_SIZE) { this.log('장비 교체에 필요한 가방 공간이 부족합니다.','warn'); return; }
+    entry.qty--; if (!entry.qty) inv.splice(idx,1);
+    for (const key of slots) ch.equipment[key]=null;
+    for (const id of returned) inv.push({id,qty:1});
+    ch.equipment[slot]=entry.id;
+    this.log(`${ch.name}: ${it.name}을(를) 장착했습니다.`, 'info');
+    this.hud.markDirty('party','inv','char');
+  }
+
+  openChest(id, idx) {
+    const entries=ITEMS[id].contents?.filter(e=>ITEMS[e.id] && e.weight>0) || [];
+    if (!entries.length) { this.log('이 상자에 등록된 내용물이 없습니다.','warn'); return; }
+    let roll=Math.random()*entries.reduce((sum,e)=>sum+e.weight,0);
+    const chosen=entries.find(e=>(roll-=e.weight)<0) || entries.at(-1);
+    const qty=S.randInt(chosen.min,chosen.max), inv=this.char.inventory;
+    const copy=inv.map(e=>({...e}));
+    this.removeItemAt(idx,1);
+    if (!this.addItem(chosen.id,qty)) { this.char.inventory=copy; return; }
+    this.log(`[상자] ${ITEMS[chosen.id].name} ${qty}개 획득`,'rare');
+    this.itemReadyAt=this.time+.4;
   }
 
   unequip(slot, u = this.selUnit()) {
@@ -1482,6 +1508,7 @@ export class Game {
     const it = ITEMS[id];
     const npcKind = this.openNpc?.kind;
     if (!it || !npcKind || !SHOPS[npcKind]?.includes(id)) return;
+    if (!Number.isSafeInteger(qty) || qty<=0) return;
     const cost = it.price * qty;
     if (this.char.gold < cost) { this.log('골드가 부족합니다.', 'warn'); return; }
     if (!this.addItem(id, qty)) return;

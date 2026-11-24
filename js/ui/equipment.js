@@ -1,6 +1,7 @@
+import { itemStatRows } from '../data/rebirth-items.js';
 import { ITEMS, canEquip, sellPrice, INVENTORY_SIZE } from '../data/items.js';
 import { CLASSES } from '../data/classes.js';
-import { EQUIPMENT_SLOTS, equipmentSlot, equipmentTotals } from '../data/equipment.js';
+import { EQUIPMENT_SLOTS, equipmentSlot, equipmentTotals, slotAccepts, comparisonSlot } from '../data/equipment.js';
 import { itemIcon } from './item-icons.js';
 import { avatarMarkup } from './portraits.js';
 export const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -23,7 +24,7 @@ export function emptySlotIcon(shape) {
   return `<svg class="equipment-empty-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="${paths[shape] || paths.armor}"/></svg>`;
 }
 export function availableInSlot(game, char, slot) {
-  return game.char.inventory.filter(e => slot === 'consumable' ? ITEMS[e.id]?.type === 'consumable' : equipmentSlot(e.id) === slot && canEquip(e.id, char.classId));
+  return game.char.inventory.filter(e => slot === 'consumable' ? ITEMS[e.id]?.type === 'consumable' : slotAccepts(slot,e.id) && canEquip(e.id, char.classId, char.level || 1));
 }
 export function equipmentMarkup(game) {
   const unit = game.selUnit(), char = unit.char;
@@ -45,25 +46,28 @@ export function itemDetailsMarkup(game, context) {
   const item = ITEMS[context.id];
   if (!item) return '';
   const unit = game.unitById?.(context.unitId) || game.selUnit(), char = unit.char;
-  const slot = equipmentSlot(context.id);
-  const old = ITEMS[char.equipment?.[slot]];
+  const slot = comparisonSlot(context.id,char,context.slot);
+  const old = ITEMS[char.equipment?.[slot] || (slot==='ranged' ? char.equipment?.weapon : slot==='weapon' ? char.equipment?.ranged : null)];
   const owned = game.char.inventory.filter(e => e.id === context.id).reduce((n,e) => n+e.qty,0);
   const classNames = item.classes?.map(id => CLASSES[id]?.name || id).join(' · ') || '모든 직업';
-  const stats = [['atk','일반공격'],['def','방어력']].filter(([key]) => item[key] != null).map(([key,label]) => {
-    const diff = (item[key] || 0) - (old?.[key] || 0);
-    return `<div><span>${label}</span><b>${signed(item[key])}</b>${context.source !== 'equipped' ? `<small class="${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}">현재 장비 대비 ${signed(diff)}</small>` : ''}</div>`;
+  const beforeStats=Object.fromEntries(itemStatRows(old).map(([key,,n])=>[key,n]));
+  const afterStats=Object.fromEntries(itemStatRows(item).map(([key,,n])=>[key,n]));
+  const keys=new Map([...itemStatRows(item),...itemStatRows(old)].map(([key,label])=>[key,label]));
+  const stats = [...keys].filter(([key])=>beforeStats[key] || afterStats[key] || item[key]!=null || old?.[key]!=null).map(([key,label]) => {
+    const value=afterStats[key] || 0,diff=+(value-(beforeStats[key] || 0)).toFixed(2),unit=['atk','def'].includes(key)?'':'%';
+    return `<div><span>${label}</span><b>${signed(value)}${unit}</b>${context.source !== 'equipped' && slot ? `<small class="${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}">현재 장비 대비 ${signed(diff)}${unit}</small>` : ''}</div>`;
   }).join('');
   const equipped = context.source === 'equipped';
-  const usable = item.type === 'consumable' || canEquip(context.id,char.classId);
+  const usable = item.type === 'consumable' || item.type === 'chest' || canEquip(context.id,char.classId,char.level || 1);
   const disabled = !usable || (!equipped && !owned);
-  const action = equipped ? 'unequip' : item.type === 'consumable' ? 'use' : 'equip';
-  const actionLabel = equipped ? '장착 해제' : item.type === 'consumable' ? '사용' : '장착';
+  const action = equipped ? 'unequip' : ['consumable','chest'].includes(item.type) ? 'use' : 'equip';
+  const actionLabel = equipped ? '장착 해제' : ['consumable','chest'].includes(item.type) ? '사용' : slot ? '장착' : '사용 불가';
   const shop = context.source === 'shop';
   return `<header class="item-dialog-header"><h3 id="item-detail-title">아이템 정보</h3><button type="button" data-item-close aria-label="아이템 설명 닫기">×</button></header>
-    <div class="item-detail-heading">${itemIcon(context.id)}<div><h2>${escapeHtml(item.name)}</h2><span>${slot ? EQUIPMENT_SLOTS.find(s=>s.id===slot).label : '소모품'}${equipped ? ' · 착용 중' : ''}</span></div></div>
+    <div class="item-detail-heading">${itemIcon(context.id)}<div><h2>${escapeHtml(item.name)}</h2><span>${slot ? EQUIPMENT_SLOTS.find(s=>s.id===slot).label : escapeHtml(item.category || '소모품')}${equipped ? ' · 착용 중' : ''}</span></div></div>
     <p class="item-description">${escapeHtml(item.desc)}</p>
     <div class="item-detail-stats">${stats}</div>
-    <dl class="item-detail-meta"><div><dt>${item.type === 'consumable' ? '사용 대상' : '장착 대상'}</dt><dd>${escapeHtml(item.type === 'consumable' ? game.char.name : char.name)}</dd></div><div><dt>직업 조건</dt><dd>${classNames}</dd></div><div><dt>가방 보유 수량</dt><dd>${owned}개</dd></div><div><dt>상점 가격</dt><dd>${item.price} 골드</dd></div><div><dt>판매 가격</dt><dd>${sellPrice(context.id)} 골드</dd></div></dl>
-    ${!usable ? '<p class="item-requirement">선택한 캐릭터가 장착할 수 없는 장비입니다.</p>' : ''}
+    <dl class="item-detail-meta"><div><dt>${slot ? '장착 대상' : '사용 대상'}</dt><dd>${escapeHtml(slot ? char.name : game.char.name)}</dd></div><div><dt>필요 레벨</dt><dd>${item.minLevel || 1}</dd></div><div><dt>직업 조건</dt><dd>${classNames}</dd></div><div><dt>가방 보유 수량</dt><dd>${owned}개</dd></div><div><dt>상점 가격</dt><dd>${item.price} 골드</dd></div><div><dt>판매 가격</dt><dd>${sellPrice(context.id)} 골드</dd></div></dl>
+    ${!usable ? '<p class="item-requirement">직업·레벨 조건을 만족하지 않거나, 현재 사용할 수 없는 아이템입니다. (장착할 수 없는 항목)</p>' : ''}
     <div class="item-dialog-actions">${shop ? `<button class="primary" data-item-action="buy" ${game.char.gold < item.price ? 'disabled' : ''}>${item.price} 골드에 구매</button>` : `<button class="primary" data-item-action="${action}" ${disabled || equipped && game.char.inventory.length >= INVENTORY_SIZE ? 'disabled' : ''}>${actionLabel}</button>`}<button data-item-close>닫기</button></div>`;
 }

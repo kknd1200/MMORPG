@@ -339,3 +339,7 @@ canvas.portrait { margin: 0; width: 62px; height: 64px; image-rendering: pixelat
 .atlas-details { margin-top:12px; border-left:3px solid #d1ab5c; padding:8px 12px; background:#27271f; font-size:13px; }
 .atlas-details p { margin:7px 0; }.atlas-details small { color:#bdb49f; }
 @media(max-width:650px){.atlas-pin small{font-size:8px;max-width:80px;overflow:hidden;text-overflow:ellipsis}.atlas-pin{width:15px;height:15px;line-height:12px}.atlas-details{font-size:11px}}
+
+.rebirth-item-art { image-rendering:pixelated; }
+.shop-filters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:12px 0; }
+.shop-filters input { width:130px; }

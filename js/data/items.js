@@ -1,8 +1,10 @@
+import { REBIRTH_ITEMS } from './rebirth-items.js';
 // 아이템 정의
 // type: consumable | weapon | armor
 // 무기 atk 는 일반공격력에 더해집니다 (스킬 피해에도 반영).
 
 export const ITEMS = {
+  ...REBIRTH_ITEMS,
   // ---- 소모품 ----
   red_potion: {
     name: '빨간 물약', type: 'consumable', price: 20,
@@ -64,9 +66,11 @@ export const ITEMS = {
 
 export const INVENTORY_SIZE = 24;
 
+const imported = Object.entries(REBIRTH_ITEMS);
 export const SHOPS = {
-  merchant: ['red_potion', 'orange_potion', 'blue_potion', 'courage_potion', 'return_scroll'],
+  merchant: ['red_potion', 'orange_potion', 'blue_potion', 'courage_potion', 'return_scroll', ...imported.filter(([,it]) => !it.slot && it.type !== 'chest' && it.category !== '전리품').map(([id])=>id)],
   smith: [
+    ...imported.filter(([,it]) => it.slot && !it.source.unique && it.source.set == null).map(([id])=>id),
     'training_sword', 'long_sword', 'training_bow', 'long_bow',
     'training_staff', 'oak_staff', 'training_mace', 'iron_mace', 'training_axe', 'battle_axe',
     'cloth_armor', 'leather_armor', 'chain_mail',
@@ -77,8 +81,8 @@ export function sellPrice(itemId) {
   return Math.floor((ITEMS[itemId]?.price || 0) / 2);
 }
 
-export function canEquip(itemId, classId) {
+export function canEquip(itemId, classId, level = Infinity) {
   const it = ITEMS[itemId];
   if (!it || (it.type !== 'weapon' && it.type !== 'armor')) return false;
-  return !it.classes || it.classes.includes(classId);
+  return (!it.classes || it.classes.includes(classId)) && level >= (it.minLevel || 1);
 }

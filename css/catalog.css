@@ -1,0 +1,10 @@
+.catalog-page { height:auto; overflow:auto; background:#191c17; color:#e5dfcd; }
+.catalog-page main { max-width:1200px; padding:24px; margin:auto; }
+.catalog-page header,.catalog-controls,.catalog-page nav { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-between; align-items:center; }
+.catalog-page a { color:#e8c67b; }.catalog-controls { justify-content:flex-start; margin:20px 0; }
+.catalog-page input,.catalog-page select { color:inherit; background:#292b25; border:1px solid #71674b; padding:8px; }
+.catalog-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.catalog-card { padding:14px; border:1px solid #55523e; background:#252820; border-radius:6px; }
+.catalog-card h2 { font-size:15px; margin:0 0 8px; }.catalog-card .icon { width:48px; height:48px; float:left; margin:0 12px 8px 0; }
+.catalog-card p { clear:both; font-size:12px; line-height:1.7; }.catalog-card small { color:#cebc88; }
+.catalog-page nav { justify-content:center; padding:24px; }

@@ -592,14 +592,14 @@ export class Hud {
       const e = ch.inventory[i];
       if (!e) { cells.push('<div class="cell empty"></div>'); continue; }
       const it = ITEMS[e.id];
-      const usable = it.type === 'consumable' || canEquip(e.id, su.char.classId);
+      const usable = ['consumable','chest'].includes(it.type) || canEquip(e.id, su.char.classId, su.char.level || 1);
 
       cells.push(`<div class="cell ${usable ? '' : 'nouse'}" role="button" tabindex="0" aria-label="${esc(it.name)} 설명 보기" draggable="true" data-item-hover="${e.id}" data-inv="${i}" data-drag='${JSON.stringify({ type: 'item', id: e.id })}'>
         ${itemIcon(e.id)}${e.qty > 1 ? `<span class="qty">${e.qty}</span>` : ''}
         ${shopOpen && sellPrice(e.id) > 0 ? `<button class="sell" data-sell="${i}">판매</button>` : ''}</div>`);
     }
     return `
-      <div class="gold">골드 ${ch.gold.toLocaleString()}</div>
+      <div class="gold">골드 ${ch.gold.toLocaleString()} · <a href="catalog.html" target="_blank" rel="noopener">아이템 도감 (733종)</a></div>
       ${equipmentMarkup(g)}
       <div class="grid">${cells.join('')}</div>
       <small class="hint">마우스 올리기: 정보·장비 비교 · 클릭: 사용/장착 · 단축칸으로 끌어다 놓기${shopOpen ? ' · 판매 버튼으로 판매' : ''}</small></section></div>`;
@@ -663,7 +663,12 @@ export class Hud {
     if (npc.kind === 'mercenary') return this.mercHtml();
     const shop = SHOPS[npc.kind];
     if (!shop) return '';
-    const rows = shop.map((id) => {
+    const category=this.shopCategory || '', query=(this.shopQuery || '').toLowerCase();
+    const filtered=shop.filter(id=>(!category || (ITEMS[id].category || (ITEMS[id].type==='weapon'?'무기':ITEMS[id].type==='armor'?'방어구':'소모품'))===category) && ITEMS[id].name.toLowerCase().includes(query));
+    const pageSize=24, pages=Math.max(1,Math.ceil(filtered.length/pageSize));
+    this.shopPage=Math.min(this.shopPage || 0,pages-1);
+    const controls=`<div class="shop-filters"><label>분류 <select data-shop-category><option value="">전체</option>${[...new Set(shop.map(id=>ITEMS[id].category || (ITEMS[id].type==='weapon'?'무기':ITEMS[id].type==='armor'?'방어구':'소모품')))].map(c=>`<option ${category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></label><label>이름 <input data-shop-search value="${esc(this.shopQuery || '')}" placeholder="아이템 검색"></label><button data-shop-page="-1" ${this.shopPage===0?'disabled':''}>이전</button><span>${this.shopPage+1}/${pages} · ${filtered.length}종</span><button data-shop-page="1" ${this.shopPage===pages-1?'disabled':''}>다음</button></div>`;
+    const rows = filtered.slice(this.shopPage*pageSize,(this.shopPage+1)*pageSize).map((id) => {
       const it = ITEMS[id];
       const usable = it.type === 'consumable' || canEquip(id, g.char.classId);
       const afford = g.char.gold >= it.price;
@@ -675,7 +680,7 @@ export class Hud {
         ${it.type === 'consumable' ? `<button data-buy="${id}" data-qty="10" ${g.char.gold >= it.price * 10 ? '' : 'disabled'}>×10</button>` : ''}
       </div>`;
     }).join('');
-    return `<div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>${rows}
+    return `<div class="gold">보유 골드 ${g.char.gold.toLocaleString()}</div>${controls}${rows}
       <small class="hint">판매는 인벤토리 창의 판매 버튼으로 합니다. (구입가의 50%)</small>`;
   }
 
@@ -769,7 +774,7 @@ export class Hud {
     const g = this.game, unit = g.unitById(context.unitId);
     if (!unit || unit !== g.selUnit()) { this.closeItem(); return; }
     const idx = g.char.inventory.findIndex(e => e.id === context.id);
-    if (action === 'equip' && idx >= 0) g.equip(idx, unit);
+    if (action === 'equip' && idx >= 0) g.equip(idx, unit, context.slot);
     else if (action === 'unequip' && unit.char.equipment[context.slot] === context.id) g.unequip(context.slot, unit);
     else if (action === 'use' && idx >= 0) g.useItem(context.id);
     else if (action === 'buy' && SHOPS[g.openNpc?.kind]?.includes(context.id)) g.buy(context.id, 1);
@@ -784,7 +789,8 @@ export class Hud {
     this.root.addEventListener('click', (e) => {
       const t = e.target.closest('button');
       if (!t) return;
-      if (t.dataset.stat) g.allocateStat(t.dataset.stat);
+      if (t.dataset.shopPage) { this.shopPage=Math.max(0,(this.shopPage || 0)+Number(t.dataset.shopPage)); this.renderPanel('npc'); }
+      else if (t.dataset.stat) g.allocateStat(t.dataset.stat);
       else if (t.dataset.unequip) g.unequip(t.dataset.unequip);
       else if (t.dataset.sell) g.sell(Number(t.dataset.sell));
       else if (t.dataset.buy) g.buy(t.dataset.buy, Number(t.dataset.qty));
@@ -804,6 +810,8 @@ export class Hud {
       if (e.target.closest('.hud-portrait')) this.selectUnit('player');
     });
     this.root.addEventListener('change', (e) => {
+      if (e.target.matches('[data-shop-category]')) { this.shopCategory=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
+      if (e.target.matches('[data-shop-search]')) { this.shopQuery=e.target.value; this.shopPage=0; this.renderPanel('npc'); }
       const sel = e.target.closest('select[data-slotcond]');
       if (sel) g.setSlotCond(g.selectedId, Number(sel.dataset.slotcond), sel.value);
     });
@@ -866,7 +874,7 @@ export class Hud {
     this.root.querySelector('.item-overlay').addEventListener('click', e => {
       if (e.target.classList.contains('item-overlay') || e.target.closest('[data-item-close]')) this.closeItem();
       else if (e.target.closest('[data-item-action]')) this.itemAction(e.target.closest('[data-item-action]').dataset.itemAction);
-      else if (e.target.closest('[data-item-choice]')) this.showItem(e.target.closest('[data-item-choice]').dataset.itemChoice, 'bag');
+      else if (e.target.closest('[data-item-choice]')) this.showItem(e.target.closest('[data-item-choice]').dataset.itemChoice, 'bag', this.itemContext?.slot);
     });
     this.root.addEventListener('dragstart', (e) => {
       const src = e.target.closest?.('[data-drag]');

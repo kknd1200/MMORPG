@@ -1,26 +1,30 @@
+import { itemStatRows } from '../data/rebirth-items.js';
 import { ITEMS, canEquip, sellPrice } from '../data/items.js';
 import { CLASSES } from '../data/classes.js';
-import { equipmentSlot } from '../data/equipment.js';
+import { equipmentSlot, comparisonSlot } from '../data/equipment.js';
 import { itemIcon } from './item-icons.js';
 import { escapeHtml } from './equipment.js';
 const signed = n => `${n >= 0 ? '+' : ''}${n}`;
 
 export function itemComparisonMarkup(game, id) {
-  const item = ITEMS[id], char = game.selUnit().char, slot = equipmentSlot(id);
+  const item = ITEMS[id], char = game.selUnit().char, slot = comparisonSlot(id,char);
   if (!item || !slot) return '';
-  const current = ITEMS[char.equipment?.[slot]];
-  const rows = [['atk','일반공격'],['def','방어력']].filter(([key]) => item[key] != null || current?.[key] != null).map(([key,label]) => {
-    const before = current?.[key] || 0, after = item[key] || 0, delta = after - before;
+  const current = ITEMS[char.equipment?.[slot] || (slot==='ranged' ? char.equipment?.weapon : slot==='weapon' ? char.equipment?.ranged : null)];
+  const beforeStats=Object.fromEntries(itemStatRows(current).map(([key,,n])=>[key,n])), afterStats=Object.fromEntries(itemStatRows(item).map(([key,,n])=>[key,n]));
+  const keys=new Map([...itemStatRows(item),...itemStatRows(current)].map(([key,label])=>[key,label]));
+  const rows = [...keys].filter(([key]) => beforeStats[key] || afterStats[key] || item[key]!=null || current?.[key]!=null).map(([key,label]) => {
+    const percent=!['atk','def'].includes(key); if (percent) label+=' (%)';
+    const before = beforeStats[key] || 0, after = afterStats[key] || 0, delta = +(after-before).toFixed(2);
     return `<tr><th scope="row">${label}</th><td>${signed(before)}</td><td>${signed(after)}</td><td class="${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'neutral'}">${signed(delta)}</td></tr>`;
   }).join('');
-  return `<div class="item-comparison"><p><b>${escapeHtml(char.name)}</b>의 착용 장비와 비교</p><p class="comparison-current">현재 착용: ${current ? escapeHtml(current.name) : '미장착'}</p><table><thead><tr><th>능력치</th><th>착용 중</th><th>이 아이템</th><th>차이</th></tr></thead><tbody>${rows}</tbody></table>${canEquip(id,char.classId) ? '' : '<p class="item-requirement">선택한 캐릭터는 장착할 수 없습니다.</p>'}</div>`;
+  return `<div class="item-comparison"><p><b>${escapeHtml(char.name)}</b>의 착용 장비와 비교</p><p class="comparison-current">현재 착용: ${current ? escapeHtml(current.name) : '미장착'}</p><table><thead><tr><th>능력치</th><th>착용 중</th><th>이 아이템</th><th>차이</th></tr></thead><tbody>${rows}</tbody></table>${canEquip(id,char.classId,char.level || 1) ? '' : '<p class="item-requirement">선택한 캐릭터는 장착할 수 없습니다.</p>'}</div>`;
 }
 
 export function itemTooltipMarkup(game, id) {
   const item = ITEMS[id];
   if (!item) return '';
   const classes = item.classes?.map(c=>CLASSES[c]?.name || c).join(' · ') || '모든 직업';
-  return `<div class="tooltip-heading">${itemIcon(id)}<b>${escapeHtml(item.name)}</b></div><p class="tooltip-description">${escapeHtml(item.desc)}</p><p class="tooltip-classes">장착/사용 직업: ${classes}</p>${itemComparisonMarkup(game,id)}<div class="tooltip-footer"><span>판매가 ${sellPrice(id)} 골드</span><span>클릭하여 ${item.type === 'consumable' ? '사용' : '장착'} 메뉴</span></div>`;
+  return `<div class="tooltip-heading">${itemIcon(id)}<b>${escapeHtml(item.name)}</b></div><p class="tooltip-description">${escapeHtml(item.desc)}</p><p class="tooltip-classes">장착/사용 직업: ${classes}</p>${itemComparisonMarkup(game,id)}<div class="tooltip-footer"><span>판매가 ${sellPrice(id)} 골드</span><span>클릭하여 ${['consumable','chest'].includes(item.type) ? '사용' : equipmentSlot(id) ? '장착' : '정보'} 메뉴</span></div>`;
 }
 
 export class ItemTooltip {
