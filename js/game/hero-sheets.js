@@ -1,3 +1,4 @@
+import {rigFiles} from './equipment-art.js';
 // Render the approved Dynamic 8Directions artwork for every player surface.
 import { drawChar, charFiles } from './chars.js';
 import { CHARS, dirIndex, actionDur } from '../data/chars.js';
@@ -19,11 +20,11 @@ export function heroFrame(state) {
   return { row: dirIndex(state.facing), column: state.moving && !state.dead ? Math.floor(phase / (Math.PI * 2) * 8) : 0 };
 }
 export function preloadHeroArt() {
-  return loadImages([...Object.keys(CHARS).map(key => `chars/${key}/idle.webp`),'items/rebirth-items.webp','items/icons.webp','items/hand-equipment.webp']);
+  return loadImages([...Object.keys(CHARS).flatMap(key => [`chars/${key}/idle.webp`,...rigFiles(key)]),'items/rebirth-items.webp','items/icons.webp','items/hand-equipment.webp']);
 }
 export function preloadHeroActions(state) {
   const key = heroSprite(state);
-  return key ? loadImages([...charFiles(key),'items/rebirth-items.webp','items/icons.webp','items/hand-equipment.webp']) : Promise.resolve();
+  return key ? loadImages([...charFiles(key),...rigFiles(key),'items/rebirth-items.webp','items/icons.webp','items/hand-equipment.webp']) : Promise.resolve();
 }
 export function drawHeroSheet(ctx, x, y, state) {
   const sprite = heroSprite(state);
