@@ -6,104 +6,104 @@
           78,
           80
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           77.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           77.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           78
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           78
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           80.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           77
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           77.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           78
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           80.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           77
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ],
     [
@@ -112,104 +112,104 @@
           76.0,
           83.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           79.06,
           80.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           76.0,
           83.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           79.06,
           80.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           76.0,
           80.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           79.06,
           77.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           72.0,
           79.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           75.06,
           76.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           76.0,
           83.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           79.06,
           80.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           77.0,
           82.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           80.06,
           79.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           85.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           81.06,
           82.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           72.0,
           79.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           75.06,
           76.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ],
     [
@@ -218,7 +218,7 @@
           75.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           78.46,
@@ -231,7 +231,7 @@
           74.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           77.46,
@@ -244,7 +244,7 @@
           76.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           79.46,
@@ -257,7 +257,7 @@
           76.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           79.46,
@@ -270,7 +270,7 @@
           77.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           80.46,
@@ -283,7 +283,7 @@
           80.0,
           86.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           83.46,
@@ -296,7 +296,7 @@
           77.0,
           86.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           80.46,
@@ -309,7 +309,7 @@
           74.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           77.46,
@@ -324,104 +324,104 @@
           70.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           73.46,
           81.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           72.0,
           80.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           75.46,
           78.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           70.0,
           81.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           73.46,
           79.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           69.0,
           85.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           72.46,
           83.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           70.0,
           82.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           73.46,
           80.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           72.0,
           78.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           75.46,
           76.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           71.0,
           81.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           74.46,
           79.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           72.0,
           78.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           75.46,
           76.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -430,104 +430,104 @@
           87,
           83
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           80.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           81.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           83.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           83.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           88.0,
           81.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87,
           80
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           83.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87,
           82
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           79.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87,
           82
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           79.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87,
           82
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           79.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -536,104 +536,104 @@
           88.0,
           85.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           84.94,
           82.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           80.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           79.94,
           77.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           84.0,
           89.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           80.94,
           86.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           81.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           83.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           90.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           79.94,
           87.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           86.0,
           80.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           82.94,
           77.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           88.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           79.94,
           85.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           85.0,
           80.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           81.94,
           77.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -642,7 +642,7 @@
           88.0,
           82.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           85.43,
@@ -655,7 +655,7 @@
           85.0,
           81.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -668,7 +668,7 @@
           83.0,
           80.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           80.43,
@@ -681,7 +681,7 @@
           83.0,
           79.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           80.43,
@@ -694,7 +694,7 @@
           83.0,
           80.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           80.43,
@@ -707,7 +707,7 @@
           85.0,
           80.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -720,7 +720,7 @@
           84.0,
           81.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           81.43,
@@ -733,7 +733,7 @@
           83.0,
           81.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           80.43,
@@ -748,104 +748,104 @@
           84.0,
           85.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           86.57,
           81.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           84.0,
           84.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           86.57,
           80.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           86.0,
           82.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           88.57,
           78.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           82.0,
           84.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           84.57,
           80.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           84.0,
           85.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           86.57,
           81.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           84.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           86.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           84.0,
           85.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           86.57,
           81.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           82.0,
           89.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           84.57,
           85.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ]
   ],
@@ -856,104 +856,104 @@
           78.0,
           82.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           81,
           78
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           82.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           81,
           78
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           79.0,
           83.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           82,
           79
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           81,
           77
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           77.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           82.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80,
           79
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           82.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           78.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           78.0,
           81.0
         ],
-        "angle": 2.26893,
+        "angle": -2.79253,
         "off": null,
         "secondary": [
           80.57,
           77.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ],
     [
@@ -962,104 +962,104 @@
           75.0,
           85.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           78.06,
           82.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           75.0,
           84.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           78.06,
           81.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           75.0,
           87.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           78.06,
           84.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           74.0,
           87.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           77.06,
           84.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           74.0,
           84.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           77.06,
           81.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           74.0,
           85.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           77.06,
           82.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           75.0,
           88.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           78.06,
           85.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           74.0,
           84.0
         ],
-        "angle": 2.44346,
+        "angle": 0.17453,
         "off": null,
         "secondary": [
           77.06,
           81.43
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ],
     [
@@ -1068,7 +1068,7 @@
           73.0,
           87.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           76.46,
@@ -1081,7 +1081,7 @@
           73.0,
           85.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           76.46,
@@ -1094,7 +1094,7 @@
           72.0,
           85.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           75.46,
@@ -1107,7 +1107,7 @@
           74.0,
           88.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           77.46,
@@ -1120,7 +1120,7 @@
           74.0,
           87.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           77.46,
@@ -1133,7 +1133,7 @@
           74.0,
           86.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           77.46,
@@ -1146,7 +1146,7 @@
           72.0,
           85.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           75.46,
@@ -1159,7 +1159,7 @@
           75.0,
           89.0
         ],
-        "angle": 2.61799,
+        "angle": 0.43633,
         "off": null,
         "secondary": [
           78.46,
@@ -1174,104 +1174,104 @@
           73.0,
           84.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           76.46,
           82.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           72.0,
           84.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           75.46,
           82.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           72.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           75.46,
           81.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           78.0,
           87.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           81.46,
           85.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           77.0,
           85.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           80,
           82
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           77.0,
           89.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           80.46,
           87.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           73.0,
           83.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           76.46,
           81.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           73.0,
           79.0
         ],
-        "angle": 2.61799,
+        "angle": 0.69813,
         "off": null,
         "secondary": [
           76.46,
           77.0
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -1280,104 +1280,104 @@
           86,
           84
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           84.94,
           81.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           84.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           80.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           79.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           79.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           79.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           85.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           81.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           79.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           83.0,
           79.0
         ],
-        "angle": 0.69813,
+        "angle": 0.7854,
         "off": null,
         "secondary": [
           79.94,
           76.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -1386,104 +1386,104 @@
           87.0,
           84.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           83.94,
           81.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           86.0,
           83.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           82.94,
           80.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           88,
           82
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           85,
           79
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           81.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           83.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           84.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           83.94,
           81.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           85.0,
           81.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           81.94,
           78.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           86.0,
           82.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           82.94,
           79.43
         ],
-        "mainBehind": true
+        "mainBehind": false
       },
       {
         "main": [
           87.0,
           84.0
         ],
-        "angle": 0.69813,
+        "angle": 2.44346,
         "off": null,
         "secondary": [
           84,
           80
         ],
-        "mainBehind": true
+        "mainBehind": false
       }
     ],
     [
@@ -1492,7 +1492,7 @@
           87,
           84
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           85.43,
@@ -1505,7 +1505,7 @@
           86,
           84
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           84.43,
@@ -1518,7 +1518,7 @@
           85,
           82
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -1531,7 +1531,7 @@
           87.0,
           82.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           84.43,
@@ -1544,7 +1544,7 @@
           84,
           85
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -1557,7 +1557,7 @@
           85.0,
           84.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -1570,7 +1570,7 @@
           85.0,
           82.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           82.43,
@@ -1583,7 +1583,7 @@
           83.0,
           84.0
         ],
-        "angle": 0.87266,
+        "angle": 2.70526,
         "off": null,
         "secondary": [
           80.43,
@@ -1598,104 +1598,104 @@
           83.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           85.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           83.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           85.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           82.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           84.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           82.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           84.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           83.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           85.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           82.0,
           86.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           84.57,
           82.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           83.0,
           90.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           85.57,
           86.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       },
       {
         "main": [
           83.0,
           85.0
         ],
-        "angle": 2.26893,
+        "angle": 2.96706,
         "off": null,
         "secondary": [
           85.57,
           81.94
         ],
-        "mainBehind": false
+        "mainBehind": true
       }
     ]
   ]

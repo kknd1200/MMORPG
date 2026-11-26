@@ -13,6 +13,10 @@ are drawn. Closed carry hands support the existing equipped-weapon renderer.
 
 The two character `.webp` files contain reviewed 160px-cell sheets. `poses.json`
 stores the explicit primary and secondary grip sockets and carry angles.
+Walking blade angles point opposite travel in every direction. Side views carry
+the blade low behind the hip; front/back views use torso occlusion appropriate to
+depth. The authored carry hands remain fixed to their authored fist pixels.
+Attack and stationary poses retain their existing weapon directions.
 `*-before.webp` preserves the previous walking body for comparison; `qc.json`
 records source quality checks and final dimensions/unique-pose counts.
 
