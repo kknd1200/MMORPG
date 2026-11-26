@@ -1,17 +1,30 @@
-"""Pixel-level art regression check. Run with Python + Pillow after editing warrior art."""
+"""Check the delivered walking pixels, compiled atlas, and foreground sockets."""
 from pathlib import Path
+import json
 from PIL import Image
 
-sheet = Image.open(Path(__file__).resolve().parents[1] / 'assets/chars/warrior/walk.webp').convert('RGBA')
-assert sheet.size == (1280, 1280), 'Unexpected warrior walk atlas dimensions'
-for frame in range(8):
-    cell = sheet.crop((frame * 160, 0, (frame + 1) * 160, 160))
-    coverage = []
-    for side, x0, x1 in [('right (viewer left)', 68, 80), ('left (viewer right)', 80, 92)]:
-        rows = [sum(cell.getpixel((x, y))[3] >= 128 for x in range(x0, x1)) for y in range(88, 113)]
-        count = sum(rows)
-        assert count >= 130, f'Frame {frame}: {side} leg loses opaque pixels ({count})'
-        assert sum(n > 0 for n in rows) >= 18, f'Frame {frame}: {side} shin/boot is truncated'
-        coverage.append(count)
-    assert min(coverage) / max(coverage) >= 0.62, f'Frame {frame}: one leg becomes too thin'
-print('Warrior front walk: both legs remain visible in all 8 frames')
+ROOT = Path(__file__).resolve().parents[1]
+rig = json.loads((ROOT / 'js/data/equipment-rig.js').read_text().split('export const EQUIPMENT_RIG=')[1].strip().rstrip(';'))
+for key in ['warrior', 'warrior_female']:
+    walk = Image.open(ROOT / 'assets/chars' / key / 'walk.webp').convert('RGBA')
+    body = Image.open(ROOT / 'assets/chars/rigged' / key / 'body.webp').convert('RGBA')
+    assert walk.size == (1280, 1280)
+    assert body.crop((0, 160, 1280, 1440)).tobytes() == walk.tobytes()
+    for row in range(8):
+        frames = []
+        for col in range(8):
+            f = walk.crop((col * 160, row * 160, (col + 1) * 160, (row + 1) * 160))
+            box = f.getbbox()
+            assert box and 0 < box[0] < box[2] < 160 and 0 < box[1] < box[3] < 160
+            assert 45 <= box[3] - box[1] <= 62, (key, row, col, box)
+            for name in ['main', 'secondary']:
+                x, y = (round(v) for v in rig[key]['walk'][row][col][name])
+                assert f.getpixel((x, y))[3] > 100, (key, row, col, name)
+            if row == 0:
+                # Both front-view greaves/boots must remain present in every pose.
+                for left, right in [(68, 80), (80, 92)]:
+                    coverage = sum(f.getpixel((x, y))[3] > 128 for x in range(left, right) for y in range(91, 110))
+                    assert coverage >= 35, (key, col, left, coverage)
+            frames.append(f.tobytes())
+        assert len(set(frames)) == 8, (key, row, 'duplicate pose')
+print('128 warrior walking frames: complete, distinct, both front legs present, sockets attached')

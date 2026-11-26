@@ -12,11 +12,11 @@ SOURCE = Path(__file__).with_name('knight-walk')
 RIG_FILE = ROOT / 'js/data/equipment-rig.js'
 
 
-def compile_walks():
+def compile_walks(source=SOURCE):
     rig = json.loads(RIG_FILE.read_text().split('export const EQUIPMENT_RIG=')[1].strip().rstrip(';'))
-    sockets = json.loads((SOURCE / 'poses.json').read_text())
+    sockets = json.loads((source / 'poses.json').read_text())
     for key, rows in sockets.items():
-        sheet = Image.open(SOURCE / (key + '.webp')).convert('RGBA')
+        sheet = Image.open(source / (key + '.webp')).convert('RGBA')
         assert sheet.size == (1280, 1280)
         dest = ROOT / 'assets/chars/rigged' / key
         body = Image.open(dest / 'body.webp').convert('RGBA')
@@ -28,7 +28,9 @@ def compile_walks():
                 old = rig[key]['walk'][row][col]
                 pose = dict(rows[row][col])
                 pose['hands'] = []
-                for name, patch in zip(['main', 'off'], old['hands']):
+                names = [n for n in ['main', 'secondary', 'off'] if pose.get(n) is not None]
+                assert len(names) == len(old['hands']), (key, row, col)
+                for name, patch in zip(names, old['hands']):
                     x, y = (round(v) for v in pose[name])
                     at = [x - 4, y - 4]
                     tile = frame.crop((at[0], at[1], at[0] + 8, at[1] + 8))
@@ -46,7 +48,7 @@ def compile_walks():
         hands.save(dest / 'hands.webp', lossless=True)
         sheet.save(ROOT / 'assets/chars' / key / 'walk.webp', lossless=True)
     RIG_FILE.write_text('// Compiled, reviewed source-frame hand sockets. Coordinates use the 160px character cell.\nexport const EQUIPMENT_RIG=' + json.dumps(rig, separators=(',', ':')) + ';\n')
-    print('Installed 128 knight walking poses; idle, attacks and other classes preserved')
+    print(f'Installed {len(sockets) * 64} walking poses: {", ".join(sockets)}')
 
 
 if __name__ == '__main__':

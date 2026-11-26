@@ -1,0 +1,90 @@
+{
+  "warrior": {
+    "frames": 64,
+    "uniqueFramesPerDirection": [
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "heightRange": [
+      47,
+      57
+    ],
+    "sourceQCSummary": {
+      "frame_count": 64,
+      "valid_frame_count": 64,
+      "empty_count": 0,
+      "edge_touch_count": 0,
+      "paste_clamped_count": 0,
+      "body_scale_mean": 0.2782737458387342,
+      "output_subject_height_mean": 53.859375,
+      "body_scale_cv": 0.043929604520127015,
+      "anchor_x_std": 0.03763806100100706,
+      "anchor_y_std": 0.013452024379846972,
+      "anchor_y_mean": 0.8042060810810812
+    }
+  },
+  "warrior_female": {
+    "frames": 64,
+    "uniqueFramesPerDirection": [
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "heightRange": [
+      49,
+      56
+    ],
+    "sourceQCSummary": {
+      "frame_count": 64,
+      "valid_frame_count": 64,
+      "empty_count": 0,
+      "edge_touch_count": 0,
+      "paste_clamped_count": 0,
+      "body_scale_mean": 0.27167509847412796,
+      "output_subject_height_mean": 54.375,
+      "body_scale_cv": 0.034438147685485074,
+      "anchor_x_std": 0.026463536936711277,
+      "anchor_y_std": 0.018453253490151932,
+      "anchor_y_mean": 0.7806925675675676
+    }
+  },
+  "additionalSources": {
+    "warrior-front-walk-processed": {
+      "frame_count": 16,
+      "valid_frame_count": 16,
+      "empty_count": 0,
+      "edge_touch_count": 0,
+      "paste_clamped_count": 0,
+      "body_scale_mean": 0.3318037370295669,
+      "output_subject_height_mean": 55.4375,
+      "body_scale_cv": 0.02364664678806516,
+      "anchor_x_std": 0.01222447027092287,
+      "anchor_y_std": 0.01124557705821934,
+      "anchor_y_mean": 0.9030516431924884
+    },
+    "warrior-diagonal-walk-processed": {
+      "frame_count": 32,
+      "valid_frame_count": 32,
+      "empty_count": 0,
+      "edge_touch_count": 0,
+      "paste_clamped_count": 0,
+      "body_scale_mean": 0.4049889011840888,
+      "output_subject_height_mean": 53.34375,
+      "body_scale_cv": 0.0356860685496387,
+      "anchor_x_std": 0.03191990638429539,
+      "anchor_y_std": 0.005839128152034151,
+      "anchor_y_mean": 0.953638497652582
+    }
+  }
+}
