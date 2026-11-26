@@ -5,15 +5,18 @@
 <label>성별 <select id="gender"><option value="warrior">남전사</option><option value="warrior_female">여전사</option></select></label>
 <label>방향 <select id="direction"></select></label>
 <label>한 주기 <select id="period"><option value="800">0.8초</option><option value="1000" selected>1초</option><option value="1600">1.6초</option></select></label>
-<button id="pause">일시정지</button><label>프레임 <input id="frame" type="range" min="0" max="7" value="0"></label><span id="number"></span>
+<label>장착 무기 <select id="weapon"></select></label><button id="pause">일시정지</button><label>프레임 <input id="frame" type="range" min="0" max="7" value="0"></label><span id="number"></span>
 <canvas id="view" width="960" height="360"></canvas>
-<p>아래는 새 걷기의 8프레임입니다. 비교 화면은 무기 미장착 상태이며, 게임에서는 장착한 무기를 새 손 위치에 맞춰 표시합니다.</p>
+<p>수정 전은 몸의 걷기 동작만 표시합니다. 수정 후와 아래 8프레임에는 선택한 무기를 실제로 장착해 표시합니다. 기본 선택은 강철 대검입니다.</p>
 <canvas id="strip" width="1280" height="210"></canvas>
 <script type="module">
 import {drawChar} from '../js/game/chars.js';
 import {preloadHeroActions} from '../js/game/hero-sheets.js';
 import {CHAR_ANGLES,CHAR_DIRS} from '../js/data/chars.js';
+import {ITEMS,canEquip} from '../js/data/items.js';
 const $=id=>document.getElementById(id),before={};
+$('weapon').innerHTML='<option value="">미장착</option>'+Object.entries(ITEMS).filter(([id,it])=>it.type==='weapon' && canEquip(id,'warrior',100)).map(([id,it])=>`<option value="${id}">${it.name}</option>`).join('');
+$('weapon').value='steel_blade';
 for(const key of ['warrior','warrior_female']){
  await preloadHeroActions({classId:'warrior',gender:key==='warrior'?'male':'female'});
  before[key]=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`rig/warrior-walk/${key}-before.webp`;});
@@ -25,7 +28,7 @@ $('frame').oninput=()=>{paused=true;$('pause').textContent='재생';phase=Number
 function draw(ctx,x,y,key,row,col,scale,old=false){
  ctx.imageSmoothingEnabled=false;
  if(old)ctx.drawImage(before[key],col*160,row*160,160,160,x-80*scale,y-109*scale,160*scale,160*scale);
- else{const a=CHAR_ANGLES[row];drawChar(ctx,x,y,{sprite:key,classId:'warrior',equipment:{},moving:true,walk:(col+.01)/8*Math.PI*2,facing:{x:Math.cos(a),y:Math.sin(a)},scale});}
+ else{const a=CHAR_ANGLES[row];drawChar(ctx,x,y,{sprite:key,classId:'warrior',level:100,equipment:{weapon:$('weapon').value},moving:true,walk:(col+.01)/8*Math.PI*2,facing:{x:Math.cos(a),y:Math.sin(a)},scale});}
 }
 function tick(now){
  if(!paused)phase=(phase+(now-last)/Number($('period').value))%1;
