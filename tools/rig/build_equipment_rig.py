@@ -261,4 +261,9 @@ def run():
    if old.name not in ['body.webp','hands.webp']:old.unlink()
  (ROOT/'js/data/equipment-rig.js').write_text('// Compiled, reviewed source-frame hand sockets. Coordinates use the 160px character cell.\nexport const EQUIPMENT_RIG='+json.dumps(rig,separators=(',',':'))+';\n')
  (WORK/'frame-report.json').write_text(json.dumps(quality,indent=2));print('Compiled',sum(q['frames'] for q in quality),'hand-rig frames')
-if __name__=='__main__':run()
+if __name__=='__main__':
+ run()
+ # Reapply the separately reviewed walking action after the base rig rebuild.
+ if (ROOT/'tools/rig/knight-walk/poses.json').exists():
+  from compile_knight_walk import compile_walks
+  compile_walks()
