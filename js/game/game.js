@@ -99,6 +99,7 @@ export class Game {
     this.tempPortals = [];
     this.pending = []; // 늦게 적용할 피해 (화살 · 마법 도착)
     this.portalReadyAt = 0;
+    this.travelIntent = null;
     this.clockOffset = 0; // 필드 보스 시간 확인용 (테스트에서 시계를 앞당길 때)
 
     // 그림 미리 불러오기: 직업 스킬 이펙트 · 아이콘 (캐릭터는 코드로 그림)
@@ -219,6 +220,7 @@ export class Game {
   }
 
   setAutoMode(mode) {
+    this.travelIntent = null;
     this.autoMode = mode;
     this.char.autoMode = mode;
     const label = { manual: '자동사냥 끔 (이동은 직접, 근처 적은 파티가 자동 전투)', normal: '자동사냥: 일반공격만', skill: '자동사냥: 스킬까지 사용' }[mode];
@@ -338,7 +340,7 @@ export class Game {
   leaderAI(dt) {
     const p = this.player, L = this.leader;
     L.gcd -= dt;
-    if (p.shieldBash || p.dead || this.userMoving() || p.action?.type === 'talk' || p.action?.type === 'skill') return;
+    if (p.shieldBash || p.dead || this.travelIntent || this.userMoving() || p.action?.type === 'talk' || p.action?.type === 'skill') return;
     if (!p.action) {
       let t = this.pickTarget(L, null);
       if (!t && this.autoMode !== 'manual') t = this.roamTarget();
@@ -622,7 +624,9 @@ export class Game {
 
     if (p.shieldBash) return;
     if (this.mouse.left && this.mouse.mode === 'move') {
-      p.moveTarget = { x: this.mouse.wx, y: this.mouse.wy };
+      p.moveTarget = this.travelIntent
+        ? { x: this.travelIntent.portal.cx, y: this.travelIntent.portal.cy }
+        : { x: this.mouse.wx, y: this.mouse.wy };
       p.action = null;
     }
 
@@ -1652,6 +1656,7 @@ export class Game {
   enterMap(world, pos, first = false) {
     for (const unit of this.units()) cancelShieldBash(unit);
     this.pendingTravel = null;
+    this.travelIntent = null;
     this.dismissedPortal = null;
     this.hud?.closeTravelPrompt();
     // 이전 맵의 몬스터 · 그림 정리
@@ -1695,16 +1700,54 @@ export class Game {
     this.save();
   }
 
+  portalAt(x, y) {
+    return this.world.portalAt(x, y)
+      || this.tempPortals.find(q => x >= q.rect.x0 && x <= q.rect.x1 && y >= q.rect.y0 && y <= q.rect.y1);
+  }
+
   portalUnderPlayer() {
-    const p = this.player;
-    return this.world.portalAt(p.x, p.y)
-      || this.tempPortals.find(q => p.x >= q.rect.x0 && p.x <= q.rect.x1 && p.y >= q.rect.y0 && p.y <= q.rect.y1);
+    return this.portalAt(this.player.x, this.player.y);
+  }
+
+  portalFromClick() {
+    const ground = this.portalAt(this.mouse.wx, this.mouse.wy);
+    if (ground) return ground;
+    // The cave opening and portal labels stand above their ground footprint.
+    return [...this.world.portals, ...this.tempPortals].find(q => {
+      const s = this.renderer.worldToScreen(q.cx, q.cy, this.camera);
+      const dx = this.mouse.sx - s.x, dy = this.mouse.sy - s.y;
+      const labelY = q.kind === 'cave' ? -130 : -26;
+      return (q.kind === 'cave' && Math.abs(dx) <= 34 && dy >= -90 && dy <= 12)
+        || (Math.abs(dx) <= Math.max(40, Math.min(140, (q.label || '').length * 7)) && Math.abs(dy - labelY) <= 12);
+    }) || null;
+  }
+
+  moveToClick(x, y, portal = this.portalAt(x, y)) {
+    this.travelIntent = portal ? { portal, from: this.world.id } : null;
+    if (portal) this.dismissedPortal = null;
+    this.player.action = null;
+    this.player.moveTarget = portal ? { x: portal.cx, y: portal.cy } : { x, y };
+    this.mouse.mode = 'move';
+    this.checkPortal();
   }
 
   checkPortal() {
     const p = this.player, portal = this.portalUnderPlayer();
     if (this.dismissedPortal && portal !== this.dismissedPortal) this.dismissedPortal = null;
-    if (!portal || p.shieldBash || p.dead || this.time < this.portalReadyAt || this.pendingTravel || portal === this.dismissedPortal) return;
+    const intent = this.travelIntent;
+    if (!intent) return;
+    if (p.dead || intent.from !== this.world.id || p.action
+      || ![...this.world.portals, ...this.tempPortals].includes(intent.portal)
+      || (p.moveTarget && this.portalAt(p.moveTarget.x, p.moveTarget.y) !== intent.portal)) {
+      this.travelIntent = null;
+      return;
+    }
+    if (portal !== intent.portal) {
+      if (!p.moveTarget && !this.mouse.left) this.travelIntent = null;
+      return;
+    }
+    if (p.shieldBash || this.time < this.portalReadyAt || this.pendingTravel || portal === this.dismissedPortal) return;
+    this.travelIntent = null;
     const destination = MAPS[portal.to.map];
     if (this.world.type !== 'dungeon' && destination?.type !== 'dungeon') {
       this.changeMap(portal.to.map, portal.to.spot);
@@ -1721,7 +1764,7 @@ export class Game {
     if (!pending) return;
     this.pendingTravel = null;
     this.hud.closeTravelPrompt();
-    // 취소한 자리에서는 다시 묻지 않고, 포탈 밖으로 나갔다 돌아오면 재확인.
+    // 취소 뒤에는 자동으로 다시 묻지 않는다. 같은 입구를 다시 클릭하면 재시도.
     this.dismissedPortal = pending.portal;
     if (!enter || this.player.dead || this.world.id !== pending.from || this.portalUnderPlayer() !== pending.portal) return;
     this.changeMap(pending.portal.to.map, pending.portal.to.spot);
@@ -1792,8 +1835,9 @@ export class Game {
     this.handlers = {
       mousedown: (e) => {
         this.updateMouse(e);
-        if (e.button === 1) { e.preventDefault(); this.useSlot(this.selectedSlot); return; }
+        if (e.button === 1) { this.travelIntent = null; e.preventDefault(); this.useSlot(this.selectedSlot); return; }
         if (e.button !== 0 || this.player.dead) return;
+        this.travelIntent = null;
         const p = this.player;
         const h = this.hover;
         this.mouse.left = true;
@@ -1803,13 +1847,15 @@ export class Game {
           p.action = { type: 'attack', targetId: h.id }; p.moveTarget = null; this.mouse.mode = 'attack';
           this.focusId = h.id; // 파티 전원이 이 대상을 집중 공격
         } else {
-          this.mouse.mode = 'move';
-          p.action = null;
-          p.moveTarget = { x: this.mouse.wx, y: this.mouse.wy };
+          this.moveToClick(this.mouse.wx, this.mouse.wy, this.portalFromClick());
         }
       },
       mouseup: (e) => { if (e.button === 0) { this.mouse.left = false; this.mouse.mode = null; } },
-      mousemove: (e) => this.updateMouse(e),
+      mousemove: (e) => {
+        this.updateMouse(e);
+        if (this.travelIntent && this.mouse.left && this.mouse.mode === 'move'
+          && this.portalFromClick() !== this.travelIntent.portal) this.travelIntent = null;
+      },
       wheel: (e) => { e.preventDefault(); this.selectSlot(this.selectedSlot + (e.deltaY > 0 ? 1 : -1)); },
       contextmenu: (e) => e.preventDefault(),
       auxclick: (e) => { if (e.button === 1) e.preventDefault(); },
