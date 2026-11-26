@@ -1,0 +1,3018 @@
+{
+  "mage_male": [
+    [
+      {
+        "main": [
+          68.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          84.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          85.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          70.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          76.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          70.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          71.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          72.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          77.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          70.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          70.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          74.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          74.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          76.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          76.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          76.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          76.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          91.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          71.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          71.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          71.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          90.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          88.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          87.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          82.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          83.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          89.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          82.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          89.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          76.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          89.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          89.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          88.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ]
+  ],
+  "mage": [
+    [
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          89.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          70.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          67.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          88.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          67.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          86.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          67.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          87.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          86.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          87.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          87.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          69.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          87.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          68.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          86.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          71.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          77.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          76.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          77.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          76.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          76.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          76.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          78.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          75.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          75.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          71.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          80.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          91.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          91.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          91.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          75.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          69.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          90.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          89.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          70.0,
+          76.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          89.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          93.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          86.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          82.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          88.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          86.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          87.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          89.0,
+          83.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          84.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          78.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          86.0,
+          87.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          87.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          78.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          87.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          82.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          90.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          78.0,
+          86.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          93.0,
+          81.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          88.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          83.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          85.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          91.0,
+          79.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          83.0
+        ],
+        "angle": -1.5708,
+        "off": [
+          92.0,
+          77.0
+        ],
+        "secondary": null,
+        "mainBehind": false
+      }
+    ]
+  ],
+  "priest": [
+    [
+      {
+        "main": [
+          80.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          77.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          75.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          76.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          74.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          73.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          73.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          73.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          80.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          81.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          81.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          79.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          79.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          81.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          86.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          86.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          86.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          88.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          89.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          90.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          89.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          89.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          84.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          82.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ]
+  ],
+  "priest_female": [
+    [
+      {
+        "main": [
+          80.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          80.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          77.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          78.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          78.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          78.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          79.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          77.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          75.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          74.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          75.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          73.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          75.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          76.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          74.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          75.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          80.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          79.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          79.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          79.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          80.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          86.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          86.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      },
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": true
+      }
+    ],
+    [
+      {
+        "main": [
+          87.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          87.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          88.0,
+          77.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ],
+    [
+      {
+        "main": [
+          83.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          82.0,
+          82.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          80.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          82.0,
+          81.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          83.0,
+          79.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      },
+      {
+        "main": [
+          84.0,
+          78.0
+        ],
+        "angle": -1.5708,
+        "off": null,
+        "secondary": null,
+        "mainBehind": false
+      }
+    ]
+  ]
+}

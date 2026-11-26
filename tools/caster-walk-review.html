@@ -1,0 +1,29 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>마법사·사제 걷기 비교</title>
+<style>body{background:#202731;color:#eee;font:16px sans-serif;margin:24px}button,select,input{font:inherit;padding:8px;margin:5px;background:#344251;color:white;border:1px solid #718393}canvas{display:block;max-width:100%;background:#35434b;image-rendering:pixelated;margin:18px 0}p{color:#c7d4dd}</style>
+<h1>마법사·사제 걷기 비교</h1><p>왼쪽은 수정 전, 오른쪽은 새 걷기입니다. 수정 후에는 선택한 장비가 손을 따라갑니다.</p>
+<label>직업 <select id="job"><option value="mage">마법사</option><option value="priest">사제</option></select></label>
+<label>성별 <select id="gender"><option value="male">남성</option><option value="female">여성</option></select></label>
+<label>방향 <select id="direction"></select></label><label>무기 <select id="weapon"></select></label><label>오브 <select id="off"></select></label>
+<label>한 주기 <select id="period"><option value="800">0.8초</option><option value="1000" selected>1초</option><option value="1600">1.6초</option></select></label>
+<button id="pause">일시정지</button><label>프레임 <input id="frame" type="range" min="0" max="7" value="0"></label><span id="number"></span>
+<canvas id="view" width="960" height="360"></canvas><p>새 걷기의 8프레임입니다. 원본에 포함됐던 지팡이·오브·경전은 새 걷기에서 실제 장착 장비로 표시합니다.</p><canvas id="strip" width="1280" height="210"></canvas>
+<script type="module">
+import {drawChar} from '../js/game/chars.js';
+import {heroSprite,preloadHeroActions} from '../js/game/hero-sheets.js';
+import {CHAR_ANGLES,CHAR_DIRS} from '../js/data/chars.js';
+import {ITEMS,canEquip} from '../js/data/items.js';
+const $=id=>document.getElementById(id),before={};
+for(const classId of ['mage','priest'])for(const gender of ['male','female']){
+ await preloadHeroActions({classId,gender});const key=heroSprite({classId,gender});
+ before[key]=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`rig/caster-walk/${key}-before.webp`;});
+}
+function choices(){const cls=$('job').value,all=Object.entries(ITEMS).filter(([id,it])=>it.weaponType && canEquip(id,cls,100));
+ $('weapon').innerHTML='<option value="">미장착</option>'+all.filter(([,it])=>it.weaponType!=='orb').map(([id,it])=>`<option value="${id}">${it.name}</option>`).join('');
+ $('off').innerHTML='<option value="">미장착</option>'+all.filter(([,it])=>it.weaponType==='orb').map(([id,it])=>`<option value="${id}">${it.name}</option>`).join('');
+ $('weapon').value=all.find(([,it])=>it.weaponType===(cls==='mage'?'staff':'scripture'))?.[0] || '';
+ $('off').value=all.find(([,it])=>it.weaponType==='orb')?.[0] || '';$('off').disabled=cls!=='mage';}
+$('job').onchange=choices;choices();$('direction').innerHTML=CHAR_DIRS.map((s,i)=>`<option value="${i}">${s}</option>`).join('');
+let paused=false,phase=0,last=performance.now();$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'재생':'일시정지';};$('frame').oninput=()=>{paused=true;phase=Number($('frame').value)/8;$('pause').textContent='재생';};
+function draw(ctx,x,y,key,row,col,scale,old=false){ctx.imageSmoothingEnabled=false;if(old)ctx.drawImage(before[key],col*160,row*160,160,160,x-80*scale,y-109*scale,160*scale,160*scale);else{const a=CHAR_ANGLES[row];drawChar(ctx,x,y,{sprite:key,classId:$('job').value,level:100,equipment:{weapon:$('weapon').value,shield:$('off').value},moving:true,walk:(col+.01)/8*Math.PI*2,facing:{x:Math.cos(a),y:Math.sin(a)},scale});}}
+function tick(now){if(!paused)phase=(phase+(now-last)/Number($('period').value))%1;last=now;const key=heroSprite({classId:$('job').value,gender:$('gender').value}),r=Number($('direction').value),f=Math.floor(phase*8),c=$('view').getContext('2d');c.clearRect(0,0,960,360);c.fillStyle='#eef3f5';c.font='18px sans-serif';c.fillText('수정 전',180,36);c.fillText('수정 후',650,36);draw(c,240,300,key,r,f,4,true);draw(c,720,300,key,r,f,4);const s=$('strip').getContext('2d');s.clearRect(0,0,1280,210);for(let n=0;n<8;n++){draw(s,n*160+80,180,key,r,n,2.3);s.fillStyle=n===f?'#80ed9b':'#c7d4dd';s.fillText(String(n+1),n*160+72,24);}$('frame').value=f;$('number').textContent=`${f+1} / 8`;requestAnimationFrame(tick);}requestAnimationFrame(tick);
+</script></html>

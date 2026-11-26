@@ -270,3 +270,9 @@ if __name__=='__main__':
  if (ROOT/'tools/rig/warrior-walk/poses.json').exists():
   from compile_knight_walk import compile_walks
   compile_walks(ROOT/'tools/rig/warrior-walk')
+ if (ROOT/'tools/rig/archer-walk/poses.json').exists():
+  from compile_knight_walk import compile_walks
+  compile_walks(ROOT/'tools/rig/archer-walk')
+ if (ROOT/'tools/rig/caster-walk/poses.json').exists():
+  from compile_knight_walk import compile_walks
+  compile_walks(ROOT/'tools/rig/caster-walk')

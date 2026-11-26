@@ -57,7 +57,7 @@ export function drawChar(ctx, x, y, s) {
   // Never fall back to a body containing a different, baked-in weapon.
   if(s.equipment && !body){ctx.restore();return true;}
   const equipped=body?visibleEquipment(s):null,back=[3,4,5].includes(dir);
-  const drawMain=()=>{if(equipped?.main)drawHeldItem(ctx,equipped.main,body.grip,body.angle,{scale:sc});};
+  const drawMain=()=>{if(equipped?.main)drawHeldItem(ctx,equipped.main,body.grip,body.angle,{scale:sc,flipX:body.mainFlipX});};
   const drawOff=()=>{if(equipped?.off)drawHeldItem(ctx,equipped.off,body.off,-Math.PI/2,{scale:sc});};
   const draw = () => {
     if(body && body.mainBehind)drawMain();

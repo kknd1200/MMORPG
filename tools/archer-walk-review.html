@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><title>궁수 걷기 비교</title>
+<style>body{background:#202731;color:#eee;font:16px sans-serif;margin:24px}button,select,input{font:inherit;padding:8px;margin:5px;background:#344251;color:white;border:1px solid #718393}canvas{display:block;max-width:100%;background:#35434b;image-rendering:pixelated;margin:18px 0}p{color:#c7d4dd}</style>
+<h1>궁수 걷기 비교</h1><p>왼쪽은 수정 전, 오른쪽은 적용된 걷기입니다. 남녀 궁수와 8방향을 선택해 비교하세요.</p>
+<label>성별 <select id="gender"><option value="archer_male">남궁수</option><option value="archer">여궁수</option></select></label>
+<label>방향 <select id="direction"></select></label>
+<label>한 주기 <select id="period"><option value="800">0.8초</option><option value="1000" selected>1초</option><option value="1600">1.6초</option></select></label>
+<label>장착 활 <select id="weapon"></select></label><button id="pause">일시정지</button><label>프레임 <input id="frame" type="range" min="0" max="7" value="0"></label><span id="number"></span>
+<canvas id="view" width="960" height="360"></canvas>
+<p>아래는 새 걷기의 8프레임입니다. 수정 전에는 몸에 포함된 기존 활이 보이며, 수정 후에는 선택한 장착 활이 손을 따라갑니다.</p>
+<canvas id="strip" width="1280" height="210"></canvas>
+<script type="module">
+import {drawChar} from '../js/game/chars.js';
+import {preloadHeroActions} from '../js/game/hero-sheets.js';
+import {CHAR_ANGLES,CHAR_DIRS} from '../js/data/chars.js';
+import {ITEMS,canEquip} from '../js/data/items.js';
+const $=id=>document.getElementById(id),before={};
+$('weapon').innerHTML='<option value="">미장착</option>'+Object.entries(ITEMS).filter(([id,it])=>it.type==='weapon' && canEquip(id,'elf',100)).map(([id,it])=>`<option value="${id}">${it.name}</option>`).join('');
+$('weapon').value=Object.keys(ITEMS).find(id=>ITEMS[id].weaponType==='bow') || '';
+for(const key of ['archer_male','archer']){
+ await preloadHeroActions({classId:'elf',gender:key==='archer_male'?'male':'female'});
+ before[key]=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=`rig/archer-walk/${key}-before.webp`;});
+}
+$('direction').innerHTML=CHAR_DIRS.map((label,i)=>`<option value="${i}">${label}</option>`).join('');
+let paused=false,phase=0,last=performance.now();
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'재생':'일시정지';};
+$('frame').oninput=()=>{paused=true;$('pause').textContent='재생';phase=Number($('frame').value)/8;};
+function draw(ctx,x,y,key,row,col,scale,old=false){
+ ctx.imageSmoothingEnabled=false;
+ if(old)ctx.drawImage(before[key],col*160,row*160,160,160,x-80*scale,y-109*scale,160*scale,160*scale);
+ else{const a=CHAR_ANGLES[row];drawChar(ctx,x,y,{sprite:key,classId:'elf',level:100,equipment:{ranged:$('weapon').value},moving:true,walk:(col+.01)/8*Math.PI*2,facing:{x:Math.cos(a),y:Math.sin(a)},scale});}
+}
+function tick(now){
+ if(!paused)phase=(phase+(now-last)/Number($('period').value))%1;
+ last=now;const key=$('gender').value,row=Number($('direction').value),f=Math.floor(phase*8),ctx=$('view').getContext('2d');
+ ctx.clearRect(0,0,960,360);ctx.fillStyle='#eef3f5';ctx.font='18px sans-serif';ctx.fillText('수정 전',180,36);ctx.fillText('수정 후',650,36);
+ draw(ctx,240,300,key,row,f,4,true);draw(ctx,720,300,key,row,f,4);
+ const sc=$('strip').getContext('2d');sc.clearRect(0,0,1280,210);
+ for(let c=0;c<8;c++){draw(sc,c*160+80,180,key,row,c,2.3);sc.fillStyle=c===f?'#80ed9b':'#c7d4dd';sc.font='16px sans-serif';sc.fillText(String(c+1),c*160+72,24);}
+ $('frame').value=f;$('number').textContent=`${f+1} / 8`;requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script></html>

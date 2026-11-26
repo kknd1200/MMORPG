@@ -38,11 +38,16 @@ export function equipmentBody(_original,sprite,action,row,col){
 export function drawHandForeground(ctx,body,scale=1){
  for(const h of body.handsMeta || body.handPatches || [])ctx.drawImage(body.hands,h.xy[0],h.xy[1],8,8,(h.at[0]-80)*scale,(h.at[1]-109)*scale,8*scale,8*scale);
 }
-export function drawHeldItem(ctx,item,point,angle,{scale=1,back=false}={}){
+export function drawHeldItem(ctx,item,point,angle,{scale=1,back=false,flipX=false}={}){
  const tx=texture(item),profile=equipmentGrip(item);if(!tx || !profile || !point)return;
  const [gx,gy]=profile.grip,[txp,typ]=profile.tip,sourceAngle=Math.atan2(typ-gy,txp-gx);
  const factor=profile.reach/Math.hypot(txp-gx,typ-gy)*scale;
- ctx.save();ctx.translate((point[0]-80)*scale,(point[1]-109)*scale);ctx.rotate(angle-sourceAngle);ctx.imageSmoothingEnabled=false;
+ ctx.save();ctx.translate((point[0]-80)*scale,(point[1]-109)*scale);
+ // Rear-view carry bows curve away from the torso while keeping the grip and
+ // upper limb anchored. Reflect the heading too, so the bow never turns upside down.
+ if(flipX)ctx.scale(-1,1);
+ const heading=flipX?Math.atan2(Math.sin(angle),-Math.cos(angle)):angle;
+ ctx.rotate(heading-sourceAngle);ctx.imageSmoothingEnabled=false;
  ctx.drawImage(tx,-gx*factor,-gy*factor,tx.width*factor,tx.height*factor);
  if(item.enhance>=7){ctx.globalAlpha=.18;ctx.globalCompositeOperation='lighter';ctx.drawImage(tx,-gx*factor,-gy*factor,tx.width*factor,tx.height*factor);}
  ctx.restore();
