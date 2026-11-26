@@ -56,7 +56,7 @@ export function drawChar(ctx, x, y, s) {
   const body=s.equipment?equipmentBody(sheet,key,name,dir,rigCol):null;
   // Never fall back to a body containing a different, baked-in weapon.
   if(s.equipment && !body){ctx.restore();return true;}
-  const equipped=body?visibleEquipment(s):null,back=body?.offBehind ?? [3,4,5].includes(dir);
+  const equipped=body?visibleEquipment(s):null,back=[3,4,5].includes(dir);
   const drawMain=()=>{if(equipped?.main)drawHeldItem(ctx,equipped.main,body.grip,body.angle,{scale:sc});};
   const drawOff=()=>{if(equipped?.off)drawHeldItem(ctx,equipped.off,body.off,-Math.PI/2,{scale:sc});};
   const draw = () => {
@@ -66,7 +66,7 @@ export function drawChar(ctx, x, y, s) {
     else ctx.drawImage(sheet,col*C,row*C,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
     if(body && !body.mainBehind)drawMain();
     if(body && !back)drawOff();
-    if(body)drawHandForeground(ctx,body,sc,{hideOffHand:equipped?.off?.weaponType==='shield'});
+    if(body)drawHandForeground(ctx,body,sc);
   };
   draw();
   if (s.hurt > 0) {

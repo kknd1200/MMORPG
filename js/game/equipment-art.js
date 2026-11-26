@@ -35,8 +35,8 @@ export function equipmentBody(_original,sprite,action,row,col){
  const frame=frames[row]?.[resolved==='idle'?0:col];if(!frame)return null;
  return {...frame,handPatches:frame.hands,sheet,hands,sx:(resolved==='idle'?row:col)*160,sy:RIG_ACTION_Y[resolved]+(resolved==='idle'?0:row*160),grip:frame.main};
 }
-export function drawHandForeground(ctx,body,scale=1,{hideOffHand=false}={}){
- for(const h of body.handsMeta || body.handPatches || [])if(!hideOffHand || h.role!=='off')ctx.drawImage(body.hands,h.xy[0],h.xy[1],8,8,(h.at[0]-80)*scale,(h.at[1]-109)*scale,8*scale,8*scale);
+export function drawHandForeground(ctx,body,scale=1){
+ for(const h of body.handsMeta || body.handPatches || [])ctx.drawImage(body.hands,h.xy[0],h.xy[1],8,8,(h.at[0]-80)*scale,(h.at[1]-109)*scale,8*scale,8*scale);
 }
 export function drawHeldItem(ctx,item,point,angle,{scale=1,back=false}={}){
  const tx=texture(item),profile=equipmentGrip(item);if(!tx || !profile || !point)return;

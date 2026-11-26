@@ -9,7 +9,6 @@ from PIL import Image,ImageDraw
 from scipy import ndimage,signal
 ROOT=Path(__file__).resolve().parents[2]
 WORK=ROOT.parent/'weapon-repair';WORK.mkdir(exist_ok=True)
-KNIGHT_POSES=json.loads((ROOT/'tools/rig/knight-poses.json').read_text())
 KEYS=['knight','knight_female','warrior','warrior_female','archer_male','archer','mage_male','mage','priest','priest_female']
 # Source tip directions, authored per pose, remove the old near-body endpoint ambiguity.
 KN=[[135,150,-50,-50,35,30,145,135],[135,150,-25,-45,50,35,150,135],[120,155,-25,-40,130,145,145,120],[120,150,-20,-35,145,145,150,120],[60,120,-30,-15,145,145,140,60],[65,40,-150,-165,20,40,25,65],[70,25,-150,-150,10,30,5,70],[135,140,-150,-140,35,45,0,135]]
@@ -133,11 +132,10 @@ def run():
     rowdata=[]
     for col in range(1 if action=='idle' else 8):
      sx=row if action=='idle' else col;sy=0 if action=='idle' else row;frame=get_frame(im,sy,sx);ref=refs[row]
-     authored=KNIGHT_POSES[key][action][row][col] if kind=='knight' else None
-     main=np.array(authored['main'],float) if authored else track(frame,ref,IDLE_MAIN[kind][row],12 if action=='walk' else 22);angle=math.pi*.7 if row<4 or row==7 else math.pi*.3
+     main=track(frame,ref,IDLE_MAIN[kind][row],12 if action=='walk' else 22);angle=math.pi*.7 if row<4 or row==7 else math.pi*.3
      mask=np.zeros((160,160),bool);tip=None;secondary=None
      edit=get_frame(generated,row,0 if action=='idle' else col) if generated is not None else None
-     if kind=='warrior':
+     if kind in ['knight','warrior']:
       table=KN if kind=='knight' else WA
       phase=0 if action in ['idle','walk'] else col
       expected=math.radians(table[row][phase])
@@ -156,7 +154,7 @@ def run():
       mask |= (abs(xx-main[0])<5)&(yy>49)&(yy<110)&gold&((xx<74)|(xx>88));angle=-math.pi/2
      if kind=='elf':angle=-math.pi/2
      if kind=='priest':angle=-math.pi/2
-     off=np.array(authored['off'],float) if authored else track(frame,ref,IDLE_OFF[kind][row],18) if kind=='mage' else None
+     off=track(frame,ref,IDLE_OFF.get(kind,IDLE_MAIN[kind])[row],18) if kind in ['mage','knight'] else None
      edit=get_frame(generated,row,0 if action=='idle' else col) if generated is not None else None
      clean=merge_inpaint(frame,edit,mask,main,tip)
      if edit is not None:
@@ -194,12 +192,12 @@ def run():
         point=main-axis*step
         if skin_count(point)>=3:main=point;break
       secondary=main-axis*4
-     if action=='walk' and kind=='warrior':
+     if action=='walk' and kind in ['knight','warrior']:
       # Carry poses keep the blade trailing; the hand follows the authored gait.
       main=track(clean,get_frame(generated,row,0),IDLE_MAIN[kind][row],10)
       angle=math.radians([130,140,150,150,40,40,50,130][row])
       secondary=main-np.array([math.cos(angle),math.sin(angle)])*4 if kind=='warrior' else None
-     if kind=='warrior' and action in ['normal','skill','idle']:
+     if kind in ['knight','warrior'] and action in ['normal','skill','idle']:
       # Explicit return pose: source frame 7 is the same closed-fist carry pose.
       if action=='idle' or col==7:
        seed=IDLE_MAIN[kind][row]
@@ -228,8 +226,6 @@ def run():
       ]
       main=np.array(female_hands[row][0 if action=='idle' else col],float)
       secondary=main-np.array([math.cos(angle),math.sin(angle)])*4
-     if authored:
-      main=np.array(authored['main'],float);off=np.array(authored['off'],float);angle=authored['angle'];secondary=None;mask[:]=False
      hand_source=clean if edit is not None else frame
      # Closed original hands are a FOREGROUND layer, so fingers occlude the handle.
      overlay=np.zeros_like(frame);yy,xx=np.indices(mask.shape)
@@ -237,18 +233,17 @@ def run():
       if point is None:continue
       radius=2.4 if kind in ['knight','warrior'] else 2.1
       circle=(xx-point[0])**2+(yy-point[1])**2<=radius**2
-      colored=(hand_source[:,:,:3].max(2)-hand_source[:,:,:3].min(2)>25)
+      colored=(frame[:,:,:3].max(2)-frame[:,:,:3].min(2)>25)
       circle &= ~(mask if edit is None else np.zeros_like(mask))
       if kind in ['knight','warrior']:circle &= colored
       overlay[circle]=hand_source[circle]
      clean[mask & (frame[:,:,3]==0)]=0
      body.paste(Image.fromarray(clean),(sx*160,sy*160));hands.paste(Image.fromarray(overlay),(sx*160,sy*160))
-     meta={'main':[round(float(x),2) for x in main],'angle':round(float(angle),5),'off':[round(float(x),2) for x in off] if off is not None else None,'secondary':[round(float(x),2) for x in secondary] if secondary is not None else None,'mainBehind':authored['mainBehind'] if authored else row in [3,4,5] and action in ['idle','walk']}
-     if authored:meta['offBehind']=authored['offBehind']
+     meta={'main':[round(float(x),2) for x in main],'angle':round(float(angle),5),'off':[round(float(x),2) for x in off] if off is not None else None,'secondary':[round(float(x),2) for x in secondary] if secondary is not None else None,'mainBehind':row in [3,4,5] and action in ['idle','walk']}
      meta['hands']=[]
-     for role,point in [('main',main),('secondary',secondary),('off',off)]:
+     for point in [main,secondary,off]:
       if point is None:continue
-      x,y=map(lambda n:round(float(n)),point);tile=Image.fromarray(overlay).crop((x-4,y-4,x+4,y+4));idx=len(hand_tiles);hand_tiles.append(tile);meta['hands'].append({'xy':[idx%32*8,idx//32*8],'at':[x-4,y-4],'role':role})
+      x,y=map(lambda n:round(float(n)),point);tile=Image.fromarray(overlay).crop((x-4,y-4,x+4,y+4));idx=len(hand_tiles);hand_tiles.append(tile);meta['hands'].append({'xy':[idx%32*8,idx//32*8],'at':[x-4,y-4]})
      rowdata.append(meta)
      if action in ['normal','skill']:
       tile=Image.fromarray(frame).crop((35,25,125,120)).resize((152,160),Image.Resampling.NEAREST);debug.paste(tile,(col*160,row*160),tile)
