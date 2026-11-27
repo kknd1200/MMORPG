@@ -1,9 +1,8 @@
 import { shieldBashPose } from '../data/skill-motions.js';
-import {equipmentBody,visibleEquipment,drawHeldItem,drawHandForeground} from './equipment-art.js';
 // 8방향 도트 캐릭터 그리기 (assets/chars, 데이터는 js/data/chars.js)
 //
 // - 대기: 바라보는 방향의 대기 그림 1장
-// - 걷기: walk.webp 8방향 × 8프레임 (사용자 제공 player-motion 걷기 그림). 발걸음 위상에 맞춰 넘김
+// - 걷기: fixed-walk.webp 8방향 × 8프레임 (사용자 제공 player-motion 걷기 그림). 발걸음 위상에 맞춰 넘김
 // - 일반공격 · 스킬: 8프레임을 팩에 적힌 프레임별 시간대로 재생 (몸 전체 동작)
 // - 이펙트: 팩 규격대로 캐릭터 앞 고정 위치에서 같은 프레임 번호로 재생 (날아가지 않음)
 // 도트 그림이라 배율 1, 부드럽게 하지 않음
@@ -14,7 +13,7 @@ export const CHAR_SCALE = 1;
 export const CHAR_BODY_PX = 57; // 화면에서 몸 키 (이름표 위치 등)
 
 export const hasChar = (key) => !!CHARS[key];
-export const charFiles = (key) => (CHARS[key] ? ['idle', 'walk', 'normal', 'skill', 'fx-normal', 'fx-skill'].map((n) => `chars/${key}/${n}.webp`) : []);
+export const charFiles = (key) => (CHARS[key] ? ['idle', 'fixed-walk', 'normal', 'skill', 'fx-normal', 'fx-skill'].map((n) => `chars/${key}/${n}.webp`) : []);
 
 /**
  * s: { sprite, facing(화면 방향), act: { name: 'normal'|'skill', t: 경과초 } | null,
@@ -28,7 +27,8 @@ export function drawChar(ctx, x, y, s) {
   const act = s.act && !s.dead ? s.act : null;
   const walking = !act && !s.dead && s.moving;
   const name = act ? act.name : walking ? 'walk' : 'idle';
-  const source=CHARS[key].actions[name]?.source || name;
+  // Appearance is fixed by the approved class artwork, never by inventory gear.
+  const source=walking ? 'fixed-walk' : CHARS[key].actions[name]?.source || name;
   const sheet = img(`chars/${key}/${source}.webp`) || img(`chars/${key}/idle.webp`);
   if (!sheet) return false;
   const full = sheet.height > CHAR_CELL; // 8방향 × 8프레임 시트가 불러와졌는지 (아니면 대기 그림)
@@ -52,22 +52,7 @@ export function drawChar(ctx, x, y, s) {
     ctx.rotate(-Math.PI / 2);
     ctx.translate(18, 0);
   }
-  const rigCol=act?frameAt(key,act.name,act.t):walking?Math.floor(((((s.walk || 0)%TAU)+TAU)%TAU)/TAU*8)%8:0;
-  const body=s.equipment?equipmentBody(sheet,key,name,dir,rigCol):null;
-  // Never fall back to a body containing a different, baked-in weapon.
-  if(s.equipment && !body){ctx.restore();return true;}
-  const equipped=body?visibleEquipment(s):null,back=[3,4,5].includes(dir);
-  const drawMain=()=>{if(equipped?.main)drawHeldItem(ctx,equipped.main,body.grip,body.angle,{scale:sc,flipX:body.mainFlipX});};
-  const drawOff=()=>{if(equipped?.off)drawHeldItem(ctx,equipped.off,body.off,-Math.PI/2,{scale:sc});};
-  const draw = () => {
-    if(body && body.mainBehind)drawMain();
-    if(body && back)drawOff();
-    if(body)ctx.drawImage(body.sheet,body.sx,body.sy,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
-    else ctx.drawImage(sheet,col*C,row*C,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
-    if(body && !body.mainBehind)drawMain();
-    if(body && !back)drawOff();
-    if(body)drawHandForeground(ctx,body,sc);
-  };
+  const draw = () => ctx.drawImage(sheet,col*C,row*C,C,C,-ox*sc,-oy*sc,C*sc,C*sc);
   draw();
   if (s.hurt > 0) {
     // 맞았을 때 밝게 번쩍 (filter 를 쓰지 않아 가벼움)

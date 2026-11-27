@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {EQUIPMENT_RIG} from '../js/data/equipment-rig.js';
 import {equipmentGrip} from '../js/data/equipment-grips.js';
 import {ITEMS} from '../js/data/items.js';
-import {drawChar} from '../js/game/chars.js';
+import {drawChar,charFiles} from '../js/game/chars.js';
 import {loadImages} from '../js/game/art.js';
 import {CHAR_ANGLES,CHARS} from '../js/data/chars.js';
 const pending=[];
@@ -34,12 +34,19 @@ test('wind-up, contact and recovery follow different hands and return to carry a
   const frames=EQUIPMENT_RIG[key].normal[0];assert.notDeepEqual(frames[0].main,frames[2].main);assert.notEqual(frames[0].angle,frames[2].angle);assert.equal(frames[0].angle,frames[7].angle);
  }
 });
-test('loading an equipped body never reveals a baked sword, and hands draw over the weapon layer',async()=>{
- await loadImages(['chars/knight/normal.webp','chars/knight/skill.webp','chars/knight/idle.webp']);
- const s={sprite:'knight',classId:'knight',equipment:{},facing:{x:Math.cos(CHAR_ANGLES[0]),y:Math.sin(CHAR_ANGLES[0])},act:{name:'normal',t:.01}};
- const before=ctx();drawChar(before,0,0,s);assert.equal(before.calls.length,0);
- for(const image of pending)image.onload();
- for(const action of ['normal','skill','shield_bash']){
-  const c=ctx();drawChar(c,0,0,{...s,act:{name:action,t:.01}});assert.match(c.calls[0][0].url,/rigged\/knight\/body.webp$/);assert.match(c.calls.at(-1)[0].url,/rigged\/knight\/hands.webp$/);
+test('all classes keep identical fixed artwork when equipment is changed or removed',async()=>{
+ await loadImages(Object.keys(CHARS).flatMap(charFiles));
+ for(const [key,info] of Object.entries(CHARS))for(let dir=0;dir<8;dir++)for(let f=0;f<8;f++){
+  const states=[{},{weapon:'training_sword',shield:'orb_5'},{weapon:'steel_blade',ranged:'training_bow'},null];
+  for(const action of ['idle','walk','normal','skill',...(info.classId==='knight'?['shield_bash']:[])]){
+   const t=action==='shield_bash'?f/8+.001:CHARS[key].actions[action]?.durations.slice(0,f).reduce((s,n)=>s+n,0)/1000+.001;
+   const state={sprite:key,classId:info.classId,level:100,facing:{x:Math.cos(CHAR_ANGLES[dir]),y:Math.sin(CHAR_ANGLES[dir])},moving:action==='walk',walk:(f+.01)/8*Math.PI*2,act:['idle','walk'].includes(action)?null:{name:action,t}};
+   const renders=states.map(equipment=>{const c=ctx();drawChar(c,0,0,{...state,equipment});return c.calls;});
+   assert.equal(renders[0].length,1,`${key}/${action}/${dir}/${f}`);
+   for(const calls of renders.slice(1))assert.deepEqual(calls,renders[0]);
+   assert.ok(!renders[0][0][0].url.includes('/rigged/'));
+   if(action==='walk')assert.match(renders[0][0][0].url,/fixed-walk.webp$/);
+  }
  }
+ assert.equal(pending.length,0,'runtime must not request equipment body or hand atlases');
 });

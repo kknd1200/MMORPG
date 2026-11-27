@@ -16,7 +16,7 @@ test('all classes and both appearances map to the approved 8-direction asset pac
     for (const gender of ['male','female']) {
       const key = heroSprite({classId,gender});
       assert.ok(CHARS[key]);
-      for (const action of ['idle','walk','normal','skill']) assert.ok(fs.existsSync(new URL(`../assets/chars/${key}/${action}.webp`,import.meta.url)));
+      for (const action of ['idle','fixed-walk','normal','skill']) assert.ok(fs.existsSync(new URL(`../assets/chars/${key}/${action}.webp`,import.meta.url)));
     }
   }
   assert.equal(heroSprite({classId:'elf'}),'archer_male');
@@ -31,14 +31,14 @@ test('login portraits and game bodies use the same artwork with the requested sc
   assert.deepEqual(rect,[0,0,160,160,-160,-218,320,320]);
 });
 test('walking uses all eight authored frames', async () => {
-  await loadImages(['chars/knight/walk.webp']);
+  await loadImages(['chars/knight/fixed-walk.webp']);
   for(let i=0;i<8;i++) {
     const state={classId:'knight',moving:true,walk:(i+.01)/8*Math.PI*2,facing:{x:1,y:0}};
     const ctx=context();drawHeroSheet(ctx,0,0,state);
     assert.equal(heroFrame(state).column,i);
     assert.equal(ctx.calls[0][1],i*160);
     assert.equal(ctx.calls[0][2],6*160);
-    assert.match(ctx.calls[0][0].url,/walk.webp$/);
+    assert.match(ctx.calls[0][0].url,/fixed-walk.webp$/);
   }
 });
 test('attack, spell and death keep the approved body instead of reverting to primitives', async () => {
